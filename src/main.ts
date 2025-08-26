@@ -26,8 +26,8 @@ const skins = [
       },
       // 位置
       position: {
-        x: 152 -  720 / 2,
-        y: 200 - 1280 / 2,
+        x: 152,
+        y: 200,
       },
     },
     // キーの定義
@@ -114,8 +114,8 @@ const skins = [
       },
       // 位置
       position: {
-        x: 428 - 1280 / 2,
-        y:  84 -  720 / 2,
+        x: 428,
+        y:  84,
       },
     },
     // キーの定義
@@ -217,6 +217,7 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
 
   // 背景
   const bg_sprite = new Sprite(bg_texture);
+  bg_sprite.anchor.set(0.5);
   app.stage.addChild(bg_sprite);
 
   // コンテナ作成
@@ -262,7 +263,7 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
     skin.screen.position.y);
   game_layer.pivot.set(0, 0);
   game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
-  root_container.addChild(game_layer);
+  ui_layer.addChild(game_layer);
 
   // ゲーム画面内のサンプル描画
   {
@@ -295,6 +296,9 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
     const ch = window.innerHeight;
     app.renderer.resize(cw, ch);
     skin = (cw < ch) ? skins[0] : skins[1];
+
+    // 背景を画面中央に
+    bg_sprite.position.set(cw / 2, ch / 2);
 
     // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
     ui_layer.pivot.set(
