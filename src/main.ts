@@ -5,6 +5,8 @@ import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesh
 const GAME_SCREEN_WIDTH = 256;
 const GAME_SCREEN_HEIGHT = 224;
 
+let currentSkinIndex = -1;
+
 // 仮想ゲーム機の設定
 const skins = [
   // 縦画面用
@@ -236,13 +238,13 @@ function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite
     skin.body.size.height / 2);
 
   // ゲーム機本体(UIレイヤー)
-  const body_sprites = [
-    Sprite.from(skin.body.images[0]),
-    Sprite.from(skin.body.images[1]),
-    Sprite.from(skin.body.images[2]),
-    Sprite.from(skin.body.images[3]),
-  ];
-  body_sprites.forEach(s => ui_layer.addChild(s));
+  const body_sprites: Sprite[] = [];
+  for (let i = 0; i < 4; ++i) {
+    const s = new Sprite();
+    s.anchor.set(0);
+    ui_layer.addChild(s);
+    body_sprites.push(s);
+  }
 
   // 方向キー(UIレイヤー)
   const direction_pad = Sprite.from(skin.key.direction.image.neutral);
@@ -253,11 +255,10 @@ function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite
 
   for (let i = 0; i < 4; ++i) {
     const button = skin.key.buttons[i];
-    const is_only_definition = i < skin.key.buttons.length;
-    const sprite = Sprite.from(!is_only_definition ? button.image.off : skin.key.buttons[0].image.off);
+    const sprite = new Sprite();
     sprite.anchor.set(0.5);
+    sprite.visible = false;
     ui_layer.addChild(sprite);
-    sprite.visible = !is_only_definition;
     buttons.push(sprite);
   }
 
@@ -302,30 +303,36 @@ function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite
     const cw = window.innerWidth;
     const ch = window.innerHeight;
     app.renderer.resize(cw, ch);
-    skin = (cw < ch) ? skins[0] : skins[1];
 
-    // 背景を画面中央に
-    bg_sprite.position.set(cw / 2, ch / 2);
+    const nextSkinIndex = cw < ch ? 0 : 1;
 
-    // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
-    ui_layer.pivot.set(
-      skin.body.size.width  / 2,
-      skin.body.size.height / 2
-    );
+    if (currentSkinIndex != nextSkinIndex) {
+      skin = skins[nextSkinIndex];
+      currentSkinIndex = nextSkinIndex;
 
-    // UI を再配置
-    buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
+      // 背景を画面中央に
+      bg_sprite.position.set(cw / 2, ch / 2);
 
-    // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
-    game_layer.position.set(skin.screen.position.x, skin.screen.position.y);
-    game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
+      // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
+      ui_layer.pivot.set(
+        skin.body.size.width  / 2,
+        skin.body.size.height / 2
+      );
+
+      // UI を再配置
+      buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
+
+      // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
+      game_layer.position.set(skin.screen.position.x, skin.screen.position.y);
+      game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
+    }
 
     // 全体スケーリングとセンタリング
     const scale = Math.min(
       cw / skin.body.size.width,
       ch / skin.body.size.height);
     root_container.scale.set(scale);
-    root_container.position.set(~~(cw / 2), ~~(ch / 2));
+    root_container.position.set((cw / 2) | 0, (ch / 2) | 0);
   }
 
   // キーボード入力イベント
