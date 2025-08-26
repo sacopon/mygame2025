@@ -15,7 +15,7 @@ const skins = [
         width: 720,
         height: 1280,
       },
-      image: "v_body.png",
+      images: ["v_body_lt.png", "v_body_rt.png", "v_body_lb.png", "v_body_rb.png"],
     },
     // 仮想ゲーム画面
     screen: {
@@ -103,7 +103,7 @@ const skins = [
         width: 1280,
         height: 720,
       },
-      image: "h_body.png",
+      images: ["h_body_lt.png", "h_body_rt.png", "h_body_lb.png", "h_body_rb.png"],
     },
     // 仮想ゲーム画面
     screen: {
@@ -176,12 +176,16 @@ const skins = [
 
 let skin = skins[0];
 
-function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, buttons: Sprite[]) {
+function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
-  body.texture = Texture.from(setting.body.image);
-  body.position.set(
-    setting.body.size.width  / 2,
-    setting.body.size.height / 2);
+  bodies[0].texture = Texture.from(setting.body.images[0]);
+  bodies[0].position.set(0, 0);
+  bodies[1].texture = Texture.from(setting.body.images[1]);
+  bodies[1].position.set(setting.body.size.width  / 2, 0);
+  bodies[2].texture = Texture.from(setting.body.images[2]);
+  bodies[2].position.set(0, setting.body.size.height / 2);
+  bodies[3].texture = Texture.from(setting.body.images[3]);
+  bodies[3].position.set(setting.body.size.width  / 2, setting.body.size.height / 2);
 
   // 方向キー
   direction.texture = Texture.from(setting.key.direction.image.neutral);
@@ -212,8 +216,7 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
 
   // 画像読み込み
   const bg_texture = await Assets.load("/textures/screen_bg.png");
-  await Assets.load("/textures/virticalui.json");
-  await Assets.load("/textures/horizontalui.json");
+  await Assets.load("/textures/virtualui.json");
 
   // 背景
   const bg_sprite = new Sprite(bg_texture);
@@ -233,9 +236,13 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
     skin.body.size.height / 2);
 
   // ゲーム機本体(UIレイヤー)
-  const body_sprite = Sprite.from(skin.body.image);
-  body_sprite.anchor.set(0.5);
-  ui_layer.addChild(body_sprite);
+  const body_sprites = [
+    Sprite.from(skin.body.images[0]),
+    Sprite.from(skin.body.images[1]),
+    Sprite.from(skin.body.images[2]),
+    Sprite.from(skin.body.images[3]),
+  ];
+  body_sprites.forEach(s => ui_layer.addChild(s));
 
   // 方向キー(UIレイヤー)
   const direction_pad = Sprite.from(skin.key.direction.image.neutral);
@@ -254,7 +261,7 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
     buttons.push(sprite);
   }
 
-  buildVirtualConsoleUi(skin, body_sprite, direction_pad, buttons);
+  buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
 
   // ゲーム画面レイヤー
   const game_layer = new Container();
@@ -307,7 +314,7 @@ function buildVirtualConsoleUi(setting: any, body: Sprite, direction: Sprite, bu
     );
 
     // UI を再配置
-    buildVirtualConsoleUi(skin, body_sprite, direction_pad, buttons);
+    buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
 
     // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
     game_layer.position.set(skin.screen.position.x, skin.screen.position.y);
