@@ -264,8 +264,8 @@ function registerPwaServiceWorker() {
   app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
 
   // 画像読み込み
-  const bg_texture = await Assets.load("/textures/screen_bg.png");
-  await Assets.load("/textures/virtualui.json");
+  const bg_texture = await Assets.load(new URL("textures/screen_bg.png", import.meta.env.BASE_URL).toString());
+  await Assets.load(new URL("textures/virtualui.json", import.meta.env.BASE_URL).toString());
 
   // 背景
   const bg_sprite = new Sprite(bg_texture);
