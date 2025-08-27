@@ -1,10 +1,19 @@
-html, body {
+html, body, #app {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* 必要に応じてスクロールバーを消す */
+  overflow: hidden;            /* 必要に応じてスクロールバーを消す */
+  overscroll-behavior: none;   /* Android Chrome: プルリフ/オーバースクロール無効 */
+  touch-action: none;          /* ポインタ系ジェスチャ無効（ズーム/パン等）*/
+  user-select: none;           /* テキスト選択無効 */
+  -webkit-user-select: none;   /* iOS Safari */
+  -ms-user-select: none;
+  -webkit-touch-callout: none; /* iOS 長押しメニュー無効 */
 }
 canvas {
-  display: block; /* デフォルトの inline-block スペースを消す */
+  display: block;             /* デフォルトの inline-block スペースを消す */
+  touch-action: none;         /* 念のため canvas にも */
+  -webkit-user-drag: none;    /* 画像ドラッグ防止 */
+  image-rendering: pixelated; /* ドット絵ならお好みで */
 }

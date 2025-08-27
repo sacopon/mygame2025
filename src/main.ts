@@ -204,6 +204,42 @@ function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite
   });
 }
 
+function disableBrowserGestures() {
+  // 共通禁止（右クリック・長押しメニュー・ダブルタップ等）
+  window.addEventListener('contextmenu', e => e.preventDefault()); // 右クリック/長押しメニュー
+  window.addEventListener('selectstart', e => e.preventDefault()); // テキスト選択開始
+  window.addEventListener('dragstart', e => e.preventDefault());   // 画像ドラッグ
+
+  // ホイール/タッチスクロール・ピンチズーム・ダブルタップズーム抑止
+  const opts = { passive: false } as AddEventListenerOptions;
+  window.addEventListener('wheel', e => e.preventDefault(), opts);
+  window.addEventListener('touchmove', e => e.preventDefault(), opts);
+  window.addEventListener('gesturestart', e => e.preventDefault() as any, opts); // iOS Safari 独自
+  window.addEventListener('dblclick', e => e.preventDefault(), opts);
+
+  // Android Chrome: バックキー/履歴誤タップ対策
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace') e.preventDefault(); // 入力欄が無いのに Backspace で戻るのを防止
+  });
+
+  // スワイプバック誤動作軽減（完全には防げません）
+  history.pushState(null, '', location.href);
+
+  // このイベントコールバックでゲーム内ポーズを出す等.
+  // ブラウザバック自体は戻さずにゲームへフォーカス返す
+  window.addEventListener('popstate', () => history.pushState(null, '', location.href));
+}
+
+function registerPwaServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(
+        new URL('sw.js', import.meta.env.BASE_URL)
+      ).catch(console.error);
+    });
+  }
+}
+
 (async () => {
   const app = new Application();
 
@@ -215,6 +251,17 @@ function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite
   });
 
   document.body.appendChild(app.canvas);
+
+  // PWA の ServiceWorker を設定
+  registerPwaServiceWorker();
+
+  // ブラウザデフォルトのジェスチャ操作を禁止
+  disableBrowserGestures();
+
+  // キャンバスにフォーカスを集める
+  app.canvas.setAttribute('tabindex', '0');
+  app.canvas.addEventListener('pointerdown', () => app.canvas.focus());
+  app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
 
   // 画像読み込み
   const bg_texture = await Assets.load("/textures/screen_bg.png");
