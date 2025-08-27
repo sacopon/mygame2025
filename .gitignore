@@ -9,3 +9,7 @@ src-tauri/Cargo.lock
 # IDE
 .vscode/
 .DS_Store
+
+# 自動生成
+public/icons
+public/textures
