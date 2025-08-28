@@ -2,7 +2,9 @@ name: Build & Deploy (GitHub Pages)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]        # 本番更新
+  pull_request:
+    branches: [ main ]        # PR作成/更新時にプレビュー
   workflow_dispatch:
 
 permissions:
@@ -18,43 +20,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (with private submodules)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
           ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
           persist-credentials: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install deps
-        run: npm ci
-
-      - name: Copy assets
-        run: npm run copy:assets
-
-      - name: Build
-        run: npm run build
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm' }
+      - run: npm ci
+      - run: npm run copy:assets
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # プレビューか本番かで自動的に切り替わる
     steps:
-      - name: Deploy to Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # PRのときだけプレビューにする
+          preview: ${{ github.event_name == 'pull_request' }}
