@@ -3,9 +3,6 @@ html, body, #app {
   padding: 0;
   width: 100%;
   height: 100vh;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
   overflow: hidden;            /* 必要に応じてスクロールバーを消す */
   overscroll-behavior: none;   /* Android Chrome: プルリフ/オーバースクロール無効 */
   touch-action: none;          /* ポインタ系ジェスチャ無効（ズーム/パン等）*/
@@ -18,8 +15,23 @@ html, body, #app {
 
 /* 使える環境では 100dvh を優先（アドレス/ホームバーの高さ変動に強い） */
 @supports (height: 100dvh) {
-  body > canvas {
+  html, body, #app {
     height: 100dvh;
+  }
+}
+
+/* ←これを追記 */
+body > canvas {
+  position: fixed;
+  inset: 0;        /* 画面全域（safe area 含む） */
+  width: 100%;
+  height: 100vh;   /* フォールバック */
+  z-index: 0;
+}
+
+@supports (height: 100dvh) {
+  body > canvas {
+    height: 100dvh; /* iOS 縦画面でもホームバー裏まで埋まる */
   }
 }
 
