@@ -180,14 +180,15 @@ let skin = skins[0];
 
 function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
+  const offset = 200;
   bodies[0].texture = Texture.from(setting.body.images[0]);
-  bodies[0].position.set(0, 0);
+  bodies[0].position.set(0, 0 + offset);
   bodies[1].texture = Texture.from(setting.body.images[1]);
-  bodies[1].position.set(setting.body.size.width  / 2, 0);
+  bodies[1].position.set(setting.body.size.width  / 2, 0 + offset);
   bodies[2].texture = Texture.from(setting.body.images[2]);
-  bodies[2].position.set(0, setting.body.size.height / 2);
+  bodies[2].position.set(0, setting.body.size.height / 2 + offset);
   bodies[3].texture = Texture.from(setting.body.images[3]);
-  bodies[3].position.set(setting.body.size.width  / 2, setting.body.size.height / 2);
+  bodies[3].position.set(setting.body.size.width  / 2, setting.body.size.height / 2 + offset);
 
   // 方向キー
   direction.texture = Texture.from(setting.key.direction.image.neutral);
