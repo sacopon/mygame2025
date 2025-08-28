@@ -353,6 +353,7 @@ function registerPwaServiceWorker() {
     const nextSkinIndex = cw < ch ? 0 : 1;
 
     if (currentSkinIndex != nextSkinIndex) {
+      alert('test');
       skin = skins[nextSkinIndex];
       currentSkinIndex = nextSkinIndex;
 
