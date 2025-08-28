@@ -180,7 +180,7 @@ let skin = skins[0];
 
 function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
-  const offset = 200;
+  const offset = 0;
   bodies[0].texture = Texture.from(setting.body.images[0]);
   bodies[0].position.set(0, 0 + offset);
   bodies[1].texture = Texture.from(setting.body.images[1]);
