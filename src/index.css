@@ -13,6 +13,14 @@ html, body, #app {
   background: #000
 }
 
+html, body, #app {
+  height: var(--dvh, 100dvh);
+}
+
+@supports not (height: 100dvh) {
+  html, body, #app { height: var(--dvh, 100vh); }
+}
+
 /* 使える環境では 100dvh を優先（アドレス/ホームバーの高さ変動に強い） */
 @supports (height: 100dvh) {
   html, body, #app {
@@ -27,6 +35,18 @@ body > canvas {
   width: 100%;
   height: 100vh;   /* フォールバック */
   z-index: 0;
+}
+
+body > canvas,
+#app > canvas {
+  height: var(--dvh, 100dvh);
+}
+
+@supports not (height: 100dvh) {
+  body > canvas,
+  #app > canvas {
+    height: var(--dvh, 100vh);
+  }
 }
 
 @supports (height: 100dvh) {
