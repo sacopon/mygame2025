@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesheet, Texture } from "pixi.js";
+import { Application, Assets, Container, Cache, Graphics, Sprite, Spritesheet, Texture } from "pixi.js";
 
 // ゲーム画面の内部サイズ
 const GAME_SCREEN_WIDTH = 256;
@@ -231,11 +231,10 @@ function disableBrowserGestures() {
 }
 
 function registerPwaServiceWorker() {
-  if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    const swUrl = `${import.meta.env.BASE_URL}sw.js`;
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register(
-        new URL('sw.js', import.meta.env.BASE_URL)
-      ).catch(console.error);
+      navigator.serviceWorker.register(swUrl, { scope: import.meta.env.BASE_URL }).catch(console.error);
     });
   }
 }
@@ -264,8 +263,8 @@ function registerPwaServiceWorker() {
   app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
 
   // 画像読み込み
-  const bg_texture = await Assets.load(new URL("textures/screen_bg.png", import.meta.env.BASE_URL).toString());
-  await Assets.load(new URL("textures/virtualui.json", import.meta.env.BASE_URL).toString());
+  const bg_texture = await Assets.load(`${import.meta.env.BASE_URL}textures/screen_bg.png`);
+  await Assets.load(`${import.meta.env.BASE_URL}textures/virtualui.json`);
 
   // 背景
   const bg_sprite = new Sprite(bg_texture);
@@ -337,7 +336,7 @@ function registerPwaServiceWorker() {
     // g.fill({ color: 0x00ff00, alpha: 1 });
     game_layer.addChild(g);
 
-    const smile_tex = await Assets.load("/textures/smile.png");
+    const smile_tex = await Assets.load(`${import.meta.env.BASE_URL}textures/smile.png`);
     smile_tex.source.scaleMode = "nearest";
     const smile = new Sprite(smile_tex);
     smile.anchor.set(0.5);

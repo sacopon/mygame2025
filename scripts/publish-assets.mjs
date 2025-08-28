@@ -12,35 +12,6 @@ const ROOT = path.resolve(process.cwd());
 const ASSETS = path.join(ROOT, 'assets');
 const PUBLIC = path.join(ROOT, 'public');
 
-async function ensureDir(p) { await mkdir(p, { recursive: true }); }
-
-async function cleanGenerated() {
-  // 自動生成物の場所を必要に応じて掃除
-  // アトラスは各サブフォルダに出すので全削除は危険。まず textures配下だけ等に限定を推奨
-  // 例) public内の *.png|*.json を削除したいフォルダがあれば個別指定で:
-  // await rm(path.join(PUBLIC, 'textures'), { recursive: true, force: true });
-}
-
-// ルース画像を assets -> public に階層維持でコピー
-async function copyLooseImages() {
-  const files = await fg(['**/*.{png,jpg,jpeg,webp,svg}'], {
-    cwd: ASSETS,
-    absolute: true,
-    dot: false,
-    ignore: [
-      '**/_*/**', // アトラス用素材は無視
-      'src/**'    // 原本データ置き場も無視
-    ]
-  });
-
-  for (const abs of files) {
-    const relFromAssets = path.relative(ASSETS, abs);
-    const dest = path.join(PUBLIC, relFromAssets);
-    await ensureDir(path.dirname(dest));
-    await cp(abs, dest, { force: true });
-  }
-}
-
 // _で始まる各ディレクトリを1アトラスとしてTexturePackerに投げる
 async function buildAtlases() {
   // 例: assets/**/_ui, assets/textures/_virtualui, assets/game/ui/_buttons ...
@@ -68,7 +39,7 @@ async function buildAtlases() {
 
     // Pixi向けに無難な共通パラメータ（ドット絵想定）
     const args = [
-      '--format', 'json-array',   // Pixi互換
+      '--format', 'json-hash',   // Pixi互換
       '--data', dataOut,
       '--sheet', sheetOut,
       '--texture-format', 'png',
@@ -95,11 +66,8 @@ async function buildAtlases() {
 }
 
 async function main() {
-  await ensureDir(PUBLIC);
-  await cleanGenerated();
   await buildAtlases();
-  await copyLooseImages();
-  console.log('✅ publish-assets done');
+  console.log('✅ build-atlases done');
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
