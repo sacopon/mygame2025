@@ -13,27 +13,41 @@ html, body, #app {
   background: #000;
 }
 
-/* 環境が対応していれば 100dvh をフォールバックに使う */
+/* dvh が使えるなら dvh（従来どおり） */
 @supports (height: 100dvh) {
   html, body, #app {
-    height: var(--dvh, 100dvh);
+    height: 100dvh;
   }
 }
 
-/* Pixi の canvas を全面に固定 */
+/* ★ 最後に lvh を上書き（初回から最大値＝ホームバー裏まで埋める） */
+@supports (height: 100lvh) {
+  html, body, #app {
+    height: 100lvh;
+  }
+}
+
+/* キャンバスも同様に全画面固定＋高さは上と同じ優先順で */
 body > canvas,
 #app > canvas {
   position: fixed;
-  inset: 0;        
+  inset: 0;
   width: 100%;
-  height: var(--dvh, 100vh);   /* 基本は --dvh or 100vh */
+  height: 100vh;              /* fallback */
   z-index: 0;
 }
 
 @supports (height: 100dvh) {
   body > canvas,
   #app > canvas {
-    height: var(--dvh, 100dvh);
+    height: 100dvh;
+  }
+}
+
+@supports (height: 100lvh) {
+  body > canvas,
+  #app > canvas {
+    height: 100lvh;           /* ★ ここでも最終的に lvh を優先 */
   }
 }
 
