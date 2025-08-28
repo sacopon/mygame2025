@@ -240,6 +240,33 @@ function registerPwaServiceWorker() {
   }
 }
 
+function bootViewportFix(app?: any) {
+  let last = -1;
+  let sameFrames = 0;
+  let ticks = 0;
+
+  const step = () => {
+    const h = Math.round(window.visualViewport?.height ?? window.innerHeight);
+    if (h === last) sameFrames++; else { sameFrames = 0; last = h; }
+
+    // CSS 変数を更新
+    document.documentElement.style.setProperty('--dvh', `${h}px`);
+
+    // （任意）Pixi の描画解像度も表示サイズに同期
+    if (app) {
+      const c = app.canvas as HTMLCanvasElement;
+      app.renderer.resize(c.clientWidth, c.clientHeight);
+    }
+
+    // 連続で同じ値が2フレーム続く or 最大30フレームで打ち切り
+    if (sameFrames >= 2 || ticks >= 30) return;
+    ticks++;
+    requestAnimationFrame(step);
+  };
+
+  step();
+}
+
 (async () => {
   const app = new Application();
 
@@ -262,6 +289,8 @@ function registerPwaServiceWorker() {
   app.canvas.setAttribute('tabindex', '0');
   app.canvas.addEventListener('pointerdown', () => app.canvas.focus());
   app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
+
+  bootViewportFix(app);
 
   // 画像読み込み
   const bg_texture = await Assets.load(`${import.meta.env.BASE_URL}textures/screen_bg.png`);
@@ -431,6 +460,8 @@ function registerPwaServiceWorker() {
     });
   });
 
+  window.addEventListener('pageshow', () => bootViewportFix(app));
+  window.addEventListener('orientationchange', () => bootViewportFix(app));
   window.addEventListener("resize", resize);
   resize();
 })();
