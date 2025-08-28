@@ -37,10 +37,23 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # プレビューか本番かで自動的に切り替わる
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
-          # PRのときだけプレビューにする
           preview: ${{ github.event_name == 'pull_request' }}
+
+      - name: Show preview URL in logs
+        run: echo "Preview URL = ${{ steps.deployment.outputs.page_url }}"
+
+      - name: Comment URL on PR
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🚀 Preview: ${{ steps.deployment.outputs.page_url }}`
+            })
