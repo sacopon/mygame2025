@@ -53,16 +53,3 @@ jobs:
 
       - name: Show preview URL in logs
         run: echo "Preview URL = ${{ steps.deployment.outputs.page_url }}"
-
-      # ★ 同一リポのブランチPRのときだけコメントする（フォークPRはスキップ）
-      - name: Comment URL on PR
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `🚀 Preview: ${{ steps.deployment.outputs.page_url }}`
-            })
