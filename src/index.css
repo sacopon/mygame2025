@@ -2,7 +2,7 @@ html, body, #app {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   overflow: hidden;            /* 必要に応じてスクロールバーを消す */
   overscroll-behavior: none;   /* Android Chrome: プルリフ/オーバースクロール無効 */
   touch-action: none;          /* ポインタ系ジェスチャ無効（ズーム/パン等）*/
@@ -10,7 +10,16 @@ html, body, #app {
   -webkit-user-select: none;   /* iOS Safari */
   -ms-user-select: none;
   -webkit-touch-callout: none; /* iOS 長押しメニュー無効 */
+  background: #000
 }
+
+/* 使える環境では 100dvh を優先（アドレス/ホームバーの高さ変動に強い） */
+@supports (height: 100dvh) {
+  html, body, #app {
+    height: 100dvh;
+  }
+}
+
 canvas {
   display: block;             /* デフォルトの inline-block スペースを消す */
   touch-action: none;         /* 念のため canvas にも */
