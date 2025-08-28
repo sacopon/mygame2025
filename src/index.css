@@ -13,17 +13,17 @@ html, body, #app {
   background: #000;
 }
 
-/* dvh が使えるなら dvh（従来どおり） */
+/* 通常ブラウザ: 見えている高さに追従（URLバーの分を除外） */
 @supports (height: 100dvh) {
   html, body, #app {
     height: 100dvh;
   }
 }
 
-/* ★ 最後に lvh を上書き（初回から最大値＝ホームバー裏まで埋める） */
-@supports (height: 100lvh) {
-  html, body, #app {
-    height: 100lvh;
+/* PWA(ホーム追加/Standalone) のときだけ最大値を使う＝ホームバー裏まで届かせる */
+@media (display-mode: standalone) {
+  @supports (height: 100lvh) {
+    html, body, #app { height: 100lvh; }
   }
 }
 
@@ -44,10 +44,9 @@ body > canvas,
   }
 }
 
-@supports (height: 100lvh) {
-  body > canvas,
-  #app > canvas {
-    height: 100lvh;           /* ★ ここでも最終的に lvh を優先 */
+@media (display-mode: standalone) {
+  @supports (height: 100lvh) {
+    body > canvas, #app > canvas { height: 100lvh; }
   }
 }
 
