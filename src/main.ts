@@ -1,5 +1,6 @@
 import "./index.css";
 import { Application, Assets, Container, Cache, Graphics, Sprite, Spritesheet, Texture } from "pixi.js";
+import { skins, Skin } from "@/skin";
 
 // ゲーム画面の内部サイズ
 const GAME_SCREEN_WIDTH = 256;
@@ -7,198 +8,28 @@ const GAME_SCREEN_HEIGHT = 224;
 
 let currentSkinIndex = -1;
 
-// 仮想ゲーム機の設定
-const skins = [
-  // 縦画面用
-  {
-    // 仮想ゲーム機の大きさ
-    body: {
-      size: {
-        width: 720,
-        height: 1280,
-      },
-      images: ["v_body_lt.png", "v_body_rt.png", "v_body_lb.png", "v_body_rb.png"],
-    },
-    // 仮想ゲーム画面
-    screen: {
-      // 大きさ
-      size: {
-        width: 432,
-        height: 378,
-      },
-      // 位置
-      position: {
-        x: 152,
-        y: 200,
-      },
-    },
-    // キーの定義
-    key: {
-      // 方向キー
-      direction: {
-        position: {
-          x: 150,
-          y: 830,
-        },
-        image: {
-          neutral: "v_dir_neutral.png",
-          up: "v_dir_up.png",
-          down: "v_dir_down.png",
-          left: "v_dir_left.png",
-          right: "v_dir_right.png",
-        },
-      },
-      // その他のボタン
-      buttons: [
-        // ボタン1(Aボタン)
-        {
-          position: {
-            x: 628,
-            y: 798,
-          },
-          image: {
-            on: "v_circle_button_on.png",
-            off: "v_circle_button_off.png",
-          },
-        },
-        // ボタン2(Bボタン)
-        {
-          position: {
-            x: 518,
-            y: 844,
-          },
-          image: {
-            on: "v_circle_button_on.png",
-            off: "v_circle_button_off.png",
-          },
-        },
-        // ボタン3(STARTボタン)
-        {
-          position: {
-            x: 378,
-            y: 982,
-          },
-          image: {
-            on: "v_rect_button_on.png",
-            off: "v_rect_button_off.png",
-          },
-        },
-        // ボタン4(SELECTボタン)
-        {
-          position: {
-            x: 262,
-            y: 982,
-          },
-          image: {
-            on: "v_rect_button_on.png",
-            off: "v_rect_button_off.png",
-          },
-        }
-      ],
-    },
-  },
-  // 横画面用
-  {
-    // 仮想ゲーム機の大きさ
-    body: {
-      size: {
-        width: 1280,
-        height: 720,
-      },
-      images: ["h_body_lt.png", "h_body_rt.png", "h_body_lb.png", "h_body_rb.png"],
-    },
-    // 仮想ゲーム画面
-    screen: {
-      // 大きさ
-      size: {
-        width:  410,
-        height: 360,
-      },
-      // 位置
-      position: {
-        x: 428,
-        y:  84,
-      },
-    },
-    // キーの定義
-    key: {
-      // 方向キー
-      direction: {
-        position: {
-          x: 178,
-          y: 256,
-        },
-        image: {
-          neutral: "h_dir_neutral.png",
-          up: "h_dir_up.png",
-          down: "h_dir_down.png",
-          left: "h_dir_left.png",
-          right: "h_dir_right.png",
-        },
-      },
-      // その他のボタン
-      buttons: [
-        // ボタン1(Aボタン)
-        {
-          position: {
-            x: 1120,
-            y:  220,
-          },
-          image: {
-            on: "h_circle_button_on.png",
-            off: "h_circle_button_off.png",
-          },
-        },
-        // ボタン2(Bボタン)
-        {
-          position: {
-            x: 1046,
-            y:  300,
-          },
-          image: {
-            on: "h_circle_button_on.png",
-            off: "h_circle_button_off.png",
-          },
-        },
-        // ボタン3(STARTボタン)
-        {
-          position: {
-            x: 1048,
-            y:  130,
-          },
-          image: {
-            on: "h_start_button_on.png",
-            off: "h_start_button_off.png",
-          },
-        },
-      ],
-    },
-  }
-];
+let skin: Skin = skins[0];
 
-let skin = skins[0];
-
-function buildVirtualConsoleUi(setting: any, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
+function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
-  const offset = 0;
-  bodies[0].texture = Texture.from(setting.body.images[0]);
-  bodies[0].position.set(0, 0 + offset);
-  bodies[1].texture = Texture.from(setting.body.images[1]);
-  bodies[1].position.set(setting.body.size.width  / 2, 0 + offset);
-  bodies[2].texture = Texture.from(setting.body.images[2]);
-  bodies[2].position.set(0, setting.body.size.height / 2 + offset);
-  bodies[3].texture = Texture.from(setting.body.images[3]);
-  bodies[3].position.set(setting.body.size.width  / 2, setting.body.size.height / 2 + offset);
+  bodies[0].texture = Texture.from(skin.body.images[0]);
+  bodies[0].position.set(0, 0);
+  bodies[1].texture = Texture.from(skin.body.images[1]);
+  bodies[1].position.set(skin.body.size.width  / 2, 0);
+  bodies[2].texture = Texture.from(skin.body.images[2]);
+  bodies[2].position.set(0, skin.body.size.height / 2);
+  bodies[3].texture = Texture.from(skin.body.images[3]);
+  bodies[3].position.set(skin.body.size.width  / 2, skin.body.size.height / 2);
 
   // 方向キー
-  direction.texture = Texture.from(setting.key.direction.image.neutral);
+  direction.texture = Texture.from(skin.key.direction.image.neutral);
   direction.position.set(
-    setting.key.direction.position.x,
-    setting.key.direction.position.y);
+    skin.key.direction.position.x,
+    skin.key.direction.position.y);
 
   // その他ボタン
   buttons.forEach(button => button.visible = false);
-  setting.key.buttons.forEach((button: any, i: number) => {
+  skin.key.buttons.forEach((button: any, i: number) => {
     buttons[i].texture = Texture.from(button.image.off);
     buttons[i].position.set(button.position.x, button.position.y);
     buttons[i].visible = true;
@@ -240,6 +71,113 @@ function registerPwaServiceWorker() {
   }
 }
 
+function handleKeyDown(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
+  if (e.key === "ArrowUp") {
+    directionPad.texture = Texture.from(skin.key.direction.image.up);
+  } else if (e.key === "ArrowDown") {
+    directionPad.texture = Texture.from(skin.key.direction.image.down);
+  } else if (e.key === "ArrowLeft") {
+    directionPad.texture = Texture.from(skin.key.direction.image.left);
+  } else if (e.key === "ArrowRight") {
+    directionPad.texture = Texture.from(skin.key.direction.image.right);
+  } else if (e.key === "z" || e.key === "Z") {
+    const buttonIndex = 0;
+
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
+    }
+  } else if (e.key === "x" || e.key === "X") {
+    const buttonIndex = 1;
+
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
+    }
+  } else if (e.key === "a" || e.key === "A") {
+    const buttonIndex = 2;
+
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
+    }
+  } else if (e.key === "s" || e.key === "S") {
+    const buttonIndex = 3;
+
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
+    }
+  }
+}
+
+function handleKeyUp(directionPad: Sprite, buttons: Sprite[]) {
+  directionPad.texture = Texture.from(skin.key.direction.image.neutral);
+
+  buttons.forEach((button, i) => {
+    if (skin.key.buttons.length <= i) {
+      return;
+    }
+
+    button.texture = Texture.from(skin.key.buttons[i].image.off);
+  });
+}
+
+function resize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
+  // pixi.js による描画領域を再設定
+  const cw = window.innerWidth;
+  const ch = window.innerHeight;
+  app.renderer.resize(cw, ch);
+
+  const nextSkinIndex = cw < ch ? 0 : 1;
+
+  if (currentSkinIndex != nextSkinIndex) {
+    skin = skins[nextSkinIndex];
+    currentSkinIndex = nextSkinIndex;
+
+    // 背景を画面中央に
+    bgSprite.position.set(cw / 2, ch / 2);
+
+    // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
+    uiLayer.pivot.set(
+      skin.body.size.width  / 2,
+      skin.body.size.height / 2
+    );
+
+    // UI を再配置
+    buildVirtualConsoleUi(skin, bodySprites, directionPad, buttons);
+
+    // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
+    gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
+    gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
+  }
+
+  // 全体スケーリングとセンタリング
+  const scale = Math.min(
+    cw / skin.body.size.width,
+    ch / skin.body.size.height);
+  rootContainer.scale.set(scale);
+  rootContainer.position.set((cw / 2) | 0, (ch / 2) | 0);
+}
+
+function handleResize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
+  resize(app, rootContainer, uiLayer, gameLayer, bgSprite, bodySprites, directionPad, buttons);
+}
+
+function drawGameSample(gameLayer: Container, smileTex: Texture) {
+  // 赤い四角
+  const g = new Graphics();
+  g.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+  g.fill({ color: 0xff0000, alpha: 1 });
+  gameLayer.addChild(g);
+  // 青い四角
+  g.rect(0, 0, 16, 16);
+  g.fill({ color: 0x0000ff, alpha: 1 });
+  gameLayer.addChild(g);
+  gameLayer.addChild(g);
+
+  const smile = new Sprite(smileTex);
+  smile.anchor.set(0.5);
+  smile.position.set(GAME_SCREEN_WIDTH / 2, GAME_SCREEN_HEIGHT / 2);
+  gameLayer.addChild(smile);
+}
+
 (async () => {
   const app = new Application();
 
@@ -247,7 +185,7 @@ function registerPwaServiceWorker() {
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundColor: 0x1099bb,
-    roundPixels: true,
+    roundPixels: true,  // 描画座標に小数値が渡された場合に整数値に丸める
   });
 
   document.body.appendChild(app.canvas);
@@ -264,8 +202,11 @@ function registerPwaServiceWorker() {
   app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
 
   // 画像読み込み
-  const bg_texture = await Assets.load(`${import.meta.env.BASE_URL}textures/screen_bg.png`);
-  await Assets.load(`${import.meta.env.BASE_URL}textures/virtualui.json`);
+  const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
+  const bg_texture = await Assets.load(makePath("textures/screen_bg.png"));
+  await Assets.load(makePath("textures/virtualui.json"));
+  const smile_tex = await Assets.load(makePath("textures/smile.png")) as Texture;
+  smile_tex.source.scaleMode = "nearest";
 
   // 背景
   const bg_sprite = new Sprite(bg_texture);
@@ -309,8 +250,6 @@ function registerPwaServiceWorker() {
     buttons.push(sprite);
   }
 
-  buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
-
   // ゲーム画面レイヤー
   const game_layer = new Container();
   game_layer.position.set(
@@ -321,116 +260,17 @@ function registerPwaServiceWorker() {
   ui_layer.addChild(game_layer);
 
   // ゲーム画面内のサンプル描画
-  {
-    // 赤い四角
-    const g = new Graphics();
-    // g.rect(-GAME_SCREEN_WIDTH / 2, -GAME_SCREEN_HEIGHT / 2, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
-    g.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
-    g.fill({ color: 0xff0000, alpha: 1 });
-    game_layer.addChild(g);
-    // 青い四角
-    g.rect(0, 0, 16, 16);
-    g.fill({ color: 0x0000ff, alpha: 1 });
-    game_layer.addChild(g);
-    // // 緑い四角
-    // g.rect(GAME_SCREEN_WIDTH / 2 - 8, GAME_SCREEN_HEIGHT / 2 - 8, 16, 16);
-    // g.fill({ color: 0x00ff00, alpha: 1 });
-    game_layer.addChild(g);
-
-    const smile_tex = await Assets.load(`${import.meta.env.BASE_URL}textures/smile.png`);
-    smile_tex.source.scaleMode = "nearest";
-    const smile = new Sprite(smile_tex);
-    smile.anchor.set(0.5);
-    smile.position.set(GAME_SCREEN_WIDTH / 2, GAME_SCREEN_HEIGHT / 2);
-    game_layer.addChild(smile);
-  }
-
-  function resize() {
-    // pixi.js による描画領域を再設定
-    const cw = window.innerWidth;
-    const ch = window.innerHeight;
-    app.renderer.resize(cw, ch);
-
-    const nextSkinIndex = cw < ch ? 0 : 1;
-
-    if (currentSkinIndex != nextSkinIndex) {
-      skin = skins[nextSkinIndex];
-      currentSkinIndex = nextSkinIndex;
-
-      // 背景を画面中央に
-      bg_sprite.position.set(cw / 2, ch / 2);
-
-      // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
-      ui_layer.pivot.set(
-        skin.body.size.width  / 2,
-        skin.body.size.height / 2
-      );
-
-      // UI を再配置
-      buildVirtualConsoleUi(skin, body_sprites, direction_pad, buttons);
-
-      // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
-      game_layer.position.set(skin.screen.position.x, skin.screen.position.y);
-      game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
-    }
-
-    // 全体スケーリングとセンタリング
-    const scale = Math.min(
-      cw / skin.body.size.width,
-      ch / skin.body.size.height);
-    root_container.scale.set(scale);
-    root_container.position.set((cw / 2) | 0, (ch / 2) | 0);
-  }
+  drawGameSample(game_layer, smile_tex);
 
   // キーボード入力イベント
-  window.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") {
-      direction_pad.texture = Texture.from(skin.key.direction.image.up);
-    } else if (e.key === "ArrowDown") {
-      direction_pad.texture = Texture.from(skin.key.direction.image.down);
-    } else if (e.key === "ArrowLeft") {
-      direction_pad.texture = Texture.from(skin.key.direction.image.left);
-    } else if (e.key === "ArrowRight") {
-      direction_pad.texture = Texture.from(skin.key.direction.image.right);
-    } else if (e.key === "z" || e.key === "Z") {
-      const buttonIndex = 0;
+  window.addEventListener("keydown", e => handleKeyDown(e, direction_pad, buttons));
+  window.addEventListener("keyup", () => handleKeyUp(direction_pad, buttons));
 
-      if (buttonIndex < skin.key.buttons.length) {
-        buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-      }
-    } else if (e.key === "x" || e.key === "X") {
-      const buttonIndex = 1;
+  // 回転・アドレスバー変動・PWA復帰など広めにカバー
+  window.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
+  window.visualViewport?.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
+  window.addEventListener("orientationchange", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
+  window.addEventListener("pageshow", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
 
-      if (buttonIndex < skin.key.buttons.length) {
-        buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-      }
-    } else if (e.key === "a" || e.key === "A") {
-      const buttonIndex = 2;
-
-      if (buttonIndex < skin.key.buttons.length) {
-        buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-      }
-    } else if (e.key === "s" || e.key === "S") {
-      const buttonIndex = 3;
-
-      if (buttonIndex < skin.key.buttons.length) {
-        buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-      }
-    }
-  });
-
-  window.addEventListener("keyup", (e) => {
-    direction_pad.texture = Texture.from(skin.key.direction.image.neutral);
-
-    buttons.forEach((button, i) => {
-      if (skin.key.buttons.length <= i) {
-        return;
-      }
-
-      button.texture = Texture.from(skin.key.buttons[i].image.off);
-    });
-  });
-
-  window.addEventListener("resize", resize);
-  resize();
+  resize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
 })();
