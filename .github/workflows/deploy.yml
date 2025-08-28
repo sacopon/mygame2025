@@ -2,15 +2,17 @@ name: Build & Deploy (GitHub Pages)
 
 on:
   push:
-    branches: [ main ]        # 本番更新
+    branches: [ main ]        # 本番
   pull_request:
-    branches: [ main ]        # PR作成/更新時にプレビュー
+    branches: [ main ]        # PRプレビュー
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: "pages"
@@ -37,10 +39,17 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # プレビューか本番かで自動的に切り替わる
+
+    # ★ PR右サイドバー「Deployments」にURLを出す
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
-          # PRのときだけプレビューにする
           preview: ${{ github.event_name == 'pull_request' }}
+
+      - name: Show preview URL in logs
+        run: echo "Preview URL = ${{ steps.deployment.outputs.page_url }}"
