@@ -2,62 +2,44 @@ html, body, #app {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;            /* 必要に応じてスクロールバーを消す */
-  overscroll-behavior: none;   /* Android Chrome: プルリフ/オーバースクロール無効 */
-  touch-action: none;          /* ポインタ系ジェスチャ無効（ズーム/パン等）*/
-  user-select: none;           /* テキスト選択無効 */
-  -webkit-user-select: none;   /* iOS Safari */
+  height: var(--dvh, 100vh);   /* まずはフォールバック含みで設定 */
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   -ms-user-select: none;
-  -webkit-touch-callout: none; /* iOS 長押しメニュー無効 */
-  background: #000
+  -webkit-touch-callout: none;
+  background: #000;
 }
 
-html, body, #app {
-  height: var(--dvh, 100dvh);
-}
-
-@supports not (height: 100dvh) {
-  html, body, #app { height: var(--dvh, 100vh); }
-}
-
-/* 使える環境では 100dvh を優先（アドレス/ホームバーの高さ変動に強い） */
+/* 環境が対応していれば 100dvh をフォールバックに使う */
 @supports (height: 100dvh) {
   html, body, #app {
-    height: 100dvh;
+    height: var(--dvh, 100dvh);
   }
 }
 
-/* ←これを追記 */
-body > canvas {
+/* Pixi の canvas を全面に固定 */
+body > canvas,
+#app > canvas {
   position: fixed;
-  inset: 0;        /* 画面全域（safe area 含む） */
+  inset: 0;        
   width: 100%;
-  height: 100vh;   /* フォールバック */
+  height: var(--dvh, 100vh);   /* 基本は --dvh or 100vh */
   z-index: 0;
 }
 
-body > canvas,
-#app > canvas {
-  height: var(--dvh, 100dvh);
-}
-
-@supports not (height: 100dvh) {
+@supports (height: 100dvh) {
   body > canvas,
   #app > canvas {
-    height: var(--dvh, 100vh);
-  }
-}
-
-@supports (height: 100dvh) {
-  body > canvas {
-    height: 100dvh; /* iOS 縦画面でもホームバー裏まで埋まる */
+    height: var(--dvh, 100dvh);
   }
 }
 
 canvas {
-  display: block;             /* デフォルトの inline-block スペースを消す */
-  touch-action: none;         /* 念のため canvas にも */
-  -webkit-user-drag: none;    /* 画像ドラッグ防止 */
-  image-rendering: pixelated; /* ドット絵ならお好みで */
+  display: block;
+  touch-action: none;
+  -webkit-user-drag: none;
+  image-rendering: pixelated;
 }
