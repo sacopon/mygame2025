@@ -10,6 +10,9 @@ let currentSkinIndex = -1;
 
 let skin: Skin = skins[0];
 
+let currentButtonState: number = 0;
+let previousButtonState: number = 0;
+
 function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
   bodies[0].texture = Texture.from(skin.body.images[0]);
@@ -73,50 +76,82 @@ function registerPwaServiceWorker() {
 
 function handleKeyDown(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
   if (e.key === "ArrowUp") {
-    directionPad.texture = Texture.from(skin.key.direction.image.up);
+    currentButtonState |= 1 << 0;
   } else if (e.key === "ArrowDown") {
-    directionPad.texture = Texture.from(skin.key.direction.image.down);
+    currentButtonState |= 1 << 1;
   } else if (e.key === "ArrowLeft") {
-    directionPad.texture = Texture.from(skin.key.direction.image.left);
+    currentButtonState |= 1 << 2;
   } else if (e.key === "ArrowRight") {
-    directionPad.texture = Texture.from(skin.key.direction.image.right);
+    currentButtonState |= 1 << 3;
   } else if (e.key === "z" || e.key === "Z") {
-    const buttonIndex = 0;
-
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-    }
+    currentButtonState |= 1 << 4;
   } else if (e.key === "x" || e.key === "X") {
-    const buttonIndex = 1;
-
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-    }
+    currentButtonState |= 1 << 5;
   } else if (e.key === "a" || e.key === "A") {
-    const buttonIndex = 2;
-
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-    }
+    currentButtonState |= 1 << 6;
   } else if (e.key === "s" || e.key === "S") {
-    const buttonIndex = 3;
-
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(skin.key.buttons[buttonIndex].image.on);
-    }
+    currentButtonState |= 1 << 7;
   }
 }
 
-function handleKeyUp(directionPad: Sprite, buttons: Sprite[]) {
-  directionPad.texture = Texture.from(skin.key.direction.image.neutral);
+function handleKeyUp(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
+  if (e.key === "ArrowUp") {
+    currentButtonState &= ~(1 << 0);
+  } else if (e.key === "ArrowDown") {
+    currentButtonState &= ~(1 << 1);
+  } else if (e.key === "ArrowLeft") {
+    currentButtonState &= ~(1 << 2);
+  } else if (e.key === "ArrowRight") {
+    currentButtonState &= ~(1 << 3);
+  } else if (e.key === "z" || e.key === "Z") {
+    currentButtonState &= ~(1 << 4);
+  } else if (e.key === "x" || e.key === "X") {
+    currentButtonState &= ~(1 << 5);
+  } else if (e.key === "a" || e.key === "A") {
+    currentButtonState &= ~(1 << 6);
+  } else if (e.key === "s" || e.key === "S") {
+    currentButtonState &= ~(1 << 7);
+  }
+}
 
-  buttons.forEach((button, i) => {
-    if (skin.key.buttons.length <= i) {
-      return;
+function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[], currentButtonState: number, previousButtonState: number) {
+  // ボタン状況に応じて画像を更新する
+  if (((currentButtonState & (1 << 0)) ^ (previousButtonState & (1 << 0))) !== 0) {
+    directionPad.texture = Texture.from((currentButtonState & (1 << 0)) ? skin.key.direction.image.up : skin.key.direction.image.neutral);
+  }
+  if (((currentButtonState & (1 << 1)) ^ (previousButtonState & (1 << 1))) !== 0) {
+    directionPad.texture = Texture.from((currentButtonState & (1 << 1)) ? skin.key.direction.image.down : skin.key.direction.image.neutral);
+  }
+  if (((currentButtonState & (1 << 2)) ^ (previousButtonState & (1 << 2))) !== 0) {
+    directionPad.texture = Texture.from((currentButtonState & (1 << 2)) ? skin.key.direction.image.left : skin.key.direction.image.neutral);
+  }
+  if (((currentButtonState & (1 << 3)) ^ (previousButtonState & (1 << 3))) !== 0) {
+    directionPad.texture = Texture.from((currentButtonState & (1 << 3)) ? skin.key.direction.image.right : skin.key.direction.image.neutral);
+  }
+  if (((currentButtonState & (1 << 4)) ^ (previousButtonState & (1 << 4))) !== 0) {
+    const buttonIndex = 0;
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 4)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
     }
-
-    button.texture = Texture.from(skin.key.buttons[i].image.off);
-  });
+  }
+  if (((currentButtonState & (1 << 5)) ^ (previousButtonState & (1 << 5))) !== 0) {
+    const buttonIndex = 1;
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 5)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+    }
+  }
+  if (((currentButtonState & (1 << 6)) ^ (previousButtonState & (1 << 6))) !== 0) {
+    const buttonIndex = 2;
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 6)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+    }
+  }
+  if (((currentButtonState & (1 << 7)) ^ (previousButtonState & (1 << 7))) !== 0) {
+    const buttonIndex = 3;
+    if (buttonIndex < skin.key.buttons.length) {
+      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 7)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+    }
+  }
 }
 
 function resize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
@@ -264,8 +299,9 @@ function drawGameSample(gameLayer: Container, smileTex: Texture) {
 
   // キーボード入力イベント
   window.addEventListener("keydown", e => handleKeyDown(e, direction_pad, buttons));
-  window.addEventListener("keyup", () => handleKeyUp(direction_pad, buttons));
+  window.addEventListener("keyup", e => handleKeyUp(e, direction_pad, buttons));
 
+  // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
   window.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
   window.visualViewport?.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
@@ -273,4 +309,12 @@ function drawGameSample(gameLayer: Container, smileTex: Texture) {
   window.addEventListener("pageshow", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
 
   resize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
+
+  // 毎フレーム呼ばれる処理を追加
+  app.ticker.add(deltaTime => {
+    // deltaTime は「前フレーム比の時間倍率」
+    // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
+    updateButtonImages(skin, direction_pad, buttons, currentButtonState, previousButtonState);
+    previousButtonState = currentButtonState;
+  });
 })();
