@@ -1,4 +1,4 @@
-html, body, #app {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -15,7 +15,7 @@ html, body, #app {
 
 /* 通常ブラウザ: 見えている高さに追従（URLバーの分を除外） */
 @supports (height: 100dvh) {
-  html, body, #app {
+  html, body {
     height: 100dvh;
   }
 }
@@ -23,13 +23,12 @@ html, body, #app {
 /* PWA(ホーム追加/Standalone) のときだけ最大値を使う＝ホームバー裏まで届かせる */
 @media (display-mode: standalone) {
   @supports (height: 100lvh) {
-    html, body, #app { height: 100lvh; }
+    html, body { height: 100lvh; }
   }
 }
 
 /* キャンバスも同様に全画面固定＋高さは上と同じ優先順で */
-body > canvas,
-#app > canvas {
+body > canvas {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -38,15 +37,14 @@ body > canvas,
 }
 
 @supports (height: 100dvh) {
-  body > canvas,
-  #app > canvas {
+  body > canvas {
     height: 100dvh;
   }
 }
 
 @media (display-mode: standalone) {
   @supports (height: 100lvh) {
-    body > canvas, #app > canvas { height: 100lvh; }
+    body > canvas { height: 100lvh; }
   }
 }
 
