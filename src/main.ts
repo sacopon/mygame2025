@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Cache, Graphics, Sprite, Spritesheet, Texture } from "pixi.js";
+import { Application, Assets, Container, FederatedPointerEvent, Graphics, Sprite, Texture } from "pixi.js";
 import { skins, Skin } from "@/skin";
 
 // ゲーム画面の内部サイズ
@@ -74,82 +74,175 @@ function registerPwaServiceWorker() {
   }
 }
 
+function setButtonStateBit(bit: number, down: boolean) {
+  if (down) {
+    currentButtonState |= (1 << bit);
+    return;
+  }
+
+  currentButtonState &= ~(1 << bit);
+}
+
+function isChangedButtonState(bit: number): boolean {
+  return ((currentButtonState & (1 << bit)) ^ (previousButtonState & (1 << bit))) !== 0;
+}
+
+function isPressingButton(bit: number): boolean {
+  return (currentButtonState & (1 << bit)) !== 0;
+}
+
+function enableButtonTouch(sprite: Sprite, bit: number) {
+  sprite.eventMode = 'static';
+  sprite.cursor = 'pointer';
+
+  const downs = new Set<number>(); // 押下中の pointerId を保持
+
+  sprite.on('pointerdown', e => {
+    downs.add(e.pointerId);
+    setButtonStateBit(bit, true);
+  });
+
+  const onUp = (e: any) => {
+    downs.delete(e.pointerId);
+
+    if (downs.size === 0) {
+      setButtonStateBit(bit, false);
+    }
+  };
+
+  sprite.on('pointerup', onUp);
+  sprite.on('pointerupoutside', onUp);
+  sprite.on('pointercancel', onUp);
+}
+
+function enableDpadTouch(sprite: Sprite) {
+  sprite.eventMode = 'static';
+  sprite.cursor = 'pointer';
+
+  const downs = new Set<number>(); // dpadを押している指の集合
+
+  const setDirFromLocalPoint = (lx: number, ly: number) => {
+    // まず上下左右ビット(0..3)を全クリア
+    currentButtonState &= ~0b1111;
+
+    // シンプルに x/y の絶対値で4方向を決定（斜めは大きい方を優先）
+    const ax = Math.abs(lx), ay = Math.abs(ly);
+    let bit = -1;
+    if (ax > ay) {
+      bit = (lx < 0) ? 2 : 3;   // 左:2, 右:3
+    } else {
+      bit = (ly < 0) ? 0 : 1;   // 上:0, 下:1
+    }
+    setButtonStateBit(bit, true);
+  };
+
+  const onMoveIfActive = (e: FederatedPointerEvent) => {
+    if (!downs.has(e.pointerId)) {
+      return;
+    }
+
+    const p = e.getLocalPosition(sprite); // スプライト座標系
+    setDirFromLocalPoint(p.x, p.y);
+  };
+
+  sprite.on('pointerdown', e => {
+    downs.add(e.pointerId);
+    const p = e.getLocalPosition(sprite);
+    setDirFromLocalPoint(p.x, p.y);
+  });
+
+  sprite.on('pointermove', onMoveIfActive);
+
+  const end = (e: FederatedPointerEvent) => {
+    downs.delete(e.pointerId);
+
+    if (downs.size === 0) {
+      // dpad上の指が全て離れたら方向ビット(0..3)を落とす
+      currentButtonState &= ~0b1111;
+    }
+  };
+
+  sprite.on('pointerup', end);
+  sprite.on('pointerupoutside', end);
+  sprite.on('pointercancel', end);
+}
+
 function handleKeyDown(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
   if (e.key === "ArrowUp") {
-    currentButtonState |= 1 << 0;
+    setButtonStateBit(0, true);
   } else if (e.key === "ArrowDown") {
-    currentButtonState |= 1 << 1;
+    setButtonStateBit(1, true);
   } else if (e.key === "ArrowLeft") {
-    currentButtonState |= 1 << 2;
+    setButtonStateBit(2, true);
   } else if (e.key === "ArrowRight") {
-    currentButtonState |= 1 << 3;
+    setButtonStateBit(3, true);
   } else if (e.key === "z" || e.key === "Z") {
-    currentButtonState |= 1 << 4;
+    setButtonStateBit(4, true);
   } else if (e.key === "x" || e.key === "X") {
-    currentButtonState |= 1 << 5;
+    setButtonStateBit(5, true);
   } else if (e.key === "a" || e.key === "A") {
-    currentButtonState |= 1 << 6;
+    setButtonStateBit(6, true);
   } else if (e.key === "s" || e.key === "S") {
-    currentButtonState |= 1 << 7;
+    setButtonStateBit(7, true);
   }
 }
 
 function handleKeyUp(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
   if (e.key === "ArrowUp") {
-    currentButtonState &= ~(1 << 0);
+    setButtonStateBit(0, false);
   } else if (e.key === "ArrowDown") {
-    currentButtonState &= ~(1 << 1);
+    setButtonStateBit(1, false);
   } else if (e.key === "ArrowLeft") {
-    currentButtonState &= ~(1 << 2);
+    setButtonStateBit(2, false);
   } else if (e.key === "ArrowRight") {
-    currentButtonState &= ~(1 << 3);
+    setButtonStateBit(3, false);
   } else if (e.key === "z" || e.key === "Z") {
-    currentButtonState &= ~(1 << 4);
+    setButtonStateBit(4, false);
   } else if (e.key === "x" || e.key === "X") {
-    currentButtonState &= ~(1 << 5);
+    setButtonStateBit(5, false);
   } else if (e.key === "a" || e.key === "A") {
-    currentButtonState &= ~(1 << 6);
+    setButtonStateBit(6, false);
   } else if (e.key === "s" || e.key === "S") {
-    currentButtonState &= ~(1 << 7);
+    setButtonStateBit(7, false);
   }
 }
 
 function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[], currentButtonState: number, previousButtonState: number) {
   // ボタン状況に応じて画像を更新する
-  if (((currentButtonState & (1 << 0)) ^ (previousButtonState & (1 << 0))) !== 0) {
-    directionPad.texture = Texture.from((currentButtonState & (1 << 0)) ? skin.key.direction.image.up : skin.key.direction.image.neutral);
+  if (isChangedButtonState(0)) {
+    directionPad.texture = Texture.from(isPressingButton(0) ? skin.key.direction.image.up : skin.key.direction.image.neutral);
   }
-  if (((currentButtonState & (1 << 1)) ^ (previousButtonState & (1 << 1))) !== 0) {
-    directionPad.texture = Texture.from((currentButtonState & (1 << 1)) ? skin.key.direction.image.down : skin.key.direction.image.neutral);
+  if (isChangedButtonState(1)) {
+    directionPad.texture = Texture.from(isPressingButton(1) ? skin.key.direction.image.down : skin.key.direction.image.neutral);
   }
-  if (((currentButtonState & (1 << 2)) ^ (previousButtonState & (1 << 2))) !== 0) {
-    directionPad.texture = Texture.from((currentButtonState & (1 << 2)) ? skin.key.direction.image.left : skin.key.direction.image.neutral);
+  if (isChangedButtonState(2)) {
+    directionPad.texture = Texture.from(isPressingButton(2) ? skin.key.direction.image.left : skin.key.direction.image.neutral);
   }
-  if (((currentButtonState & (1 << 3)) ^ (previousButtonState & (1 << 3))) !== 0) {
-    directionPad.texture = Texture.from((currentButtonState & (1 << 3)) ? skin.key.direction.image.right : skin.key.direction.image.neutral);
+  if (isChangedButtonState(3)) {
+    directionPad.texture = Texture.from(isPressingButton(3) ? skin.key.direction.image.right : skin.key.direction.image.neutral);
   }
-  if (((currentButtonState & (1 << 4)) ^ (previousButtonState & (1 << 4))) !== 0) {
+  if (isChangedButtonState(4)) {
     const buttonIndex = 0;
     if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 4)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+      buttons[buttonIndex].texture = Texture.from(isPressingButton(4) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
     }
   }
-  if (((currentButtonState & (1 << 5)) ^ (previousButtonState & (1 << 5))) !== 0) {
+  if (isChangedButtonState(5)) {
     const buttonIndex = 1;
     if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 5)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+      buttons[buttonIndex].texture = Texture.from(isPressingButton(5) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
     }
   }
-  if (((currentButtonState & (1 << 6)) ^ (previousButtonState & (1 << 6))) !== 0) {
+  if (isChangedButtonState(6)) {
     const buttonIndex = 2;
     if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 6)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+      buttons[buttonIndex].texture = Texture.from(isPressingButton(6) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
     }
   }
-  if (((currentButtonState & (1 << 7)) ^ (previousButtonState & (1 << 7))) !== 0) {
+  if (isChangedButtonState(7)) {
     const buttonIndex = 3;
     if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from((currentButtonState & (1 << 7)) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+      buttons[buttonIndex].texture = Texture.from(isPressingButton(7) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
     }
   }
 }
@@ -279,15 +372,16 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   // 方向キー(UIレイヤー)
   const direction_pad = Sprite.from(skin.key.direction.image.neutral);
   direction_pad.anchor.set(0.5);
+  enableDpadTouch(direction_pad);
   ui_layer.addChild(direction_pad);
 
   const buttons: Sprite[] = [];
 
   for (let i = 0; i < 4; ++i) {
-    const button = skin.key.buttons[i];
     const sprite = new Sprite();
     sprite.anchor.set(0.5);
     sprite.visible = false;
+    enableButtonTouch(sprite, i + 4);
     ui_layer.addChild(sprite);
     buttons.push(sprite);
   }
