@@ -154,7 +154,7 @@ function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[],
   }
 }
 
-function resize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
+function updateLayout(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
   // pixi.js による描画領域を再設定
   const cw = window.innerWidth;
   const ch = window.innerHeight;
@@ -192,7 +192,7 @@ function resize(app: Application, rootContainer: Container, uiLayer: Container, 
 }
 
 function handleResize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
-  resize(app, rootContainer, uiLayer, gameLayer, bgSprite, bodySprites, directionPad, buttons);
+  updateLayout(app, rootContainer, uiLayer, gameLayer, bgSprite, bodySprites, directionPad, buttons);
 }
 
 function drawGameSample(gameLayer: Container, smileTex: Texture) {
@@ -211,6 +211,13 @@ function drawGameSample(gameLayer: Container, smileTex: Texture) {
   smile.anchor.set(0.5);
   smile.position.set(GAME_SCREEN_WIDTH / 2, GAME_SCREEN_HEIGHT / 2);
   gameLayer.addChild(smile);
+}
+
+function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
+  // deltaTime は「前フレーム比の時間倍率」
+  // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
+  updateButtonImages(skin, directionPad, buttons, currentButtonState, previousButtonState);
+  previousButtonState = currentButtonState;
 }
 
 (async () => {
@@ -308,13 +315,8 @@ function drawGameSample(gameLayer: Container, smileTex: Texture) {
   window.addEventListener("orientationchange", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
   window.addEventListener("pageshow", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
 
-  resize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
-
   // 毎フレーム呼ばれる処理を追加
-  app.ticker.add(deltaTime => {
-    // deltaTime は「前フレーム比の時間倍率」
-    // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
-    updateButtonImages(skin, direction_pad, buttons, currentButtonState, previousButtonState);
-    previousButtonState = currentButtonState;
-  });
+  app.ticker.add(deltaTime => handleUpdate(direction_pad, buttons));
+
+  updateLayout(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
 })();
