@@ -11,10 +11,7 @@ let currentSkinIndex = -1;
 let skin: Skin = skins[0];
 
 let currentButtonState: number = 0;
-let previousButtonState: number = 0;
-
 let currentTouchState: number = 0;
-let previousTouchState: number = 0;
 
 let composedState: number = 0;
 let previousComposedState: number = 0;
@@ -214,52 +211,32 @@ function handleKeyUp(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) 
   }
 }
 
-function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[], currentButtonState: number, previousButtonState: number) {
+function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[]) {
   // ボタン状況に応じて画像を更新する
-  const DIR_MASK = 0b1111;
-  const dirChanged = ((currentButtonState ^ previousButtonState) & DIR_MASK) !== 0;
 
-  // if (dirChanged) {
-    let tex = skin.key.direction.image.neutral;
+  // 方向キーは現在の状態で常に設定する
+  let tex = skin.key.direction.image.neutral;
 
-    if (isPressingButton(0)) {
-      tex = skin.key.direction.image.up;
-    }
-    else if (isPressingButton(1)) {
-      tex = skin.key.direction.image.down;
-    }
-    else if (isPressingButton(2)) {
-      tex = skin.key.direction.image.left;
-    }
-    else if (isPressingButton(3)) {
-      tex = skin.key.direction.image.right;
-    }
-
-    directionPad.texture = Texture.from(tex);
-  // }
-
-  if (isChangedButtonState(4)) {
-    const buttonIndex = 0;
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(isPressingButton(4) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
-    }
+  if (isPressingButton(0)) {
+    tex = skin.key.direction.image.up;
   }
-  if (isChangedButtonState(5)) {
-    const buttonIndex = 1;
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(isPressingButton(5) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
-    }
+  else if (isPressingButton(1)) {
+    tex = skin.key.direction.image.down;
   }
-  if (isChangedButtonState(6)) {
-    const buttonIndex = 2;
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(isPressingButton(6) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
-    }
+  else if (isPressingButton(2)) {
+    tex = skin.key.direction.image.left;
   }
-  if (isChangedButtonState(7)) {
-    const buttonIndex = 3;
-    if (buttonIndex < skin.key.buttons.length) {
-      buttons[buttonIndex].texture = Texture.from(isPressingButton(7) ? skin.key.buttons[buttonIndex].image.on : skin.key.buttons[buttonIndex].image.off);
+  else if (isPressingButton(3)) {
+    tex = skin.key.direction.image.right;
+  }
+
+  directionPad.texture = Texture.from(tex);
+
+  // A/B/START/SELECT ボタンは変化時のみ描画
+  for (let i = 0; i < 4; ++i) {
+    const bit = 4 + i;
+    if (i < skin.key.buttons.length && isChangedButtonState(bit)) {
+      buttons[i].texture = Texture.from(isPressingButton(bit) ? skin.key.buttons[i].image.on : skin.key.buttons[i].image.off);
     }
   }
 }
@@ -327,9 +304,7 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   // deltaTime は「前フレーム比の時間倍率」
   // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
   composedState = currentButtonState | currentTouchState;
-  updateButtonImages(skin, directionPad, buttons, composedState, previousComposedState);
-  previousButtonState = currentButtonState;
-  previousTouchState = currentTouchState;
+  updateButtonImages(skin, directionPad, buttons);
   previousComposedState = composedState;
 }
 
