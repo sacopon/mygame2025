@@ -54,9 +54,6 @@ function disableBrowserGestures() {
   // ホイール/タッチスクロール・ピンチズーム・ダブルタップズーム抑止
   const opts = { passive: false } as AddEventListenerOptions;
   window.addEventListener('wheel', e => e.preventDefault(), opts);
-  window.addEventListener('touchmove', e => e.preventDefault(), opts);
-  window.addEventListener('gesturestart', e => e.preventDefault() as any, opts); // iOS Safari 独自
-  window.addEventListener('dblclick', e => e.preventDefault(), opts);
 
   // Android Chrome: バックキー/履歴誤タップ対策
   window.addEventListener('keydown', (e) => {
