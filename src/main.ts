@@ -129,7 +129,7 @@ function enableDpadTouch(sprite: Sprite) {
 
   const setDir = (dx: number, dy: number) => {
     // ローカル座標 (0,0) は中心（anchor=0.5）。dx,dy はそのまま中心からの偏差。
-    const dead = 6; // デッドゾーン（ピクセル）
+    const dead = Math.min(sprite.width, sprite.height) * 0.08; // デッドゾーン(スプライトの大きさの8%)
     // まず上下左右ビット(0..3)を全クリア
     currentTouchState &= ~0b1111;
 
@@ -284,15 +284,15 @@ function handleResize(app: Application, rootContainer: Container, uiLayer: Conta
 
 function drawGameSample(gameLayer: Container, smileTex: Texture) {
   // 赤い四角
-  const g = new Graphics();
-  g.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
-  g.fill({ color: 0xff0000, alpha: 1 });
-  gameLayer.addChild(g);
+  const g1 = new Graphics();
+  g1.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+  g1.fill({ color: 0xff0000, alpha: 1 });
+  gameLayer.addChild(g1);
   // 青い四角
-  g.rect(0, 0, 16, 16);
-  g.fill({ color: 0x0000ff, alpha: 1 });
-  gameLayer.addChild(g);
-  gameLayer.addChild(g);
+  const g2 = new Graphics();
+  g2.rect(0, 0, 16, 16);
+  g2.fill({ color: 0x0000ff, alpha: 1 });
+  gameLayer.addChild(g2);
 
   const smile = new Sprite(smileTex);
   smile.anchor.set(0.5);
