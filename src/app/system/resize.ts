@@ -47,7 +47,9 @@ export function createResizeHandler(app: Application, ctx: UiContext, skins: Ski
   };
 }
 
-/** サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映 */
+/**
+ * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
+ */
 export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number): void {
   const changed = skins.update(w, h);
 
