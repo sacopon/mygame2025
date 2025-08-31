@@ -20,7 +20,6 @@ let currentButtonState: number = 0;
 let currentTouchState: number = 0;
 
 let composedState: number = 0;
-let previousComposedState: number = 0;
 
 function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
   // ゲーム機本体
@@ -57,10 +56,6 @@ function setButtonStateBit(state: number, bit: number, down: boolean): number {
   return  state & ~(1 << bit);
 }
 
-function isChangedButtonState(bit: number): boolean {
-  return ((composedState & (1 << bit)) ^ (previousComposedState & (1 << bit))) !== 0;
-}
-
 function isPressingButton(bit: number): boolean {
   return (composedState & (1 << bit)) !== 0;
 }
@@ -87,6 +82,7 @@ function enableButtonTouch(sprite: Sprite, bit: number) {
   sprite.on("pointerup", onUp);
   sprite.on("pointerupoutside", onUp);
   sprite.on("pointercancel", onUp);
+  sprite.on("pointerleave", onUp);
 }
 
 function enableDpadTouch(sprite: Sprite) {
@@ -186,33 +182,44 @@ function handleKeyUp(e: KeyboardEvent) {
   }
 }
 
+/**
+ * ボタン状況に応じて画像を更新する
+ *
+ * @param skin 各種画像の定義
+ * @param directionPad 方向キーのスプライト
+ * @param buttons ボタン類のスプライト
+ */
 function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[]) {
   // ボタン状況に応じて画像を更新する
 
-  // 方向キーは現在の状態で常に設定する
-  let tex = skin.key.direction.image.neutral;
+  let directionTexImage = skin.key.direction.image.neutral;
 
   if (isPressingButton(0)) {
-    tex = skin.key.direction.image.up;
+    directionTexImage = skin.key.direction.image.up;
   }
   else if (isPressingButton(1)) {
-    tex = skin.key.direction.image.down;
+    directionTexImage = skin.key.direction.image.down;
   }
   else if (isPressingButton(2)) {
-    tex = skin.key.direction.image.left;
+    directionTexImage = skin.key.direction.image.left;
   }
   else if (isPressingButton(3)) {
-    tex = skin.key.direction.image.right;
+    directionTexImage = skin.key.direction.image.right;
   }
 
-  directionPad.texture = Texture.from(tex);
+  const directionTexture = Texture.from(directionTexImage);
+  if (directionPad.texture !== directionTexture) {
+    directionPad.texture = directionTexture;
+  }
 
   // A/B/START/SELECT ボタンは変化時のみ描画
   for (let i = 0; i < 4; ++i) {
-    const bit = 4 + i;
-    if (i < skin.key.buttons.length && isChangedButtonState(bit)) {
-      buttons[i].texture = Texture.from(isPressingButton(bit) ? skin.key.buttons[i].image.on : skin.key.buttons[i].image.off);
+    if (skin.key.buttons.length <= i) {
+      break;
     }
+
+    const bit = 4 + i;
+    buttons[i].texture = Texture.from(isPressingButton(bit) ? skin.key.buttons[i].image.on : skin.key.buttons[i].image.off);
   }
 }
 
@@ -240,7 +247,7 @@ function updateLayout(app: Application, rootContainer: Container, uiLayer: Conta
     // UI を再配置
     buildVirtualConsoleUi(skin, bodySprites, directionPad, buttons);
 
-    // game_layer を現在の skin のスクリーン位置・サイズに合わせ直す
+    // gameLayer を現在の skin のスクリーン位置・サイズに合わせ直す
     gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
     gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
   }
@@ -251,6 +258,9 @@ function updateLayout(app: Application, rootContainer: Container, uiLayer: Conta
     ch / skin.body.size.height);
   rootContainer.scale.set(scale);
   rootContainer.position.set((cw / 2) | 0, (ch / 2) | 0);
+
+  // 更新後のレイアウトでボタン類を一度描画する
+  updateButtonImages(skin, directionPad, buttons);
 }
 
 function handleResize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
@@ -286,7 +296,6 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
   composedState = currentButtonState | currentTouchState;
   updateButtonImages(skin, directionPad, buttons);
-  previousComposedState = composedState;
 }
 
 function buildUiElement(parent: Container) {
@@ -398,7 +407,13 @@ function loadAssetsAsync() {
   drawGameSample(game_layer);
 
   // キーボード入力イベント
-  window.addEventListener("keydown", e => handleKeyDown(e));
+  window.addEventListener("keydown", e => {
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) {
+      e.preventDefault();
+    }
+
+    handleKeyDown(e);
+  }, { passive: false });
   window.addEventListener("keyup", e => handleKeyUp(e));
 
   // 画面再構築が必要なイベントを登録
