@@ -225,5 +225,6 @@ export {
   Size,
   Position,
   Skin,
+  SkinButton,
   skins,
 };

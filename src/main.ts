@@ -1,6 +1,12 @@
-import "./index.css";
-import { Application, Assets, Circle, Container, Graphics, Sprite, Texture } from "pixi.js";
-import { skins, Skin } from "@/skin";
+import { Application, Assets, Circle, Container, FederatedPointerEvent, Graphics, Sprite, Texture } from "pixi.js";
+import { skins, Skin, SkinButton } from "@/skin";
+import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
+import "@/index.css";
+
+/**
+ * リソース読み込み用URLを作成する
+ */
+const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
 
 // ゲーム画面の内部サイズ
 const GAME_SCREEN_WIDTH = 256;
@@ -35,43 +41,11 @@ function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, 
 
   // その他ボタン
   buttons.forEach(button => button.visible = false);
-  skin.key.buttons.forEach((button: any, i: number) => {
+  skin.key.buttons.forEach((button: SkinButton, i: number) => {
     buttons[i].texture = Texture.from(button.image.off);
     buttons[i].position.set(button.position.x, button.position.y);
     buttons[i].visible = true;
   });
-}
-
-function disableBrowserGestures() {
-  // 共通禁止（右クリック・長押しメニュー・ダブルタップ等）
-  window.addEventListener('contextmenu', e => e.preventDefault()); // 右クリック/長押しメニュー
-  window.addEventListener('selectstart', e => e.preventDefault()); // テキスト選択開始
-  window.addEventListener('dragstart', e => e.preventDefault());   // 画像ドラッグ
-
-  // ホイール/タッチスクロール・ピンチズーム・ダブルタップズーム抑止
-  const opts = { passive: false } as AddEventListenerOptions;
-  window.addEventListener('wheel', e => e.preventDefault(), opts);
-
-  // Android Chrome: バックキー/履歴誤タップ対策
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace') e.preventDefault(); // 入力欄が無いのに Backspace で戻るのを防止
-  });
-
-  // スワイプバック誤動作軽減（完全には防げません）
-  history.pushState(null, '', location.href);
-
-  // このイベントコールバックでゲーム内ポーズを出す等.
-  // ブラウザバック自体は戻さずにゲームへフォーカス返す
-  window.addEventListener('popstate', () => history.pushState(null, '', location.href));
-}
-
-function registerPwaServiceWorker() {
-  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-    const swUrl = `${import.meta.env.BASE_URL}sw.js`;
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register(swUrl, { scope: import.meta.env.BASE_URL }).catch(console.error);
-    });
-  }
 }
 
 function setButtonStateBit(state: number, bit: number, down: boolean): number {
@@ -91,17 +65,17 @@ function isPressingButton(bit: number): boolean {
 }
 
 function enableButtonTouch(sprite: Sprite, bit: number) {
-  sprite.eventMode = 'static';
-  sprite.cursor = 'pointer';
+  sprite.eventMode = "static";
+  sprite.cursor = "pointer";
 
   const downs = new Set<number>(); // 押下中の pointerId を保持
 
-  sprite.on('pointerdown', e => {
+  sprite.on("pointerdown", e => {
     downs.add(e.pointerId);
     currentTouchState = setButtonStateBit(currentTouchState, bit, true);
   });
 
-  const onUp = (e: any) => {
+  const onUp = (e: FederatedPointerEvent) => {
     downs.delete(e.pointerId);
 
     if (downs.size === 0) {
@@ -109,14 +83,14 @@ function enableButtonTouch(sprite: Sprite, bit: number) {
     }
   };
 
-  sprite.on('pointerup', onUp);
-  sprite.on('pointerupoutside', onUp);
-  sprite.on('pointercancel', onUp);
+  sprite.on("pointerup", onUp);
+  sprite.on("pointerupoutside", onUp);
+  sprite.on("pointercancel", onUp);
 }
 
 function enableDpadTouch(sprite: Sprite) {
-  sprite.eventMode = 'static';
-  sprite.cursor = 'pointer';
+  sprite.eventMode = "static";
+  sprite.cursor = "pointer";
 
   // 任意：当たり判定をしっかり確保（アンカー中心前提）
   if (!sprite.hitArea) {
@@ -146,32 +120,32 @@ function enableDpadTouch(sprite: Sprite) {
     }
   };
 
-  sprite.on('pointerdown', (e: any) => {
+  sprite.on("pointerdown", (e: FederatedPointerEvent) => {
     if (activeId !== null) return;     // 2本目以降は無視
     activeId = e.pointerId;
     const p = e.getLocalPosition(sprite);
     setDir(p.x, p.y);
   });
 
-  sprite.on('pointermove', (e: any) => {
+  sprite.on("pointermove", (e: FederatedPointerEvent) => {
     if (e.pointerId !== activeId) return;
     const p = e.getLocalPosition(sprite);
     setDir(p.x, p.y);
   });
 
-  const end = (e: any) => {
+  const end = (e: FederatedPointerEvent) => {
     if (e.pointerId !== activeId) return;
     activeId = null;
     // 指が離れたので方向ビットを落とす
     currentTouchState &= ~0b1111;
   };
 
-  sprite.on('pointerup', end);
-  sprite.on('pointerupoutside', end);
-  sprite.on('pointercancel', end);
+  sprite.on("pointerup", end);
+  sprite.on("pointerupoutside", end);
+  sprite.on("pointercancel", end);
 }
 
-function handleKeyDown(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
+function handleKeyDown(e: KeyboardEvent) {
   if (e.key === "ArrowUp") {
     currentButtonState = setButtonStateBit(currentButtonState, 0, true);
   } else if (e.key === "ArrowDown") {
@@ -191,7 +165,7 @@ function handleKeyDown(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]
   }
 }
 
-function handleKeyUp(e: KeyboardEvent, directionPad: Sprite, buttons: Sprite[]) {
+function handleKeyUp(e: KeyboardEvent) {
   if (e.key === "ArrowUp") {
     currentButtonState = setButtonStateBit(currentButtonState, 0, false);
   } else if (e.key === "ArrowDown") {
@@ -282,22 +256,28 @@ function handleResize(app: Application, rootContainer: Container, uiLayer: Conta
   updateLayout(app, rootContainer, uiLayer, gameLayer, bgSprite, bodySprites, directionPad, buttons);
 }
 
-function drawGameSample(gameLayer: Container, smileTex: Texture) {
+/**
+ * ゲーム仮画面の描画
+ *
+ * @param gameScreenContainer ゲーム画面用コンテナ 
+ */
+function drawGameSample(gameScreenContainer: Container) {
   // 赤い四角
   const g1 = new Graphics();
   g1.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
   g1.fill({ color: 0xff0000, alpha: 1 });
-  gameLayer.addChild(g1);
+  gameScreenContainer.addChild(g1);
   // 青い四角
   const g2 = new Graphics();
   g2.rect(0, 0, 16, 16);
   g2.fill({ color: 0x0000ff, alpha: 1 });
-  gameLayer.addChild(g2);
+  gameScreenContainer.addChild(g2);
 
-  const smile = new Sprite(smileTex);
+  const smile = Sprite.from("smile.png");
+  smile.texture.source.scaleMode = "nearest";
   smile.anchor.set(0.5);
   smile.position.set(GAME_SCREEN_WIDTH / 2, GAME_SCREEN_HEIGHT / 2);
-  gameLayer.addChild(smile);
+  gameScreenContainer.addChild(smile);
 }
 
 function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
@@ -308,46 +288,15 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   previousComposedState = composedState;
 }
 
-(async () => {
-  const app = new Application();
-
-  await app.init({
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: 0x1099bb,
-    roundPixels: true,  // 描画座標に小数値が渡された場合に整数値に丸める
-  });
-
-  document.body.appendChild(app.canvas);
-
-  // PWA の ServiceWorker を設定
-  registerPwaServiceWorker();
-
-  // ブラウザデフォルトのジェスチャ操作を禁止
-  disableBrowserGestures();
-
-  // キャンバスにフォーカスを集める
-  app.canvas.setAttribute('tabindex', '0');
-  app.canvas.addEventListener('pointerdown', () => app.canvas.focus());
-  app.canvas.addEventListener('touchstart', () => app.canvas.focus(), { passive:false });
-  // ジェスチャ干渉によるponterイベント欠落を防止する
-  (app.canvas as HTMLCanvasElement).style.touchAction = 'none';
-
-  // 画像読み込み
-  const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-  const bg_texture = await Assets.load(makePath("textures/screen_bg.png"));
-  await Assets.load(makePath("textures/virtualui.json"));
-  const smile_tex = await Assets.load(makePath("textures/smile.png")) as Texture;
-  smile_tex.source.scaleMode = "nearest";
-
-  // 背景
-  const bg_sprite = new Sprite(bg_texture);
-  bg_sprite.anchor.set(0.5);
-  app.stage.addChild(bg_sprite);
-
+function buildUiElement(parent: Container) {
   // コンテナ作成
   const root_container = new Container();
-  app.stage.addChild(root_container);
+  parent.addChild(root_container);
+
+  // 背景
+  const bg_sprite = Sprite.from("screen_bg.png");
+  bg_sprite.anchor.set(0.5);
+  root_container.addChild(bg_sprite);
 
   // UI レイヤー
   const ui_layer = new Container();
@@ -392,12 +341,64 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
   ui_layer.addChild(game_layer);
 
+  return {
+    root_container,
+    ui_layer,
+    game_layer,
+    bg_sprite,
+    body_sprites,
+    direction_pad,
+    buttons,
+  };
+}
+
+function loadAssetsAsync() {
+  return Assets.load([
+    // 全体背景
+    { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
+    // バーチャルパッドUI
+    makePath("textures/virtualui.json"),
+    // ゲーム本編系画像(SAMPLE)
+    { alias: "smile.png", src: makePath("textures/smile.png") },
+  ]);
+}
+
+(async () => {
+  // PWA の ServiceWorker を設定
+  registerPwaServiceWorker(makePath("sw.js"));
+
+  const app = new Application();
+  await app.init({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: 0x1099bb,
+    roundPixels: true,  // 描画座標に小数値が渡された場合に整数値に丸める
+  });
+  document.body.appendChild(app.canvas);
+
+  // ブラウザデフォルトのジェスチャ操作を禁止
+  disableBrowserGestures(app.canvas);
+
+  // 画像読み込み
+  await loadAssetsAsync();
+
+  // 画面上のUI要素の構築
+  const {
+    root_container,
+    ui_layer,
+    game_layer,
+    bg_sprite,
+    body_sprites,
+    direction_pad,
+    buttons,
+  } = buildUiElement(app.stage);
+
   // ゲーム画面内のサンプル描画
-  drawGameSample(game_layer, smile_tex);
+  drawGameSample(game_layer);
 
   // キーボード入力イベント
-  window.addEventListener("keydown", e => handleKeyDown(e, direction_pad, buttons));
-  window.addEventListener("keyup", e => handleKeyUp(e, direction_pad, buttons));
+  window.addEventListener("keydown", e => handleKeyDown(e));
+  window.addEventListener("keyup", e => handleKeyUp(e));
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
@@ -407,7 +408,7 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   window.addEventListener("pageshow", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
 
   // 毎フレーム呼ばれる処理を追加
-  app.ticker.add(deltaTime => handleUpdate(direction_pad, buttons));
+  app.ticker.add((/*deltaTime*/) => handleUpdate(direction_pad, buttons));
 
   updateLayout(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
 })();
