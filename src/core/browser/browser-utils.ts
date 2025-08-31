@@ -1,7 +1,7 @@
 /**
  * ゲームに不要なブラウザのタッチジェスチャを抑止する設定を行う
  */
-function disableBrowserGestures(canvas: HTMLCanvasElement) {
+export function disableBrowserGestures(canvas: HTMLCanvasElement) {
   // 共通禁止（右クリック・長押しメニュー・ダブルタップ等）
   window.addEventListener("contextmenu", e => e.preventDefault()); // 右クリック/長押しメニュー
   window.addEventListener("selectstart", e => e.preventDefault()); // テキスト選択開始
@@ -35,7 +35,7 @@ function disableBrowserGestures(canvas: HTMLCanvasElement) {
 /**
  * PWA 用の ServiceWorker の登録を行う
  */
-function registerPwaServiceWorker(serviceWokerPath: string) {
+export function registerPwaServiceWorker(serviceWokerPath: string) {
   if (import.meta.env.PROD && "serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker
@@ -44,8 +44,3 @@ function registerPwaServiceWorker(serviceWokerPath: string) {
     });
   }
 }
-
-export {
-  disableBrowserGestures,
-  registerPwaServiceWorker,
-};

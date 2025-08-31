@@ -48,7 +48,12 @@ export function updateButtonImages(skin: Skin, state: InputState, directionPad: 
 }
 
 export function relayoutViewport(app: Application, ctx: UiContext, skin: Skin, w: number, h: number) {
-  app.renderer.resize(w, h);
+  const cw = (app.renderer.canvas as HTMLCanvasElement).width;
+  const ch = (app.renderer.canvas as HTMLCanvasElement).height;
+
+  if (cw !== w || ch !== h) {
+    app.renderer.resize(w, h);
+  }
 
   // 中央寄せ・スケール
   ctx.uiLayer.pivot.set(skin.body.size.width / 2, skin.body.size.height / 2);

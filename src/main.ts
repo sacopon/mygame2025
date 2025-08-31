@@ -5,10 +5,10 @@ import { GAME_SCREEN } from "@/app/constants";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
-import { relayoutViewport, updateButtonImages } from "@/app/ui/layout";
+import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
-import { applySkin } from "@/app/ui/applySkin";
 import { SkinRegistry } from "./app/skin/registry";
+import { createResizeHandler, onResize } from "./app/system/resize";
 
 /**
  * リソース読み込み用URLを作成する
@@ -39,7 +39,7 @@ function drawGameSample(gameScreenContainer: Container) {
   gameScreenContainer.addChild(smile);
 }
 
-function loadAssetsAsync() {
+function loadInitialAssetsAsync() {
   return Assets.load([
     // 全体背景
     { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
@@ -51,6 +51,10 @@ function loadAssetsAsync() {
 }
 
 (async () => {
+  // abort 時に終了処理を実行するためのインスタンス
+  const ac = new AbortController();
+  const opts = { signal: ac.signal } as AddEventListenerOptions;
+
   // PWA の ServiceWorker を設定
   registerPwaServiceWorker(makePath("sw.js"));
 
@@ -67,7 +71,7 @@ function loadAssetsAsync() {
   disableBrowserGestures(app.canvas);
 
   // 画像読み込み
-  await loadAssetsAsync();
+  await loadInitialAssetsAsync();
 
   // 画面上のUI要素の構築
   const inputState = new InputState();
@@ -75,41 +79,32 @@ function loadAssetsAsync() {
   const skins = new SkinResolver();
 
   // 初回の画面更新
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  skins.update(w, h);
-  const firstSkin = skins.current;
-  applySkin(context, firstSkin);
+  onResize(app, context, skins, window.innerWidth, window.innerHeight);
 
   // ゲーム画面内のサンプル描画
   drawGameSample(context.gameLayer);
-  relayoutViewport(app, context, firstSkin, w, h);
 
   // キーボード入力イベント
   const unbindKeyboard = bindKeyboard(window, inputState);
 
-  const onResize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const changed = skins.update(w, h);
-
-    if (changed) {
-      applySkin(context, skins.current);
-    }
-
-    relayoutViewport(app, context, skins.current, w, h);
-  };
-
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  window.addEventListener("resize", onResize);
-  window.visualViewport?.addEventListener("resize", onResize);
-  window.addEventListener("orientationchange", onResize);
-  window.addEventListener("pageshow", onResize);
-
-  // 終了時の解除
-  window.addEventListener("unload", unbindKeyboard);
+  const handleResize = createResizeHandler(app, context, skins);
+  window.addEventListener("resize", handleResize, opts);
+  window.visualViewport?.addEventListener("resize", handleResize, opts);
+  window.addEventListener("orientationchange", handleResize, opts);
+  window.addEventListener("pageshow", handleResize, opts);
 
   // 毎フレーム呼ばれる処理を追加
-  app.ticker.add((/*deltaTime*/) => updateButtonImages(skins.current, inputState, context.dpad, context.buttons));
+  const tick = (/*deltaTime*/) => updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+  app.ticker.add(tick);
+
+  // abort 時の終了処理
+  ac.signal.addEventListener("abort", () => {
+    app.ticker.remove(tick);
+    unbindKeyboard();
+  });
+
+  // 終了時に abort を呼び出す設定
+  window.addEventListener("unload", () => ac.abort(), { once: true });
 })();
