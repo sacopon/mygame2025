@@ -2,15 +2,13 @@ import { Application, Assets, Circle, Container, FederatedPointerEvent, Graphics
 import { skins, Skin, SkinButton } from "@/skin";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
 import "@/index.css";
+import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
+import { UiContext } from "@/app/types";
 
 /**
  * リソース読み込み用URLを作成する
  */
 const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-
-// ゲーム画面の内部サイズ
-const GAME_SCREEN_WIDTH = 256;
-const GAME_SCREEN_HEIGHT = 224;
 
 let currentSkinIndex = -1;
 
@@ -21,30 +19,30 @@ let currentTouchState: number = 0;
 
 let composedState: number = 0;
 
-function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, buttons: Sprite[]) {
+function buildVirtualConsoleUi(skin: Skin, context: UiContext) {
   // ゲーム機本体
-  bodies[0].texture = Texture.from(skin.body.images[0]);
-  bodies[0].position.set(0, 0);
-  bodies[1].texture = Texture.from(skin.body.images[1]);
-  bodies[1].position.set(skin.body.size.width  / 2, 0);
-  bodies[2].texture = Texture.from(skin.body.images[2]);
-  bodies[2].position.set(0, skin.body.size.height / 2);
-  bodies[3].texture = Texture.from(skin.body.images[3]);
-  bodies[3].position.set(skin.body.size.width  / 2, skin.body.size.height / 2);
+  context.body[0].texture = Texture.from(skin.body.images[0]);
+  context.body[0].position.set(0, 0);
+  context.body[1].texture = Texture.from(skin.body.images[1]);
+  context.body[1].position.set(skin.body.size.width  / 2, 0);
+  context.body[2].texture = Texture.from(skin.body.images[2]);
+  context.body[2].position.set(0, skin.body.size.height / 2);
+  context.body[3].texture = Texture.from(skin.body.images[3]);
+  context.body[3].position.set(skin.body.size.width  / 2, skin.body.size.height / 2);
 
   // 方向キー
-  direction.texture = Texture.from(skin.key.direction.image.neutral);
-  direction.position.set(
+  context.dpad.texture = Texture.from(skin.key.direction.image.neutral);
+  context.dpad.position.set(
     skin.key.direction.position.x,
     skin.key.direction.position.y);
-  direction.hitArea = new Circle(0, 0, Math.max(direction.width, direction.height) * 0.5);
+  context.dpad.hitArea = new Circle(0, 0, Math.max(context.dpad.width, context.dpad.height) * 0.5);
 
   // その他ボタン
-  buttons.forEach(button => button.visible = false);
+  context.buttons.forEach(button => button.visible = false);
   skin.key.buttons.forEach((button: SkinButton, i: number) => {
-    buttons[i].texture = Texture.from(button.image.off);
-    buttons[i].position.set(button.position.x, button.position.y);
-    buttons[i].visible = true;
+    context.buttons[i].texture = Texture.from(button.image.off);
+    context.buttons[i].position.set(button.position.x, button.position.y);
+    context.buttons[i].visible = true;
   });
 }
 
@@ -110,28 +108,37 @@ function enableDpadTouch(sprite: Sprite) {
     }
     if (Math.abs(dx) > Math.abs(dy)) {
       // 左右
-      currentTouchState = setButtonStateBit(currentTouchState, dx < 0 ? 2 : 3, true);  // 左:2, 右:3
+      currentTouchState = setButtonStateBit(currentTouchState, dx < 0 ? PAD_BIT.DPAD_LEFT : PAD_BIT.DPAD_RIGHT, true);
     } else {
       // 上下
-      currentTouchState = setButtonStateBit(currentTouchState, dy < 0 ? 0 : 1, true);  // 上:0, 下:1
+      currentTouchState = setButtonStateBit(currentTouchState, dy < 0 ? PAD_BIT.DPAD_UP : PAD_BIT.DPAD_DOWN, true);
     }
   };
 
   sprite.on("pointerdown", (e: FederatedPointerEvent) => {
-    if (activeId !== null) return;     // 2本目以降は無視
+    if (activeId !== null) {
+      return;     // 2本目以降は無視
+    }
+
     activeId = e.pointerId;
     const p = e.getLocalPosition(sprite);
     setDir(p.x, p.y);
   });
 
   sprite.on("pointermove", (e: FederatedPointerEvent) => {
-    if (e.pointerId !== activeId) return;
+    if (e.pointerId !== activeId) {
+      return;
+    }
+
     const p = e.getLocalPosition(sprite);
     setDir(p.x, p.y);
   });
 
   const end = (e: FederatedPointerEvent) => {
-    if (e.pointerId !== activeId) return;
+    if (e.pointerId !== activeId) {
+      return;
+    }
+
     activeId = null;
     // 指が離れたので方向ビットを落とす
     currentTouchState &= ~0b1111;
@@ -144,41 +151,41 @@ function enableDpadTouch(sprite: Sprite) {
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === "ArrowUp") {
-    currentButtonState = setButtonStateBit(currentButtonState, 0, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_UP, true);
   } else if (e.key === "ArrowDown") {
-    currentButtonState = setButtonStateBit(currentButtonState, 1, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_DOWN, true);
   } else if (e.key === "ArrowLeft") {
-    currentButtonState = setButtonStateBit(currentButtonState, 2, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_LEFT, true);
   } else if (e.key === "ArrowRight") {
-    currentButtonState = setButtonStateBit(currentButtonState, 3, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_RIGHT, true);
   } else if (e.key === "z" || e.key === "Z") {
-    currentButtonState = setButtonStateBit(currentButtonState, 4, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON1, true);
   } else if (e.key === "x" || e.key === "X") {
-    currentButtonState = setButtonStateBit(currentButtonState, 5, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON2, true);
   } else if (e.key === "a" || e.key === "A") {
-    currentButtonState = setButtonStateBit(currentButtonState, 6, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON3, true);
   } else if (e.key === "s" || e.key === "S") {
-    currentButtonState = setButtonStateBit(currentButtonState, 7, true);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON4, true);
   }
 }
 
 function handleKeyUp(e: KeyboardEvent) {
   if (e.key === "ArrowUp") {
-    currentButtonState = setButtonStateBit(currentButtonState, 0, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_UP, false);
   } else if (e.key === "ArrowDown") {
-    currentButtonState = setButtonStateBit(currentButtonState, 1, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_DOWN, false);
   } else if (e.key === "ArrowLeft") {
-    currentButtonState = setButtonStateBit(currentButtonState, 2, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_LEFT, false);
   } else if (e.key === "ArrowRight") {
-    currentButtonState = setButtonStateBit(currentButtonState, 3, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.DPAD_RIGHT, false);
   } else if (e.key === "z" || e.key === "Z") {
-    currentButtonState = setButtonStateBit(currentButtonState, 4, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON1, false);
   } else if (e.key === "x" || e.key === "X") {
-    currentButtonState = setButtonStateBit(currentButtonState, 5, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON2, false);
   } else if (e.key === "a" || e.key === "A") {
-    currentButtonState = setButtonStateBit(currentButtonState, 6, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON3, false);
   } else if (e.key === "s" || e.key === "S") {
-    currentButtonState = setButtonStateBit(currentButtonState, 7, false);
+    currentButtonState = setButtonStateBit(currentButtonState, PAD_BIT.BUTTON4, false);
   }
 }
 
@@ -194,16 +201,16 @@ function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[])
 
   let directionTexImage = skin.key.direction.image.neutral;
 
-  if (isPressingButton(0)) {
+  if (isPressingButton(PAD_BIT.DPAD_UP)) {
     directionTexImage = skin.key.direction.image.up;
   }
-  else if (isPressingButton(1)) {
+  else if (isPressingButton(PAD_BIT.DPAD_DOWN)) {
     directionTexImage = skin.key.direction.image.down;
   }
-  else if (isPressingButton(2)) {
+  else if (isPressingButton(PAD_BIT.DPAD_LEFT)) {
     directionTexImage = skin.key.direction.image.left;
   }
-  else if (isPressingButton(3)) {
+  else if (isPressingButton(PAD_BIT.DPAD_RIGHT)) {
     directionTexImage = skin.key.direction.image.right;
   }
 
@@ -212,18 +219,18 @@ function updateButtonImages(skin: Skin, directionPad: Sprite, buttons: Sprite[])
     directionPad.texture = directionTexture;
   }
 
-  // A/B/START/SELECT ボタンは変化時のみ描画
+  // A/B/START/SELECT ボタン
   for (let i = 0; i < 4; ++i) {
     if (skin.key.buttons.length <= i) {
       break;
     }
 
-    const bit = 4 + i;
+    const bit = PAD_BIT.BUTTON1 + i;
     buttons[i].texture = Texture.from(isPressingButton(bit) ? skin.key.buttons[i].image.on : skin.key.buttons[i].image.off);
   }
 }
 
-function updateLayout(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
+function updateLayout(app: Application, context: UiContext) {
   // pixi.js による描画領域を再設定
   const cw = window.innerWidth;
   const ch = window.innerHeight;
@@ -236,35 +243,35 @@ function updateLayout(app: Application, rootContainer: Container, uiLayer: Conta
     currentSkinIndex = nextSkinIndex;
 
     // 背景を画面中央に
-    bgSprite.position.set(cw / 2, ch / 2);
+    context.background.position.set(cw / 2, ch / 2);
 
     // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
-    uiLayer.pivot.set(
+    context.uiLayer.pivot.set(
       skin.body.size.width  / 2,
       skin.body.size.height / 2
     );
 
     // UI を再配置
-    buildVirtualConsoleUi(skin, bodySprites, directionPad, buttons);
+    buildVirtualConsoleUi(skin, context);
 
     // gameLayer を現在の skin のスクリーン位置・サイズに合わせ直す
-    gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
-    gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
+    context.gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
+    context.gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
   }
 
   // 全体スケーリングとセンタリング
   const scale = Math.min(
     cw / skin.body.size.width,
     ch / skin.body.size.height);
-  rootContainer.scale.set(scale);
-  rootContainer.position.set((cw / 2) | 0, (ch / 2) | 0);
+  context.root.scale.set(scale);
+  context.root.position.set((cw / 2) | 0, (ch / 2) | 0);
 
   // 更新後のレイアウトでボタン類を一度描画する
-  updateButtonImages(skin, directionPad, buttons);
+  updateButtonImages(skin, context.dpad, context.buttons);
 }
 
-function handleResize(app: Application, rootContainer: Container, uiLayer: Container, gameLayer: Container, bgSprite: Sprite, bodySprites: Sprite[], directionPad: Sprite, buttons: Sprite[]) {
-  updateLayout(app, rootContainer, uiLayer, gameLayer, bgSprite, bodySprites, directionPad, buttons);
+function handleResize(app: Application, context: UiContext) {
+  updateLayout(app, context);
 }
 
 /**
@@ -275,7 +282,7 @@ function handleResize(app: Application, rootContainer: Container, uiLayer: Conta
 function drawGameSample(gameScreenContainer: Container) {
   // 赤い四角
   const g1 = new Graphics();
-  g1.rect(0, 0, GAME_SCREEN_WIDTH, GAME_SCREEN_HEIGHT);
+  g1.rect(0, 0, GAME_SCREEN.WIDTH, GAME_SCREEN.HEIGHT);
   g1.fill({ color: 0xff0000, alpha: 1 });
   gameScreenContainer.addChild(g1);
   // 青い四角
@@ -287,7 +294,7 @@ function drawGameSample(gameScreenContainer: Container) {
   const smile = Sprite.from("smile.png");
   smile.texture.source.scaleMode = "nearest";
   smile.anchor.set(0.5);
-  smile.position.set(GAME_SCREEN_WIDTH / 2, GAME_SCREEN_HEIGHT / 2);
+  smile.position.set(GAME_SCREEN.WIDTH / 2, GAME_SCREEN.HEIGHT / 2);
   gameScreenContainer.addChild(smile);
 }
 
@@ -298,38 +305,38 @@ function handleUpdate(directionPad: Sprite, buttons: Sprite[]) {
   updateButtonImages(skin, directionPad, buttons);
 }
 
-function buildUiElement(parent: Container) {
+function buildUiContext(parent: Container): UiContext {
   // コンテナ作成
-  const root_container = new Container();
-  parent.addChild(root_container);
+  const root = new Container();
+  parent.addChild(root);
 
   // 背景
-  const bg_sprite = Sprite.from("screen_bg.png");
-  bg_sprite.anchor.set(0.5);
-  root_container.addChild(bg_sprite);
+  const background = Sprite.from("screen_bg.png");
+  background.anchor.set(0.5);
+  root.addChild(background);
 
   // UI レイヤー
-  const ui_layer = new Container();
-  root_container.addChild(ui_layer);
+  const uiLayer = new Container();
+  root.addChild(uiLayer);
 
-  ui_layer.pivot.set(
+  uiLayer.pivot.set(
     skin.body.size.width  / 2,
     skin.body.size.height / 2);
 
   // ゲーム機本体(UIレイヤー)
-  const body_sprites: Sprite[] = [];
+  const body: Sprite[] = [];
   for (let i = 0; i < 4; ++i) {
     const s = new Sprite();
     s.anchor.set(0);
-    ui_layer.addChild(s);
-    body_sprites.push(s);
+    uiLayer.addChild(s);
+    body.push(s);
   }
 
   // 方向キー(UIレイヤー)
-  const direction_pad = Sprite.from(skin.key.direction.image.neutral);
-  direction_pad.anchor.set(0.5);
-  enableDpadTouch(direction_pad);
-  ui_layer.addChild(direction_pad);
+  const dpad = Sprite.from(skin.key.direction.image.neutral);
+  dpad.anchor.set(0.5);
+  enableDpadTouch(dpad);
+  uiLayer.addChild(dpad);
 
   const buttons: Sprite[] = [];
 
@@ -338,26 +345,26 @@ function buildUiElement(parent: Container) {
     sprite.anchor.set(0.5);
     sprite.visible = false;
     enableButtonTouch(sprite, i + 4);
-    ui_layer.addChild(sprite);
+    uiLayer.addChild(sprite);
     buttons.push(sprite);
   }
 
   // ゲーム画面レイヤー
-  const game_layer = new Container();
-  game_layer.position.set(
+  const gameLayer = new Container();
+  gameLayer.position.set(
     skin.screen.position.x,
     skin.screen.position.y);
-  game_layer.pivot.set(0, 0);
-  game_layer.scale.set(skin.screen.size.width / GAME_SCREEN_WIDTH);
-  ui_layer.addChild(game_layer);
+  gameLayer.pivot.set(0, 0);
+  gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
+  uiLayer.addChild(gameLayer);
 
   return {
-    root_container,
-    ui_layer,
-    game_layer,
-    bg_sprite,
-    body_sprites,
-    direction_pad,
+    root,
+    uiLayer,
+    gameLayer,
+    background,
+    body,
+    dpad,
     buttons,
   };
 }
@@ -393,18 +400,10 @@ function loadAssetsAsync() {
   await loadAssetsAsync();
 
   // 画面上のUI要素の構築
-  const {
-    root_container,
-    ui_layer,
-    game_layer,
-    bg_sprite,
-    body_sprites,
-    direction_pad,
-    buttons,
-  } = buildUiElement(app.stage);
+  const context = buildUiContext(app.stage);
 
   // ゲーム画面内のサンプル描画
-  drawGameSample(game_layer);
+  drawGameSample(context.gameLayer);
 
   // キーボード入力イベント
   window.addEventListener("keydown", e => {
@@ -418,13 +417,13 @@ function loadAssetsAsync() {
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  window.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
-  window.visualViewport?.addEventListener("resize", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
-  window.addEventListener("orientationchange", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
-  window.addEventListener("pageshow", () => handleResize(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons));
+  window.addEventListener("resize", () => handleResize(app, context));
+  window.visualViewport?.addEventListener("resize", () => handleResize(app, context));
+  window.addEventListener("orientationchange", () => handleResize(app, context));
+  window.addEventListener("pageshow", () => handleResize(app, context));
 
   // 毎フレーム呼ばれる処理を追加
-  app.ticker.add((/*deltaTime*/) => handleUpdate(direction_pad, buttons));
+  app.ticker.add((/*deltaTime*/) => handleUpdate(context.dpad, context.buttons));
 
-  updateLayout(app, root_container, ui_layer, game_layer, bg_sprite, body_sprites, direction_pad, buttons);
+  updateLayout(app, context);
 })();
