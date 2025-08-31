@@ -30,6 +30,21 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
   canvas.addEventListener("touchstart", () => canvas.focus(), { passive: false });
   // ジェスチャ干渉によるponterイベント欠落を防止する
   canvas.style.touchAction = "none";
+
+  // もし選択状態が発生したら強制解除
+  const clearSelection = () => {
+    const sel = window.getSelection?.();
+    if (sel && sel.rangeCount) sel.removeAllRanges();
+    const ae = document.activeElement as HTMLElement | null;
+    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) {
+      ae.blur();
+    }
+  };
+
+  const opts = { passive:false } as AddEventListenerOptions;
+  ["pointerdown", "touchstart", "mousedown"].forEach(type => {
+    window.addEventListener(type, () => clearSelection(), opts);
+  });
 }
 
 /**

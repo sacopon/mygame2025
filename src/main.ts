@@ -7,7 +7,6 @@ import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
 import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
-import { SkinRegistry } from "./app/skin/registry";
 import { createResizeHandler, onResize } from "./app/system/resize";
 
 /**
