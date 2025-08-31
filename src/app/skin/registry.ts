@@ -1,61 +1,10 @@
-type Size = {
-  width: number;
-  height: number;
-}
+import { Skin } from "@/skin";
 
-type Position = {
-  x: number;
-  y: number;
-}
+export type SkinId = "portrait" | "landscape";
 
-type SkinBody = {
-  size: Size;
-  images: string[];
-}
-
-type SkinScreen = {
-  size: Size;
-  position: Position;
-}
-
-type SkinButtonImage = {
-  on: string;
-  off: string;
-}
-
-type SkinButton = {
-  position: Position;
-  image: SkinButtonImage;
-}
-
-type SkinDpadImage = {
-  neutral: string;
-  up: string;
-  down: string;
-  left: string;
-  right: string;
-}
-
-type SkinDpad = {
-  position: Position;
-  image: SkinDpadImage;
-}
-
-type SkinKey = {
-  direction: SkinDpad;
-  buttons: SkinButton[];
-}
-
-type Skin = {
-  body: SkinBody;
-  screen: SkinScreen;
-  key: SkinKey;
-}
-
-// 仮想ゲーム機の設定
-const skins: Skin[] = [
+export const SkinRegistry: Record<SkinId, Skin> = {
   // 縦画面用
-  {
+  portrait: {
     // 仮想ゲーム機の大きさ
     body: {
       size: {
@@ -143,6 +92,7 @@ const skins: Skin[] = [
     },
   },
   // 横画面用
+  landscape:
   {
     // 仮想ゲーム機の大きさ
     body: {
@@ -218,13 +168,5 @@ const skins: Skin[] = [
         },
       ],
     },
-  }
-];
-
-export {
-  Size,
-  Position,
-  Skin,
-  SkinButton,
-  skins,
+  },
 };
