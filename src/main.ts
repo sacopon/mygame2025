@@ -75,11 +75,11 @@ function loadInitialAssetsAsync() {
 
   // 画面上のUI要素の構築
   const inputState = new InputState();
-  const context = buildUiContext(app.stage, SkinRegistry.portrait, inputState);
-  const skins = new SkinResolver();
+  const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
+  const context = buildUiContext(app.stage, skins.current, inputState);
 
   // 初回の画面更新
-  onResize(app, context, skins, window.innerWidth, window.innerHeight);
+  onResize(app, context, skins, window.innerWidth, window.innerHeight, true);
 
   // ゲーム画面内のサンプル描画
   drawGameSample(context.gameLayer);

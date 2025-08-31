@@ -50,11 +50,11 @@ export function createResizeHandler(app: Application, ctx: UiContext, skins: Ski
 /**
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
-export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number): void {
+export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number, forceApplySkin = false): void {
   const changed = skins.update(w, h);
 
   // スキンが変わった時だけテクスチャの張り替えを行う
-  if (changed) {
+  if (changed || forceApplySkin) {
     applySkin(ctx, skins.current);
   }
 
