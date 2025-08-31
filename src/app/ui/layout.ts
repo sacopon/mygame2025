@@ -1,6 +1,6 @@
 import { Texture, Sprite, Application } from "pixi.js";
 import { Skin } from "@/skin";
-import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
+import { PAD_BIT } from "@/app/constants";
 import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
 

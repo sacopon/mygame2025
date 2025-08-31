@@ -1,10 +1,10 @@
-import { Circle, Container, FederatedPointerEvent, Sprite, Texture } from "pixi.js";
-import { Skin, SkinButton } from "@/skin";
+import { Circle, Container, FederatedPointerEvent, Sprite } from "pixi.js";
+import { Skin } from "@/skin";
 import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
 import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
 
-function enableDpadTouch(state: InputState, sprite: Sprite) {
+export function enableDpadTouch(state: InputState, sprite: Sprite) {
   sprite.eventMode = "static";
   sprite.cursor = "pointer";
 
@@ -70,7 +70,7 @@ function enableDpadTouch(state: InputState, sprite: Sprite) {
   sprite.on("pointercancel", end);
 }
 
-function enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
+export function enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
   sprite.eventMode = "static";
   sprite.cursor = "pointer";
 
@@ -95,7 +95,7 @@ function enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
   sprite.on("pointerleave", onUp);
 }
 
-function buildUiContext(parent: Container, skin: Skin, inputState: InputState): UiContext {
+export function buildUiContext(parent: Container, skin: Skin, inputState: InputState): UiContext {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);
@@ -157,10 +157,4 @@ function buildUiContext(parent: Container, skin: Skin, inputState: InputState): 
     dpad,
     buttons,
   };
-}
-
-export {
-  enableDpadTouch,
-  enableButtonTouch,
-  buildUiContext,
 }

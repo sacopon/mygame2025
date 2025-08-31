@@ -1,4 +1,4 @@
-import { Skin } from "@/skin"
+import { Skin } from "@/skin";
 
 export type SkinId = "portrait" | "landscape";
 

@@ -1,9 +1,7 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
-import { Skin, skins } from "@/skin";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
 import { GAME_SCREEN } from "@/app/constants";
-import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
