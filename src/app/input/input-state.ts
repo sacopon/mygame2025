@@ -1,6 +1,3 @@
-let keyState = 0;
-let touchState = 0;
-
 export class InputState
 {
   private keyState: number = 0;

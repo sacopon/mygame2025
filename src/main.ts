@@ -1,267 +1,21 @@
-import { Application, Assets, Circle, Container, FederatedPointerEvent, Graphics, Sprite, Texture } from "pixi.js";
-import { skins, Skin, SkinButton } from "@/skin";
-import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
+import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
-import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
+import { Skin, skins } from "@/skin";
+import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
+import { GAME_SCREEN } from "@/app/constants";
 import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
+import { bindKeyboard } from "@/app/input/bind-keyboard";
+import { buildUiContext } from "@/app/ui/virtualpad";
+import { relayoutViewport, updateButtonImages } from "@/app/ui/layout";
+import { SkinResolver } from "@/app/skin/resolver";
+import { applySkin } from "@/app/ui/applySkin";
+import { SkinRegistry } from "./app/skin/registry";
 
 /**
  * リソース読み込み用URLを作成する
  */
 const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-
-let currentSkinIndex = -1;
-
-let skin: Skin = skins[0];
-
-function buildVirtualConsoleUi(skin: Skin, context: UiContext) {
-  // ゲーム機本体
-  context.body[0].texture = Texture.from(skin.body.images[0]);
-  context.body[0].position.set(0, 0);
-  context.body[1].texture = Texture.from(skin.body.images[1]);
-  context.body[1].position.set(skin.body.size.width  / 2, 0);
-  context.body[2].texture = Texture.from(skin.body.images[2]);
-  context.body[2].position.set(0, skin.body.size.height / 2);
-  context.body[3].texture = Texture.from(skin.body.images[3]);
-  context.body[3].position.set(skin.body.size.width  / 2, skin.body.size.height / 2);
-
-  // 方向キー
-  context.dpad.texture = Texture.from(skin.key.direction.image.neutral);
-  context.dpad.position.set(
-    skin.key.direction.position.x,
-    skin.key.direction.position.y);
-  context.dpad.hitArea = new Circle(0, 0, Math.max(context.dpad.width, context.dpad.height) * 0.5);
-
-  // その他ボタン
-  context.buttons.forEach(button => button.visible = false);
-  skin.key.buttons.forEach((button: SkinButton, i: number) => {
-    context.buttons[i].texture = Texture.from(button.image.off);
-    context.buttons[i].position.set(button.position.x, button.position.y);
-    context.buttons[i].visible = true;
-  });
-}
-
-function isPressingButton(state: InputState, bit: number): boolean {
-  return (state.composed() & (1 << bit)) !== 0;
-}
-
-function enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
-  sprite.eventMode = "static";
-  sprite.cursor = "pointer";
-
-  const downs = new Set<number>(); // 押下中の pointerId を保持
-
-  sprite.on("pointerdown", e => {
-    downs.add(e.pointerId);
-    state.setTouch(bit, true);
-  });
-
-  const onUp = (e: FederatedPointerEvent) => {
-    downs.delete(e.pointerId);
-
-    if (downs.size === 0) {
-      state.setTouch(bit, false);
-    }
-  };
-
-  sprite.on("pointerup", onUp);
-  sprite.on("pointerupoutside", onUp);
-  sprite.on("pointercancel", onUp);
-  sprite.on("pointerleave", onUp);
-}
-
-function enableDpadTouch(state: InputState, sprite: Sprite) {
-  sprite.eventMode = "static";
-  sprite.cursor = "pointer";
-
-  // 任意：当たり判定をしっかり確保（アンカー中心前提）
-  if (!sprite.hitArea) {
-    const r = Math.max(sprite.width, sprite.height) * 0.5;
-    // 円で十分。十字にしたければ Polygon などで調整
-    sprite.hitArea = new Circle(0, 0, r);
-  }
-
-  let activeId: number | null = null; // 採用中の指（1本のみ）
-
-  const setDir = (dx: number, dy: number) => {
-    // ローカル座標 (0,0) は中心（anchor=0.5）。dx,dy はそのまま中心からの偏差。
-    const dead = Math.min(sprite.width, sprite.height) * 0.08; // デッドゾーン(スプライトの大きさの8%)
-    // まず上下左右の入力状況を全クリア
-    state.clearTouchDir();
-
-    if (Math.abs(dx) < dead && Math.abs(dy) < dead) {
-      // 中央付近ならニュートラルのまま
-      return;
-    }
-    if (Math.abs(dx) > Math.abs(dy)) {
-      // 左右
-      state.setTouch(dx < 0 ? PAD_BIT.DPAD_LEFT : PAD_BIT.DPAD_RIGHT, true);
-    } else {
-      // 上下
-      state.setTouch(dy < 0 ? PAD_BIT.DPAD_UP : PAD_BIT.DPAD_DOWN, true);
-    }
-  };
-
-  sprite.on("pointerdown", (e: FederatedPointerEvent) => {
-    if (activeId !== null) {
-      return;     // 2本目以降は無視
-    }
-
-    activeId = e.pointerId;
-    const p = e.getLocalPosition(sprite);
-    setDir(p.x, p.y);
-  });
-
-  sprite.on("pointermove", (e: FederatedPointerEvent) => {
-    if (e.pointerId !== activeId) {
-      return;
-    }
-
-    const p = e.getLocalPosition(sprite);
-    setDir(p.x, p.y);
-  });
-
-  const end = (e: FederatedPointerEvent) => {
-    if (e.pointerId !== activeId) {
-      return;
-    }
-
-    activeId = null;
-    // 指が離れたので入力状況を解除
-    state.clearTouchDir();
-  };
-
-  sprite.on("pointerup", end);
-  sprite.on("pointerupoutside", end);
-  sprite.on("pointercancel", end);
-}
-
-function handleKeyDown(e: KeyboardEvent, state: InputState) {
-  if (e.key === "ArrowUp") {
-    state.setKey(PAD_BIT.DPAD_UP, true);
-  } else if (e.key === "ArrowDown") {
-    state.setKey(PAD_BIT.DPAD_DOWN, true);
-  } else if (e.key === "ArrowLeft") {
-    state.setKey(PAD_BIT.DPAD_LEFT, true);
-  } else if (e.key === "ArrowRight") {
-    state.setKey(PAD_BIT.DPAD_RIGHT, true);
-  } else if (e.key === "z" || e.key === "Z") {
-    state.setKey(PAD_BIT.BUTTON1, true);
-  } else if (e.key === "x" || e.key === "X") {
-    state.setKey(PAD_BIT.BUTTON2, true);
-  } else if (e.key === "a" || e.key === "A") {
-    state.setKey(PAD_BIT.BUTTON3, true);
-  } else if (e.key === "s" || e.key === "S") {
-    state.setKey(PAD_BIT.BUTTON4, true);
-  }
-}
-
-function handleKeyUp(e: KeyboardEvent, state: InputState) {
-  if (e.key === "ArrowUp") {
-    state.setKey(PAD_BIT.DPAD_UP, false);
-  } else if (e.key === "ArrowDown") {
-    state.setKey(PAD_BIT.DPAD_DOWN, false);
-  } else if (e.key === "ArrowLeft") {
-    state.setKey(PAD_BIT.DPAD_LEFT, false);
-  } else if (e.key === "ArrowRight") {
-    state.setKey(PAD_BIT.DPAD_RIGHT, false);
-  } else if (e.key === "z" || e.key === "Z") {
-    state.setKey(PAD_BIT.BUTTON1, false);
-  } else if (e.key === "x" || e.key === "X") {
-    state.setKey(PAD_BIT.BUTTON2, false);
-  } else if (e.key === "a" || e.key === "A") {
-    state.setKey(PAD_BIT.BUTTON3, false);
-  } else if (e.key === "s" || e.key === "S") {
-    state.setKey(PAD_BIT.BUTTON4, false);
-  }
-}
-
-/**
- * ボタン状況に応じて画像を更新する
- *
- * @param skin 各種画像の定義
- * @param state 入力状況
- * @param directionPad 方向キーのスプライト
- * @param buttons ボタン類のスプライト
- */
-function updateButtonImages(skin: Skin, state: InputState, directionPad: Sprite, buttons: Sprite[]) {
-  // ボタン状況に応じて画像を更新する
-
-  let directionTexImage = skin.key.direction.image.neutral;
-
-  if (isPressingButton(state, PAD_BIT.DPAD_UP)) {
-    directionTexImage = skin.key.direction.image.up;
-  }
-  else if (isPressingButton(state, PAD_BIT.DPAD_DOWN)) {
-    directionTexImage = skin.key.direction.image.down;
-  }
-  else if (isPressingButton(state, PAD_BIT.DPAD_LEFT)) {
-    directionTexImage = skin.key.direction.image.left;
-  }
-  else if (isPressingButton(state, PAD_BIT.DPAD_RIGHT)) {
-    directionTexImage = skin.key.direction.image.right;
-  }
-
-  const directionTexture = Texture.from(directionTexImage);
-  if (directionPad.texture !== directionTexture) {
-    directionPad.texture = directionTexture;
-  }
-
-  // A/B/START/SELECT ボタン
-  for (let i = 0; i < 4; ++i) {
-    if (skin.key.buttons.length <= i) {
-      break;
-    }
-
-    const bit = PAD_BIT.BUTTON1 + i;
-    buttons[i].texture = Texture.from(isPressingButton(state, bit) ? skin.key.buttons[i].image.on : skin.key.buttons[i].image.off);
-  }
-}
-
-function updateLayout(app: Application, context: UiContext, state: InputState) {
-  // pixi.js による描画領域を再設定
-  const cw = window.innerWidth;
-  const ch = window.innerHeight;
-  app.renderer.resize(cw, ch);
-
-  const nextSkinIndex = cw < ch ? 0 : 1;
-
-  if (currentSkinIndex != nextSkinIndex) {
-    skin = skins[nextSkinIndex];
-    currentSkinIndex = nextSkinIndex;
-
-    // 背景を画面中央に
-    context.background.position.set(cw / 2, ch / 2);
-
-    // UIレイヤーの pivot を本体画像のサイズに合わせて再設定
-    context.uiLayer.pivot.set(
-      skin.body.size.width  / 2,
-      skin.body.size.height / 2
-    );
-
-    // UI を再配置
-    buildVirtualConsoleUi(skin, context);
-
-    // gameLayer を現在の skin のスクリーン位置・サイズに合わせ直す
-    context.gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
-    context.gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
-  }
-
-  // 全体スケーリングとセンタリング
-  const scale = Math.min(
-    cw / skin.body.size.width,
-    ch / skin.body.size.height);
-  context.root.scale.set(scale);
-  context.root.position.set((cw / 2) | 0, (ch / 2) | 0);
-
-  // 更新後のレイアウトでボタン類を一度描画する
-  updateButtonImages(skin, state, context.dpad, context.buttons);
-}
-
-function handleResize(app: Application, context: UiContext, inputState: InputState) {
-  updateLayout(app, context, inputState);
-}
 
 /**
  * ゲーム仮画面の描画
@@ -285,76 +39,6 @@ function drawGameSample(gameScreenContainer: Container) {
   smile.anchor.set(0.5);
   smile.position.set(GAME_SCREEN.WIDTH / 2, GAME_SCREEN.HEIGHT / 2);
   gameScreenContainer.addChild(smile);
-}
-
-function handleUpdate(inputState: InputState, directionPad: Sprite, buttons: Sprite[]) {
-  // deltaTime は「前フレーム比の時間倍率」
-  // 60FPSで1.0、120FPSで0.5、30FPSで2.0 ぐらいになる
-  updateButtonImages(skin, inputState, directionPad, buttons);
-}
-
-function buildUiContext(parent: Container, inputState: InputState): UiContext {
-  // コンテナ作成
-  const root = new Container();
-  parent.addChild(root);
-
-  // 背景
-  const background = Sprite.from("screen_bg.png");
-  background.anchor.set(0.5);
-  root.addChild(background);
-
-  // UI レイヤー
-  const uiLayer = new Container();
-  root.addChild(uiLayer);
-
-  uiLayer.pivot.set(
-    skin.body.size.width  / 2,
-    skin.body.size.height / 2);
-
-  // ゲーム機本体(UIレイヤー)
-  const body: Sprite[] = [];
-  for (let i = 0; i < 4; ++i) {
-    const s = new Sprite();
-    s.anchor.set(0);
-    uiLayer.addChild(s);
-    body.push(s);
-  }
-
-  // 方向キー(UIレイヤー)
-  const dpad = Sprite.from(skin.key.direction.image.neutral);
-  dpad.anchor.set(0.5);
-  enableDpadTouch(inputState, dpad);
-  uiLayer.addChild(dpad);
-
-  const buttons: Sprite[] = [];
-
-  for (let i = 0; i < 4; ++i) {
-    const sprite = new Sprite();
-    sprite.anchor.set(0.5);
-    sprite.visible = false;
-    enableButtonTouch(inputState, sprite, i + 4);
-    uiLayer.addChild(sprite);
-    buttons.push(sprite);
-  }
-
-  // ゲーム画面レイヤー
-  const gameLayer = new Container();
-  gameLayer.position.set(
-    skin.screen.position.x,
-    skin.screen.position.y);
-  gameLayer.pivot.set(0, 0);
-  gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
-  uiLayer.addChild(gameLayer);
-
-  return {
-    root,
-    uiLayer,
-    gameLayer,
-    background,
-    body,
-    dpad,
-    buttons,
-  };
 }
 
 function loadAssetsAsync() {
@@ -389,30 +73,45 @@ function loadAssetsAsync() {
 
   // 画面上のUI要素の構築
   const inputState = new InputState();
-  const context = buildUiContext(app.stage, inputState);
+  const context = buildUiContext(app.stage, SkinRegistry.portrait, inputState);
+  const skins = new SkinResolver();
+
+  // 初回の画面更新
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  skins.update(w, h);
+  const firstSkin = skins.current;
+  applySkin(context, firstSkin);
 
   // ゲーム画面内のサンプル描画
   drawGameSample(context.gameLayer);
+  relayoutViewport(app, context, firstSkin, w, h);
 
   // キーボード入力イベント
-  window.addEventListener("keydown", e => {
-    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) {
-      e.preventDefault();
+  const unbindKeyboard = bindKeyboard(window, inputState);
+
+  const onResize = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const changed = skins.update(w, h);
+
+    if (changed) {
+      applySkin(context, skins.current);
     }
 
-    handleKeyDown(e, inputState);
-  }, { passive: false });
-  window.addEventListener("keyup", e => handleKeyUp(e, inputState));
+    relayoutViewport(app, context, skins.current, w, h);
+  };
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  window.addEventListener("resize", () => handleResize(app, context, inputState));
-  window.visualViewport?.addEventListener("resize", () => handleResize(app, context, inputState));
-  window.addEventListener("orientationchange", () => handleResize(app, context, inputState));
-  window.addEventListener("pageshow", () => handleResize(app, context, inputState));
+  window.addEventListener("resize", onResize);
+  window.visualViewport?.addEventListener("resize", onResize);
+  window.addEventListener("orientationchange", onResize);
+  window.addEventListener("pageshow", onResize);
+
+  // 終了時の解除
+  window.addEventListener("unload", unbindKeyboard);
 
   // 毎フレーム呼ばれる処理を追加
-  app.ticker.add((/*deltaTime*/) => handleUpdate(inputState, context.dpad, context.buttons));
-
-  updateLayout(app, context, inputState);
+  app.ticker.add((/*deltaTime*/) => updateButtonImages(skins.current, inputState, context.dpad, context.buttons));
 })();
