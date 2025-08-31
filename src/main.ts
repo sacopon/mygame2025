@@ -38,6 +38,7 @@ function buildVirtualConsoleUi(skin: Skin, bodies: Sprite[], direction: Sprite, 
   direction.position.set(
     skin.key.direction.position.x,
     skin.key.direction.position.y);
+  direction.hitArea = new Circle(0, 0, Math.max(direction.width, direction.height) * 0.5);
 
   // その他ボタン
   buttons.forEach(button => button.visible = false);
