@@ -6,6 +6,8 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
   window.addEventListener("contextmenu", e => e.preventDefault()); // 右クリック/長押しメニュー
   window.addEventListener("selectstart", e => e.preventDefault()); // テキスト選択開始
   window.addEventListener("dragstart", e => e.preventDefault());   // 画像ドラッグ
+  window.addEventListener("dblclick", e => e.preventDefault(), { passive: false, capture: true });
+  window.addEventListener("gesturestart", e => e.preventDefault(), { passive: false, capture: true }); // iOS専用
 
   // ホイール/タッチスクロール・ピンチズーム・ダブルタップズーム抑止
   window.addEventListener("wheel", e => e.preventDefault(), { passive: false });
