@@ -29,7 +29,10 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
   // キャンバスにフォーカスを集める
   canvas.setAttribute("tabindex", "0");
   canvas.addEventListener("pointerdown", () => canvas.focus());
-  canvas.addEventListener("touchstart", () => canvas.focus(), { passive: false });
+  canvas.addEventListener("touchstart", e => {
+    e.preventDefault();
+    canvas.focus();
+  }, { passive: false });
   // ジェスチャ干渉によるponterイベント欠落を防止する
   canvas.style.touchAction = "none";
 
