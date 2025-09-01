@@ -41,7 +41,7 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
     const sel = window.getSelection?.();
     if (sel && sel.rangeCount) sel.removeAllRanges();
     const ae = document.activeElement as HTMLElement | null;
-    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) {
+    if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable)) {
       ae.blur();
     }
   };
