@@ -105,13 +105,13 @@ export function buildUiContext(parent: Container, skin: Skin, inputState: InputS
   background.anchor.set(0.5);
   root.addChild(background);
 
+  // バーチャルパッドUIとゲーム画面の共通の親
+  const deviceLayer = new Container();
+  root.addChild(deviceLayer);
+
   // UI レイヤー
   const uiLayer = new Container();
-  root.addChild(uiLayer);
-
-  uiLayer.pivot.set(
-    skin.body.size.width  / 2,
-    skin.body.size.height / 2);
+  deviceLayer.addChild(uiLayer);
 
   // ゲーム機本体(UIレイヤー)
   const body: Sprite[] = [];
@@ -146,10 +146,11 @@ export function buildUiContext(parent: Container, skin: Skin, inputState: InputS
     skin.screen.position.y);
   gameLayer.pivot.set(0, 0);
   gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
-  uiLayer.addChild(gameLayer);
+  deviceLayer.addChild(gameLayer);
 
   return {
     root,
+    deviceLayer,
     uiLayer,
     gameLayer,
     background,

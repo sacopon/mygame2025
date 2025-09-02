@@ -3,6 +3,8 @@ import { UiContext } from "@/app/types";
 import { SkinResolver } from "@/app/skin/resolver";
 import { applySkin } from "@/app/ui/applySkin";
 import { relayoutViewport } from "@/app/ui/layout";
+import { UIMode } from "@/app/ui/mode";
+import { relayoutViewportBare } from "@/app/ui/layout-bare";
 
 /**
  * 画面のサイズを取得する.
@@ -21,7 +23,7 @@ function readViewportSize() {
  * リサイズを要求するイベントが一度に複数発火した際に
  * RequestAnimationFrame を活用して1フレームに1回までの処理にまとめるためのヘルパー
  */
-export function createResizeHandler(app: Application, ctx: UiContext, skins: SkinResolver) {
+export function createResizeHandler(app: Application, ctx: UiContext, skins: SkinResolver, getMode: () => UIMode) {
   let scheduled = false;
   let lastW = 0, lastH = 0;
 
@@ -42,7 +44,7 @@ export function createResizeHandler(app: Application, ctx: UiContext, skins: Ski
 
       lastW = w;
       lastH = h;
-      onResize(app, ctx, skins, w, h);
+      onResize(app, ctx, skins, w, h, false, getMode());
     });
   };
 }
@@ -50,15 +52,21 @@ export function createResizeHandler(app: Application, ctx: UiContext, skins: Ski
 /**
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
-export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number, forceApplySkin = false): void {
+export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number, forceApplySkin = false, mode: UIMode = "pad"): void {
   const changed = skins.update(w, h);
 
-  // スキンが変わった時だけテクスチャの張り替えを行う
-  if (changed || forceApplySkin) {
-    applySkin(ctx, skins.current);
+  if (mode === "pad") {
+    // スキンが変わった時だけテクスチャの張り替えを行う
+    if (changed || forceApplySkin) {
+      applySkin(ctx, skins.current);
+    }
+
+    // ビューポートの更新は常に行う
+    relayoutViewport(app, ctx, skins.current, w, h);
+  }
+  else {
+    relayoutViewportBare(app, ctx, w, h, false);
   }
 
-  // ビューポートの更新は常に行う
-  relayoutViewport(app, ctx, skins.current, w, h);
   app.render();
 }

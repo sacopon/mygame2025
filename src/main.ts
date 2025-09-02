@@ -1,13 +1,14 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { GAME_SCREEN } from "@/app/constants";
+import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
 import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
 import { createResizeHandler, onResize } from "./app/system/resize";
+import { UIMode } from "@/app/ui/mode";
 
 /**
  * リソース読み込み用URLを作成する
@@ -57,6 +58,9 @@ function loadInitialAssetsAsync() {
   // PWA の ServiceWorker を設定
   registerPwaServiceWorker(makePath("sw.js"));
 
+  // 入力モード(URLから取得する/実行中に切り替え可能にする)
+  let mode: UIMode = "pad";
+
   const app = new Application();
   await app.init({
     width: window.innerWidth,
@@ -77,8 +81,13 @@ function loadInitialAssetsAsync() {
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
   const context = buildUiContext(app.stage, skins.current, inputState);
 
+  if (mode === "bare") {
+    context.uiLayer.visible = false;
+    context.uiLayer.eventMode = "none";
+  }
+
   // 初回の画面更新
-  onResize(app, context, skins, window.innerWidth, window.innerHeight, true);
+  onResize(app, context, skins, window.innerWidth, window.innerHeight, true, mode);
 
   // ゲーム画面内のサンプル描画
   drawGameSample(context.gameLayer);
@@ -88,14 +97,30 @@ function loadInitialAssetsAsync() {
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const handleResize = createResizeHandler(app, context, skins);
+  const handleResize = createResizeHandler(app, context, skins, () => mode);
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
   window.addEventListener("pageshow", handleResize, opts);
 
   // 毎フレーム呼ばれる処理を追加
-  const tick = (/*deltaTime*/) => updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+  const tick = (/*deltaTime*/) => {
+    if (mode === "pad") {
+      updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+    }
+
+    if ((inputState.composed() & ~inputState.previousComposed()) & (1 << PAD_BIT.BUTTON3)) {
+      console.log("mode change!");
+      // （任意）ランタイムで切替したい場合
+      mode = mode === "pad" ? "bare" : "pad";
+      const show = mode === "pad";
+      context.uiLayer.visible = show;
+      context.uiLayer.eventMode = show ? "static" : "none";
+      onResize(app, context, skins, innerWidth, innerHeight, true, mode);
+    }
+
+    inputState.next();
+  };
   app.ticker.add(tick);
 
   // abort 時の終了処理
