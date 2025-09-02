@@ -9,6 +9,7 @@ import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
 import { createResizeHandler, onResize } from "./app/system/resize";
 import { UIMode } from "@/app/ui/mode";
+import { GameScreenSpec } from "./app/screen/screen-spec";
 
 /**
  * リソース読み込み用URLを作成する
@@ -21,9 +22,12 @@ const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
  * @param gameScreenContainer ゲーム画面用コンテナ 
  */
 function drawGameSample(gameScreenContainer: Container) {
+  console.log("drawGameSample");
+  const { WIDTH: w, HEIGHT: h } = GameScreenSpec.current;
+
   // 赤い四角
   const g1 = new Graphics();
-  g1.rect(0, 0, GAME_SCREEN.WIDTH, GAME_SCREEN.HEIGHT);
+  g1.rect(0, 0, w, h);
   g1.fill({ color: 0xff0000, alpha: 1 });
   gameScreenContainer.addChild(g1);
   // 青い四角
@@ -35,7 +39,7 @@ function drawGameSample(gameScreenContainer: Container) {
   const smile = Sprite.from("smile.png");
   smile.texture.source.scaleMode = "nearest";
   smile.anchor.set(0.5);
-  smile.position.set(GAME_SCREEN.WIDTH / 2, GAME_SCREEN.HEIGHT / 2);
+  smile.position.set(w / 2, h / 2);
   gameScreenContainer.addChild(smile);
 }
 
@@ -97,7 +101,14 @@ function loadInitialAssetsAsync() {
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const handleResize = createResizeHandler(app, context, skins, () => mode);
+  const resizeHandler = createResizeHandler(app, context, skins, () => mode);
+  const handleResize = () => {
+    resizeHandler();
+
+    context.gameLayer.removeChildren();
+    drawGameSample(context.gameLayer);
+  };
+
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
@@ -117,6 +128,8 @@ function loadInitialAssetsAsync() {
       context.uiLayer.visible = show;
       context.uiLayer.eventMode = show ? "static" : "none";
       onResize(app, context, skins, innerWidth, innerHeight, true, mode);
+      context.gameLayer.removeChildren();
+      drawGameSample(context.gameLayer);
     }
 
     inputState.next();

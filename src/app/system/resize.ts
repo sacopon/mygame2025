@@ -5,6 +5,7 @@ import { applySkin } from "@/app/ui/applySkin";
 import { relayoutViewport } from "@/app/ui/layout";
 import { UIMode } from "@/app/ui/mode";
 import { relayoutViewportBare } from "@/app/ui/layout-bare";
+import { computeBareVirtualScreen, DefaultScreen, GameScreenSpec } from "../screen/screen-spec";
 
 /**
  * 画面のサイズを取得する.
@@ -56,6 +57,9 @@ export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, 
   const changed = skins.update(w, h);
 
   if (mode === "pad") {
+    // バーチャルキーUIの場合は従来の仮想解像度へ戻す
+    GameScreenSpec.set(DefaultScreen)
+
     // スキンが変わった時だけテクスチャの張り替えを行う
     if (changed || forceApplySkin) {
       applySkin(ctx, skins.current);
@@ -65,6 +69,8 @@ export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, 
     relayoutViewport(app, ctx, skins.current, w, h);
   }
   else {
+    // バーチャルキーUIなしの場合は仮想解像度を再計算する
+    GameScreenSpec.set(computeBareVirtualScreen(w, h));
     relayoutViewportBare(app, ctx, w, h, false);
   }
 

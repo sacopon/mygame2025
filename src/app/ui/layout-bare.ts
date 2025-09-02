@@ -1,6 +1,7 @@
 import { Application } from "pixi.js";
 import { UiContext } from "@/app/types";
 import { GAME_SCREEN } from "@/app/constants";
+import { GameScreenSpec } from "../screen/screen-spec";
 
 export function relayoutViewportBare(app: Application, ctx: UiContext, w: number, h: number, pixelPerfect = false) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;
@@ -16,8 +17,9 @@ export function relayoutViewportBare(app: Application, ctx: UiContext, w: number
   ctx.deviceLayer.position.set(0, 0);
 
   // 短辺フィットにスケーリング
-  const sx = w / GAME_SCREEN.WIDTH;
-  const sy = h / GAME_SCREEN.HEIGHT;
+  const { WIDTH: vw, HEIGHT: vh } = GameScreenSpec.current;
+  const sx = w / vw;
+  const sy = h / vh;
   let scale = Math.min(sx, sy);
 
   if (pixelPerfect) {
@@ -25,12 +27,12 @@ export function relayoutViewportBare(app: Application, ctx: UiContext, w: number
   }
 
   // ゲーム画面を中央へ
-  const screenWidth = GAME_SCREEN.WIDTH * scale;
-  const screenHeight = GAME_SCREEN.HEIGHT * scale;
+  const sw = vw * scale;
+  const sh = vh * scale;
   ctx.gameLayer.scale.set(scale);
   ctx.gameLayer.position.set(
-    ((w - screenWidth)  / 2) | 0,
-    ((h - screenHeight) / 2) | 0);
+    ((w - sw) / 2) | 0,
+    ((h - sh) / 2) | 0);
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);

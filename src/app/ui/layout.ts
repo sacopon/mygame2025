@@ -3,6 +3,7 @@ import { Skin } from "@/skin";
 import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
 import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
+import { GameScreenSpec } from "../screen/screen-spec";
 
 /**
  * ボタン状況に応じて画像を更新する
@@ -63,7 +64,7 @@ export function relayoutViewport(app: Application, ctx: UiContext, skin: Skin, w
 
   // ゲーム画面は端末ボディ座標系で設定
   ctx.gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
-  ctx.gameLayer.scale.set(skin.screen.size.width / GAME_SCREEN.WIDTH);
+  ctx.gameLayer.scale.set(skin.screen.size.width / GameScreenSpec.current.WIDTH);
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
