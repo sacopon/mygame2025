@@ -1,6 +1,5 @@
 import { Application } from "pixi.js";
-import { type UiContext } from "@/app";
-import { GameScreenSpec } from "../screen/screen-spec";
+import { type UiContext, GameScreenSpec } from "@/app";
 
 export function relayoutViewportBare(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, w: number, h: number, pixelPerfect = false) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;

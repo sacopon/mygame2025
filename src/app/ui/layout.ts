@@ -1,8 +1,6 @@
 import { Texture, Sprite, Application } from "pixi.js";
-import { PAD_BIT, type UiContext } from "@/app";
-import { Skin } from "@/skin";
+import { GameScreenSpec, PAD_BIT, type Skin, type UiContext } from "@/app";
 import { InputState } from "@/app/input/input-state";
-import { GameScreenSpec } from "../screen/screen-spec";
 
 /**
  * ボタン状況に応じて画像を更新する

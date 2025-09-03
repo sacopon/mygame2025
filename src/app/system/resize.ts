@@ -1,11 +1,9 @@
 import { Application } from "pixi.js";
-import { type UiContext } from "@/app";
-import { SkinResolver } from "@/app/skin/resolver";
+import { type UiContext, DefaultScreen, GameScreenSpec, SkinResolver } from "@/app";
 import { applySkin } from "@/app/ui/applySkin";
 import { relayoutViewport } from "@/app/ui/layout";
 import { UIMode } from "@/app/ui/mode";
 import { relayoutViewportBare } from "@/app/ui/layout-bare";
-import { DefaultScreen, GameScreenSpec } from "../screen/screen-spec";
 
 /**
  * 画面のサイズを取得する.

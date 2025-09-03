@@ -1,15 +1,13 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
-import { PAD_BIT } from "@/app";
+import { GameScreen, GameScreenSpec, PAD_BIT, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
 import { updateButtonImages } from "@/app/ui/layout";
-import { SkinResolver } from "@/app/skin/resolver";
 import { createResizeHandler, onResize } from "@/app/system/resize";
 import { UIMode } from "@/app/ui/mode";
-import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@/app/screen/screen-spec";
 
 /**
  * リソース読み込み用URLを作成する
