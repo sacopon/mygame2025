@@ -1,10 +1,12 @@
 import { Container, Sprite } from "pixi.js";
 
-interface UiContext {
+export interface UiContext {
   /** ルートコンテナ */
   root: Container;
   /** 背景 */
   background: Sprite;
+  /** バーチャルキーUI/仮想ゲーム画面共通の親 */
+  deviceLayer: Container;
   /** バーチャルキーUI */
   uiLayer: Container;
   /** 仮想ゲーム画面 */
@@ -18,7 +20,3 @@ interface UiContext {
   /** バーチャルキーUIのボタン類(A,B,START,SELECT) */
   buttons: Sprite[];
 }
-
-export {
-  UiContext,
-};

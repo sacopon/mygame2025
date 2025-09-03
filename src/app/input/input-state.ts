@@ -2,6 +2,7 @@ export class InputState
 {
   private keyState: number = 0;
   private touchState: number = 0;
+  private previousComposedState: number = 0;
 
   public constructor() {
   }
@@ -20,5 +21,13 @@ export class InputState
 
   public composed() {
     return this.keyState | this.touchState;
+  }
+
+  public previousComposed() {
+    return this.previousComposedState;
+  }
+
+  public next() {
+    this.previousComposedState = this.composed();
   }
 };

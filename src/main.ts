@@ -1,13 +1,15 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { GAME_SCREEN } from "@/app/constants";
+import { PAD_BIT } from "@/app/constants";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";
 import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
-import { createResizeHandler, onResize } from "./app/system/resize";
+import { createResizeHandler, onResize } from "@/app/system/resize";
+import { UIMode } from "@/app/ui/mode";
+import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@/app/screen/screen-spec";
 
 /**
  * リソース読み込み用URLを作成する
@@ -19,10 +21,12 @@ const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
  *
  * @param gameScreenContainer ゲーム画面用コンテナ 
  */
-function drawGameSample(gameScreenContainer: Container) {
+function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
+  gameScreenContainer.removeChildren();
+
   // 赤い四角
   const g1 = new Graphics();
-  g1.rect(0, 0, GAME_SCREEN.WIDTH, GAME_SCREEN.HEIGHT);
+  g1.rect(0, 0, w, h);
   g1.fill({ color: 0xff0000, alpha: 1 });
   gameScreenContainer.addChild(g1);
   // 青い四角
@@ -34,7 +38,7 @@ function drawGameSample(gameScreenContainer: Container) {
   const smile = Sprite.from("smile.png");
   smile.texture.source.scaleMode = "nearest";
   smile.anchor.set(0.5);
-  smile.position.set(GAME_SCREEN.WIDTH / 2, GAME_SCREEN.HEIGHT / 2);
+  smile.position.set(w / 2, h / 2);
   gameScreenContainer.addChild(smile);
 }
 
@@ -57,6 +61,9 @@ function loadInitialAssetsAsync() {
   // PWA の ServiceWorker を設定
   registerPwaServiceWorker(makePath("sw.js"));
 
+  // 入力モード(URLから取得する/実行中に切り替え可能にする)
+  let mode: UIMode = "pad";
+
   const app = new Application();
   await app.init({
     width: window.innerWidth,
@@ -73,29 +80,63 @@ function loadInitialAssetsAsync() {
   await loadInitialAssetsAsync();
 
   // 画面上のUI要素の構築
+  const gameScreenSpec = new GameScreenSpec();
   const inputState = new InputState();
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
   const context = buildUiContext(app.stage, skins.current, inputState);
 
+  // @ts-expect-error TS2367: mode は実行時に切り替わる想定
+  if (mode === "bare") {
+    context.uiLayer.visible = false;
+    context.uiLayer.eventMode = "none";
+  }
+
   // 初回の画面更新
-  onResize(app, context, skins, window.innerWidth, window.innerHeight, true);
+  onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, true, mode);
 
   // ゲーム画面内のサンプル描画
-  drawGameSample(context.gameLayer);
+  drawGameSample(context.gameLayer, gameScreenSpec.current.width, gameScreenSpec.current.height);
 
   // キーボード入力イベント
   const unbindKeyboard = bindKeyboard(window, inputState);
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const handleResize = createResizeHandler(app, context, skins);
+  const handleResize = createResizeHandler(app, context, gameScreenSpec, skins, () => mode);
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
   window.addEventListener("pageshow", handleResize, opts);
 
+  // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
+  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (e: any) => {
+    const spec: GameScreen = e.detail;
+    drawGameSample(context.gameLayer, spec.width, spec.height);
+  }, { signal: ac.signal });
+
+  // // 毎回のリサイズでは「投影/カメラだけ更新」
+  // gameScreenSpec.addEventListener(VIEWPORT_METRICS, (e: any) => {
+  //   const { screen, scale, mode } = e.detail;
+  //   game.updateProjection(screen.x, screen.y, screen.w, screen.h, scale, mode);
+  // }, { signal: ac.signal });
+
   // 毎フレーム呼ばれる処理を追加
-  const tick = (/*deltaTime*/) => updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+  const tick = (/*deltaTime*/) => {
+    if (mode === "pad") {
+      updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+    }
+
+    if ((inputState.composed() & ~inputState.previousComposed()) & (1 << PAD_BIT.BUTTON3)) {
+      // （任意）ランタイムで切替したい場合
+      mode = mode === "pad" ? "bare" : "pad";
+      const show = mode === "pad";
+      context.uiLayer.visible = show;
+      context.uiLayer.eventMode = show ? "static" : "none";
+      onResize(app, context, gameScreenSpec, skins, innerWidth, innerHeight, true, mode);
+    }
+
+    inputState.next();
+  };
   app.ticker.add(tick);
 
   // abort 時の終了処理
