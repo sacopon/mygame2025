@@ -1,7 +1,6 @@
 import { Circle, Texture } from "pixi.js";
-import type { UiContext } from "@/app/types";
+import { GAME_SCREEN, type UiContext } from "@/app";
 import type { Skin } from "@/skin";
-import { GAME_SCREEN } from "@/app/constants";
 
 /** Skin に依存する貼り替えを “だけ” 担当 */
 export function applySkin(ctx: UiContext, skin: Skin) {

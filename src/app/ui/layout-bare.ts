@@ -1,6 +1,5 @@
 import { Application } from "pixi.js";
-import { UiContext } from "@/app/types";
-import { GAME_SCREEN } from "@/app/constants";
+import { type UiContext } from "@/app";
 import { GameScreenSpec } from "../screen/screen-spec";
 
 export function relayoutViewportBare(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, w: number, h: number, pixelPerfect = false) {

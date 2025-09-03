@@ -1,7 +1,6 @@
 import { Circle, Container, FederatedPointerEvent, Sprite } from "pixi.js";
+import { GAME_SCREEN, PAD_BIT, type UiContext } from "@/app";
 import { Skin } from "@/skin";
-import { GAME_SCREEN, PAD_BIT } from "@/app/constants";
-import { UiContext } from "@/app/types";
 import { InputState } from "@/app/input/input-state";
 
 export function enableDpadTouch(state: InputState, sprite: Sprite) {

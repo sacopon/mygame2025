@@ -1,5 +1,5 @@
+import { PAD_BIT } from "@/app/index";
 import { InputState } from "@/app/input/input-state";
-import { PAD_BIT } from "@/app/constants";
 
 /**
  * キーボード押下時に InputState が更新されるように設定する

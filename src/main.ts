@@ -1,7 +1,7 @@
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
+import { PAD_BIT } from "@/app";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { PAD_BIT } from "@/app/constants";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
 import { buildUiContext } from "@/app/ui/virtualpad";

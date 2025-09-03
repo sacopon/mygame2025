@@ -1,5 +1,5 @@
 import { Application } from "pixi.js";
-import { UiContext } from "@/app/types";
+import { type UiContext } from "@/app";
 import { SkinResolver } from "@/app/skin/resolver";
 import { applySkin } from "@/app/ui/applySkin";
 import { relayoutViewport } from "@/app/ui/layout";
