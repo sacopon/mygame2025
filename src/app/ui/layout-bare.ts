@@ -3,7 +3,7 @@ import { UiContext } from "@/app/types";
 import { GAME_SCREEN } from "@/app/constants";
 import { GameScreenSpec } from "../screen/screen-spec";
 
-export function relayoutViewportBare(app: Application, ctx: UiContext, w: number, h: number, pixelPerfect = false) {
+export function relayoutViewportBare(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, w: number, h: number, pixelPerfect = false) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;
   const ch = (app.renderer.canvas as HTMLCanvasElement).height;
 
@@ -17,7 +17,7 @@ export function relayoutViewportBare(app: Application, ctx: UiContext, w: number
   ctx.deviceLayer.position.set(0, 0);
 
   // 短辺フィットにスケーリング
-  const { WIDTH: vw, HEIGHT: vh } = GameScreenSpec.current;
+  const { width: vw, height: vh } = gameScreenSpec.current;
   const sx = w / vw;
   const sy = h / vh;
   let scale = Math.min(sx, sy);

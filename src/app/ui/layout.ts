@@ -48,7 +48,7 @@ export function updateButtonImages(skin: Skin, state: InputState, directionPad: 
   }
 }
 
-export function relayoutViewport(app: Application, ctx: UiContext, skin: Skin, w: number, h: number) {
+export function relayoutViewport(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;
   const ch = (app.renderer.canvas as HTMLCanvasElement).height;
 
@@ -64,7 +64,7 @@ export function relayoutViewport(app: Application, ctx: UiContext, skin: Skin, w
 
   // ゲーム画面は端末ボディ座標系で設定
   ctx.gameLayer.position.set(skin.screen.position.x, skin.screen.position.y);
-  ctx.gameLayer.scale.set(skin.screen.size.width / GameScreenSpec.current.WIDTH);
+  ctx.gameLayer.scale.set(skin.screen.size.width / gameScreenSpec.current.width);
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
