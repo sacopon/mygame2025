@@ -5,7 +5,7 @@ import { applySkin } from "@/app/ui/applySkin";
 import { relayoutViewport } from "@/app/ui/layout";
 import { UIMode } from "@/app/ui/mode";
 import { relayoutViewportBare } from "@/app/ui/layout-bare";
-import { computeBareVirtualScreen, DefaultScreen, GameScreenSpec } from "../screen/screen-spec";
+import { computeBareVirtualScreen, DefaultScreen, GameScreenSpec, ScreenEvents } from "../screen/screen-spec";
 
 /**
  * 画面のサイズを取得する.
@@ -54,14 +54,14 @@ export function createResizeHandler(app: Application, ctx: UiContext, skins: Ski
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
 export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, w: number, h: number, forceApplySkin = false, mode: UIMode = "pad"): void {
-  const changed = skins.update(w, h);
+  const skinChanged = skins.update(w, h);
 
   if (mode === "pad") {
     // バーチャルキーUIの場合は従来の仮想解像度へ戻す
-    GameScreenSpec.set(DefaultScreen)
+    GameScreenSpec.update(DefaultScreen)
 
     // スキンが変わった時だけテクスチャの張り替えを行う
-    if (changed || forceApplySkin) {
+    if (skinChanged || forceApplySkin) {
       applySkin(ctx, skins.current);
     }
 
@@ -70,9 +70,26 @@ export function onResize(app: Application, ctx: UiContext, skins: SkinResolver, 
   }
   else {
     // バーチャルキーUIなしの場合は仮想解像度を再計算する
-    GameScreenSpec.set(computeBareVirtualScreen(w, h));
+    GameScreenSpec.update(computeBareVirtualScreen(w, h));
     relayoutViewportBare(app, ctx, w, h, false);
   }
+
+  // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
+  const { WIDTH: vw, HEIGHT: vh } = GameScreenSpec.current;
+  // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
+  const scale =
+    mode === "pad"
+      ? (skins.current.screen.size.width / vw)
+      : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
+
+  const screenW = vw * scale;
+  const screenH = vh * scale;
+  const screenX = ((w - screenW) / 2) | 0;
+  const screenY = ((h - screenH) / 2) | 0;
+
+  ScreenEvents.dispatchEvent(new CustomEvent("viewportmetrics", {
+    detail: { view: { w, h }, screen: { x: screenX, y: screenY, w: screenW, h: screenH }, scale, mode }
+  }));
 
   app.render();
 }

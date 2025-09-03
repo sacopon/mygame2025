@@ -9,7 +9,7 @@ import { updateButtonImages } from "@/app/ui/layout";
 import { SkinResolver } from "@/app/skin/resolver";
 import { createResizeHandler, onResize } from "./app/system/resize";
 import { UIMode } from "@/app/ui/mode";
-import { GameScreenSpec } from "./app/screen/screen-spec";
+import { GameScreenSpec, ScreenEvents } from "./app/screen/screen-spec";
 
 /**
  * リソース読み込み用URLを作成する
@@ -21,9 +21,8 @@ const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
  *
  * @param gameScreenContainer ゲーム画面用コンテナ 
  */
-function drawGameSample(gameScreenContainer: Container) {
-  console.log("drawGameSample");
-  const { WIDTH: w, HEIGHT: h } = GameScreenSpec.current;
+function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
+  gameScreenContainer.removeChildren();
 
   // 赤い四角
   const g1 = new Graphics();
@@ -94,25 +93,30 @@ function loadInitialAssetsAsync() {
   onResize(app, context, skins, window.innerWidth, window.innerHeight, true, mode);
 
   // ゲーム画面内のサンプル描画
-  drawGameSample(context.gameLayer);
+  drawGameSample(context.gameLayer, GameScreenSpec.current.WIDTH, GameScreenSpec.current.HEIGHT);
 
   // キーボード入力イベント
   const unbindKeyboard = bindKeyboard(window, inputState);
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const resizeHandler = createResizeHandler(app, context, skins, () => mode);
-  const handleResize = () => {
-    resizeHandler();
-
-    context.gameLayer.removeChildren();
-    drawGameSample(context.gameLayer);
-  };
-
+  const handleResize = createResizeHandler(app, context, skins, () => mode);
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
   window.addEventListener("pageshow", handleResize, opts);
+
+  // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
+  ScreenEvents.addEventListener("virtualscreenchange", (e: any) => {
+    const spec = e.detail; // { WIDTH, HEIGHT }
+    drawGameSample(context.gameLayer, spec.WIDTH, spec.HEIGHT);
+  }, { signal: ac.signal });
+
+  // 毎回のリサイズでは「投影/カメラだけ更新」
+  ScreenEvents.addEventListener("viewportmetrics", (e: any) => {
+    // const { screen, scale, mode } = e.detail;
+    // game.updateProjection(screen.x, screen.y, screen.w, screen.h, scale, mode);
+  }, { signal: ac.signal });
 
   // 毎フレーム呼ばれる処理を追加
   const tick = (/*deltaTime*/) => {
@@ -121,15 +125,12 @@ function loadInitialAssetsAsync() {
     }
 
     if ((inputState.composed() & ~inputState.previousComposed()) & (1 << PAD_BIT.BUTTON3)) {
-      console.log("mode change!");
       // （任意）ランタイムで切替したい場合
       mode = mode === "pad" ? "bare" : "pad";
       const show = mode === "pad";
       context.uiLayer.visible = show;
       context.uiLayer.eventMode = show ? "static" : "none";
       onResize(app, context, skins, innerWidth, innerHeight, true, mode);
-      context.gameLayer.removeChildren();
-      drawGameSample(context.gameLayer);
     }
 
     inputState.next();

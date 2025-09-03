@@ -5,9 +5,21 @@ export const DefaultScreen: GameScreen = { WIDTH: 256, HEIGHT: 224 };
 
 let _current: GameScreen = DefaultScreen;
 
+// ゲーム側が購読するイベント
+export const ScreenEvents = new EventTarget();
+
 export const GameScreenSpec = {
   get current(): GameScreen { return _current; },
   set(v: GameScreen) { _current = v; },
+  update(next: GameScreen) {
+    if (_current.WIDTH === next.WIDTH && _current.HEIGHT === next.HEIGHT) {
+      return;
+    }
+
+    _current = next;
+    ScreenEvents.dispatchEvent(new CustomEvent("virtualscreenchange", { detail: next }));
+    return true;
+  }
 };
 
 // bare landscape 用：16:10 の仮想解像度を計算
