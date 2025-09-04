@@ -4,10 +4,8 @@ import { GameScreen, GameScreenSpec, PAD_BIT, SkinResolver, VIRTUAL_SCREEN_CHANG
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
 import { InputState } from "@/app/input/input-state";
 import { bindKeyboard } from "@/app/input/bind-keyboard";
-import { buildUiContext } from "@/app/ui/virtualpad";
-import { updateButtonImages } from "@/app/ui/layout";
-import { createResizeHandler, onResize } from "@/app/system/resize";
-import { UIMode } from "@/app/ui/mode";
+import { buildUiContext, type UIMode, updateButtonImages } from "@/app/ui";
+import { createResizeHandler, onResize } from "@/app/resize";
 
 /**
  * リソース読み込み用URLを作成する
