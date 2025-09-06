@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import checker from 'vite-plugin-checker';
 
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
@@ -12,7 +13,10 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
+        '@app': path.resolve(__dirname, 'src/app'),
+        '@core': path.resolve(__dirname, 'src/core'),
+        '@game': path.resolve(__dirname, 'src/game'),
+        '@shared': path.resolve(__dirname, 'src/shared'),
       },
       dedupe: ['pixi.js'],  // pixi の重複取り込みを防ぐ
     },
@@ -23,6 +27,13 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 5173,
-    }
+    },
+    plugins: [
+      checker({
+        typescript: {
+          tsconfigPath: './tsconfig.json',
+        }
+      }),
+    ]
   };
 });

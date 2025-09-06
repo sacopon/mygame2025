@@ -1,4 +1,4 @@
-import { InputState, PAD_BIT } from "@/shared";
+import { InputState, PAD_BIT } from "@shared";
 
 /**
  * キーボード押下時に InputState が更新されるように設定する
