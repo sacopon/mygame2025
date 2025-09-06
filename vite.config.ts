@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import checker from 'vite-plugin-checker';
 
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
@@ -26,6 +27,13 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 5173,
-    }
+    },
+    plugins: [
+      checker({
+        typescript: {
+          tsconfigPath: './tsconfig.json',
+        }
+      }),
+    ]
   };
 });
