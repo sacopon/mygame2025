@@ -1,11 +1,12 @@
 import "@/index.css";
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
-import { GameScreen, GameScreenSpec, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
+import { AppContext, GameScreen, GameScreenSpec, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
 import { PAD_BIT, InputState } from "@/shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser";
 import { bindKeyboard } from "@/app/input";
-import { buildUiContext, type UIMode, updateButtonImages } from "@/app/ui";
+import { isUIMode, relayoutViewport, relayoutViewportBare, UIMODE, type UIMode } from "@/app/ui";
 import { createResizeHandler, onResize } from "@/app/resize";
+import { VirtualPadUI } from "./app/ui/virtual-pad-ui";
 
 /**
  * リソース読み込み用URLを作成する
@@ -49,6 +50,38 @@ function loadInitialAssetsAsync() {
   ]);
 }
 
+export function buildAppContext(parent: Container): AppContext {
+  // コンテナ作成
+  const root = new Container();
+  parent.addChild(root);
+
+  // 背景
+  const background = Sprite.from("screen_bg.png");
+  background.anchor.set(0.5);
+  root.addChild(background);
+
+  // バーチャルパッドUIとゲーム画面の共通の親
+  const deviceLayer = new Container();
+  root.addChild(deviceLayer);
+
+  // 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー
+  const frameLayer = new Container();
+  // ゲーム画面レイヤー
+  const gameLayer = new Container();
+  // 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー
+  const overlayLayer = new Container();
+
+  deviceLayer.addChild(frameLayer);   // 本体
+  deviceLayer.addChild(gameLayer);    // 画面
+  deviceLayer.addChild(overlayLayer); // ボタン
+
+  // 何も入れないうちはイベントを拾わないようにしておく
+  frameLayer.eventMode   = "none";
+  overlayLayer.eventMode = "none";
+
+  return { root, background, deviceLayer, frameLayer, gameLayer, overlayLayer };
+}
+
 (async () => {
   // abort 時に終了処理を実行するためのインスタンス
   const ac = new AbortController();
@@ -58,7 +91,8 @@ function loadInitialAssetsAsync() {
   registerPwaServiceWorker(makePath("sw.js"));
 
   // 入力モード(URLから取得する/実行中に切り替え可能にする)
-  let mode: UIMode = "pad";
+  const modeQuery = new URLSearchParams(location.search).get("mode");
+  let mode: UIMode = isUIMode(modeQuery) ? modeQuery : UIMODE.PAD;
 
   const app = new Application();
   await app.init({
@@ -79,16 +113,24 @@ function loadInitialAssetsAsync() {
   const gameScreenSpec = new GameScreenSpec();
   const inputState = new InputState();
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
-  const context = buildUiContext(app.stage, skins.current, inputState);
+  const context = buildAppContext(app.stage);
 
-  // @ts-expect-error TS2367: mode は実行時に切り替わる想定
-  if (mode === "bare") {
-    context.uiLayer.visible = false;
-    context.uiLayer.eventMode = "none";
+  let padUI: VirtualPadUI | null = null;
+
+  if (mode === UIMODE.PAD) {
+    padUI = VirtualPadUI.attach(context, skins.current, inputState);
   }
 
-  // 初回の画面更新
-  onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, true, mode);
+  // // 初回の画面更新
+  // onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, true, mode);
+
+  // 初期レイアウト
+  if (mode === UIMODE.PAD) {
+    relayoutViewport(app, context, gameScreenSpec, skins.current, window.innerWidth, window.innerHeight);
+  }
+  else {
+    relayoutViewportBare(app, context, gameScreenSpec, window.innerWidth, window.innerHeight, true);
+  }
 
   // ゲーム画面内のサンプル描画
   drawGameSample(context.gameLayer, gameScreenSpec.current.width, gameScreenSpec.current.height);
@@ -98,11 +140,29 @@ function loadInitialAssetsAsync() {
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const handleResize = createResizeHandler(app, context, gameScreenSpec, skins, () => mode);
+  const handleResize = createResizeHandler(app, context, gameScreenSpec, skins, () => ({ mode, padUI }));
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
   window.addEventListener("pageshow", handleResize, opts);
+
+  const toggleMode = () => {
+    if (mode === UIMODE.PAD) {
+      padUI?.detach();
+      mode = UIMODE.BARE;
+    }
+    else {
+      if (!padUI) {
+        padUI = VirtualPadUI.attach(context, skins.current, inputState);
+      } else {
+        padUI.reattach();
+      }
+
+      mode = UIMODE.PAD;
+    }
+
+    onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI });
+  };
 
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
   gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
@@ -118,22 +178,20 @@ function loadInitialAssetsAsync() {
 
   // 毎フレーム呼ばれる処理を追加
   const tick = (/*deltaTime*/) => {
-    if (mode === "pad") {
-      updateButtonImages(skins.current, inputState, context.dpad, context.buttons);
+    if (padUI) {
+      padUI.updateButtonImages();
     }
 
     if ((inputState.composed() & ~inputState.previousComposed()) & (1 << PAD_BIT.BUTTON3)) {
-      // （任意）ランタイムで切替したい場合
-      mode = mode === "pad" ? "bare" : "pad";
-      const show = mode === "pad";
-      context.uiLayer.visible = show;
-      context.uiLayer.eventMode = show ? "static" : "none";
-      onResize(app, context, gameScreenSpec, skins, innerWidth, innerHeight, true, mode);
+      toggleMode();
     }
 
     inputState.next();
   };
   app.ticker.add(tick);
+
+  // 初回再描画
+  onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI });
 
   // abort 時の終了処理
   ac.signal.addEventListener("abort", () => {

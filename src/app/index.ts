@@ -14,7 +14,8 @@ export {
 } from "./constants";
 
 export {
-  type UiContext,
+  type AppContext,
+  type VirtualPadSlots,
 } from "./types";
 
 export {

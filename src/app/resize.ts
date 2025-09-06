@@ -1,6 +1,17 @@
 import { Application } from "pixi.js";
-import { type UiContext, DefaultScreen, GameScreenSpec, SkinResolver } from "@/app";
-import { applySkin, relayoutViewport, relayoutViewportBare, UIMode } from "@/app/ui";
+import { type AppContext, DefaultScreen, GameScreenSpec, SkinResolver } from "@/app";
+import { relayoutViewport, relayoutViewportBare, UIMODE, UIMode, VirtualPadUI } from "@/app/ui";
+
+export type ResizeOptions = {
+  mode: UIMode;
+  forceApplySkin?: boolean;
+  padUI: VirtualPadUI | null;
+}
+
+export type ViewState = {
+  mode: UIMode,
+  padUI: VirtualPadUI | null;
+}
 
 /**
  * 画面のサイズを取得する.
@@ -19,7 +30,7 @@ function readViewportSize() {
  * リサイズを要求するイベントが一度に複数発火した際に
  * RequestAnimationFrame を活用して1フレームに1回までの処理にまとめるためのヘルパー
  */
-export function createResizeHandler(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, getMode: () => UIMode) {
+export function createResizeHandler(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, getViewState: () => ViewState) {
   let scheduled = false;
   let lastW = 0, lastH = 0;
 
@@ -40,7 +51,8 @@ export function createResizeHandler(app: Application, ctx: UiContext, gameScreen
 
       lastW = w;
       lastH = h;
-      onResize(app, ctx, gameScreenSpec, skins, w, h, false, getMode());
+      const { mode, padUI } = getViewState();
+      onResize(app, ctx, gameScreenSpec, skins, w, h, { mode, forceApplySkin: false, padUI } );
     });
   };
 }
@@ -48,16 +60,16 @@ export function createResizeHandler(app: Application, ctx: UiContext, gameScreen
 /**
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
-export function onResize(app: Application, ctx: UiContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, w: number, h: number, forceApplySkin = false, mode: UIMode = "pad"): void {
+export function onResize(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, w: number, h: number, { mode, forceApplySkin = false, padUI = null }: ResizeOptions): void {
   const skinChanged = skins.update(w, h);
 
-  if (mode === "pad") {
+  if (mode === UIMODE.PAD) {
     // バーチャルキーUIの場合は従来の仮想解像度へ戻す
     gameScreenSpec.update(DefaultScreen);
 
     // スキンが変わった時だけテクスチャの張り替えを行う
-    if (skinChanged || forceApplySkin) {
-      applySkin(ctx, skins.current);
+    if (padUI && (skinChanged || forceApplySkin)) {
+      padUI.applySkin(skins.current);
     }
 
     // ビューポートの更新は常に行う
@@ -74,7 +86,7 @@ export function onResize(app: Application, ctx: UiContext, gameScreenSpec: GameS
   // const { width: vw, height: vh } = gameScreenSpec.current;
   // // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
   // const scale =
-  //   mode === "pad"
+  //   mode === UIMODE.PAD
   //     ? (skins.current.screen.size.width / vw)
   //     : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
 

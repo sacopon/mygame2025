@@ -5,18 +5,16 @@
  * - 依存: app/screen, app/skin, shared は OK。core は UI イベント補助のみ。
  */
 export {
-  applySkin,
-} from "./applySkin";
-
-export {
   relayoutViewport,
   relayoutViewportBare,
-  type UIMode,
-  updateButtonImages,
 } from "./layout";
 
 export {
-  buildUiContext,
-  enableButtonTouch,
-  enableDpadTouch,
-} from "./virtualpad";
+  UIMODE,
+  type UIMode,
+  isUIMode,
+} from "./mode";
+
+export {
+  VirtualPadUI,
+} from "./virtual-pad-ui";
