@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
+        '@app': path.resolve(__dirname, 'src/app'),
+        '@core': path.resolve(__dirname, 'src/core'),
+        '@game': path.resolve(__dirname, 'src/game'),
+        '@shared': path.resolve(__dirname, 'src/shared'),
       },
       dedupe: ['pixi.js'],  // pixi の重複取り込みを防ぐ
     },

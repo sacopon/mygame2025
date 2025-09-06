@@ -5,7 +5,11 @@
     "moduleResolution": "Node",
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"]
+      "@app/*": ["app/*"],
+      "@core/*": ["core/*"],
+      "@game/*": ["game/*"],
+      "@shared/*": ["shared/*"],
+      "@shared": ["shared/index.ts"]
     },
     "strict": true,
     "esModuleInterop": true,

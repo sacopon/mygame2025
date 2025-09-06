@@ -1,4 +1,4 @@
-import { Skin, SkinId } from "@/app/features/ui/skin";
+import { Skin, SkinId } from "@app/features/ui/skin";
 
 export const SkinRegistry: Record<SkinId, Skin> = {
   // 縦画面用

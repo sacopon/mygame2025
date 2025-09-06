@@ -1,4 +1,4 @@
-import { Skin, SkinId, SkinRegistry } from "@/app/features/ui/skin";
+import { Skin, SkinId, SkinRegistry } from "@app/features/ui/skin";
 
 /** 端末ゆれ対策のヒステリシス。1.05 だと 5% 以上で切替 */
 const ORIENT_THRESHOLD = 1.05;

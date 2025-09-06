@@ -1,15 +1,15 @@
-import "@/index.css";
+import "./index.css";
 import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
-import { PAD_BIT, InputState } from "@/shared";
-import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser";
-import { bindKeyboard } from "@/app/input";
-import { relayoutViewport, relayoutViewportBare } from "@/app/features/ui/layout";
-import { isUIMode, UIMODE, type UIMode } from "@/app/features/ui/mode";
-import { SkinResolver } from "@/app/features/ui/skin";
-import { VirtualPadUI } from "@/app/features/ui/virtual-pad";
-import { createResizeHandler, onResize } from "@/app/services/resize";
-import { AppContext } from "@/app/config";
-import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@/app/services/screen";
+import { PAD_BIT, InputState } from "@shared";
+import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
+import { bindKeyboard } from "@app/input";
+import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
+import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
+import { SkinResolver } from "@app/features/ui/skin";
+import { VirtualPadUI } from "@app/features/ui/virtual-pad";
+import { createResizeHandler, onResize } from "@app/services/resize";
+import { AppContext } from "@app/config";
+import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
 
 /**
  * リソース読み込み用URLを作成する

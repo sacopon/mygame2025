@@ -1,10 +1,10 @@
 import { Application } from "pixi.js";
-import { AppContext } from "@/app/config";
-import { relayoutViewport, relayoutViewportBare } from "@/app/features/ui/layout";
-import { UIMODE, UIMode } from "@/app/features/ui/mode";
-import { VirtualPadUI } from "@/app/features/ui/virtual-pad";
-import { DefaultScreen, GameScreenSpec } from "@/app/services/screen";
-import { SkinResolver } from "@/app/features/ui/skin";
+import { AppContext } from "@app/config";
+import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
+import { UIMODE, UIMode } from "@app/features/ui/mode";
+import { VirtualPadUI } from "@app/features/ui/virtual-pad";
+import { DefaultScreen, GameScreenSpec } from "@app/services/screen";
+import { SkinResolver } from "@app/features/ui/skin";
 
 export type ResizeOptions = {
   mode: UIMode;

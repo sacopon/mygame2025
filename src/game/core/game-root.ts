@@ -1,4 +1,4 @@
-import { GameObject } from "@/game/core";
+import { GameObject } from "@game/core";
 
 export class GameRoot {
   #objects: GameObject[] = [];

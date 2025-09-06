@@ -1,4 +1,4 @@
-import { Position, Size } from "@/shared";
+import { Position, Size } from "@shared";
 
 type SkinBody = {
   size: Size;

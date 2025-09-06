@@ -1,4 +1,4 @@
-import { SpriteHandle, Transform2D } from "@/game/ports";
+import { SpriteHandle, Transform2D } from "@game/ports";
 
 export interface SpriteSpec {
   imageId: string;
