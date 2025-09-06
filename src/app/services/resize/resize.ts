@@ -17,6 +17,13 @@ export type ViewState = {
   padUI: VirtualPadUI | null;
 }
 
+function updateGameMask(context: AppContext, vw: number, vh: number) {
+  console.log(`vw:${vw}, vh:${vh}`);
+  const g = context.gameLayerMask;
+  g.clear();
+  g.rect(0, 0, vw, vh).fill({ color: 0xffffff, alpha: 1 }); // 透過でもOK. 色は何でも構わない
+}
+
 /**
  * 画面のサイズを取得する.
  * 可能なら visualViewport を優先
@@ -85,20 +92,24 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
     relayoutViewportBare(app, ctx, gameScreenSpec, w, h, false);
   }
 
-  // // TODO(viewportmetrics): 必要になったら発火する
+  const { width: vw, height: vh } = gameScreenSpec.current;
+  // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
+  const scale =
+    mode === UIMODE.PAD
+      ? (skins.current.screen.size.width / vw)
+      : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
+
+  const screenW = (vw * scale) | 0;
+  const screenH = (vh * scale) | 0;
+  const screenX = ((w - screenW) / 2) | 0;
+  const screenY = ((h - screenH) / 2) | 0;
+
+  // ゲーム画面のマスク領域を更新
+  console.log(`gss.cur.wid:${gameScreenSpec.current.width}, gss.cur.hei:${gameScreenSpec.current.height}`);
+  updateGameMask(ctx, gameScreenSpec.current.width, gameScreenSpec.current.height);
+
+  // TODO(viewportmetrics): 必要になったら発火する
   // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
-  // const { width: vw, height: vh } = gameScreenSpec.current;
-  // // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
-  // const scale =
-  //   mode === UIMODE.PAD
-  //     ? (skins.current.screen.size.width / vw)
-  //     : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
-
-  // const screenW = vw * scale;
-  // const screenH = vh * scale;
-  // const screenX = ((w - screenW) / 2) | 0;
-  // const screenY = ((h - screenH) / 2) | 0;
-
   // viewportMetrics.update({
   //   view:   { w, h },
   //   screen: { x: screenX, y: screenY, w: screenW, h: screenH },

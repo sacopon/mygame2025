@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite } from "pixi.js";
+import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesheet } from "pixi.js";
 import { PAD_BIT, InputState } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -16,6 +16,7 @@ import { SpriteHandle } from "@game/ports"; // TEST
 
 let render: PixiRenderAdapter;
 let smileHandle: SpriteHandle;
+let backgroundHandle: SpriteHandle;
 let rot: number = 0;
 let scale: number = 0;
 
@@ -30,6 +31,7 @@ const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
  * @param gameScreenContainer ゲーム画面用コンテナ 
  */
 function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
+  console.log("drawGameSample");
   gameScreenContainer.removeChildren();
 
   // 赤い四角
@@ -43,17 +45,20 @@ function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
   g2.fill({ color: 0x0000ff, alpha: 1 });
   gameScreenContainer.addChild(g2);
 
-  // const smile = Sprite.from("smile.png");
-  // smile.texture.source.scaleMode = "nearest";
-  // smile.anchor.set(0.5);
-  // smile.position.set(w / 2, h / 2);
-  // gameScreenContainer.addChild(smile);
+  backgroundHandle = render.createSprite({
+    imageId: "bg358x224.png",
+    transform: {
+      x: w / 2,
+      y: h / 2,
+    },
+    layer: 10,
+  });
 
   smileHandle = render.createSprite({
     imageId: "smile.png",
     transform: {
-      x: w / 2 - 8,
-      y: h / 2 - 8,
+      x: w / 2,
+      y: h / 2,
       scaleX: 2,
       scaleY: 2,
       rotation: 0,
@@ -63,14 +68,39 @@ function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
 }
 
 function loadInitialAssetsAsync() {
-  return Assets.load([
+  const resources = [
     // 全体背景
     { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
     // バーチャルパッドUI
-    makePath("textures/virtualui.json"),
+    { alias: "virtualui.json", src: makePath("textures/virtualui.json") },
     // ゲーム本編系画像(SAMPLE)
-    { alias: "smile.png", src: makePath("textures/smile.png"), data: { scaleMode: "nearest" } },
+    { alias: "game.json", src: makePath("textures/game.json") },
+    // { alias: "smile.png", src: makePath("textures/smile.png"), data: { scaleMode: "nearest" } },
+  ];
+
+  const nearestTargets = new Set([
+    "game.json",
   ]);
+
+  const promises = Assets
+    .load(resources)
+    .then(()  => {
+      resources.forEach(res => {
+        const { alias } = res;
+
+        if (!nearestTargets.has(alias)) {
+          return;
+        }
+
+        const spritesheet = Assets.get(alias) as Spritesheet;
+
+        for (const tex of Object.values(spritesheet.textures)) {
+          tex.source.scaleMode = "nearest";
+        }
+      });
+    });
+
+  return promises;
 }
 
 export function buildAppContext(parent: Container): AppContext {
@@ -91,7 +121,18 @@ export function buildAppContext(parent: Container): AppContext {
   const frameLayer = new Container();
   // ゲーム画面レイヤー
   const gameLayer = new Container();
-  gameLayer.sortableChildren = true;
+
+  // ゲーム画面内の描画がはみ出さないようにマスク
+  const gameLayerMask = new Graphics();
+  gameLayerMask.eventMode = "none";
+  gameLayer.addChild(gameLayerMask);  // マスクの座標系をマスクをかけるレイヤーの座標系にするため gameLayer の子にする
+  gameLayer.mask = gameLayerMask;
+
+  // ゲーム画面の中身用コンテナ(ゲーム画面コンテナを全削除した際にマスクまで削除してしまわないように分ける)
+  const gameContentLayer = new Container();
+  gameContentLayer.sortableChildren = true;
+  gameLayer.addChild(gameContentLayer);
+
   // 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー
   const overlayLayer = new Container();
 
@@ -104,12 +145,12 @@ export function buildAppContext(parent: Container): AppContext {
   overlayLayer.eventMode = "none";
 
   // ゲームのルートオブジェクトを作成
-  render = new PixiRenderAdapter(gameLayer);
+  render = new PixiRenderAdapter(gameContentLayer);
 
   // const gameRoot = new GameRoot(new PixiRenderAdapter(gameLayer));
   const gameRoot = new GameRoot(render);
 
-  return { root, background, deviceLayer, frameLayer, gameLayer, overlayLayer, gameRoot };
+  return { root, background, deviceLayer, frameLayer, gameLayer, gameContentLayer, gameLayerMask, overlayLayer, gameRoot };
 }
 
 (async () => {
@@ -137,7 +178,7 @@ export function buildAppContext(parent: Container): AppContext {
   disableBrowserGestures(app.canvas);
 
   // 画像読み込み
-  await loadInitialAssetsAsync();
+  await loadInitialAssetsAsync()
 
   // 画面上のUI要素の構築
   const gameScreenSpec = new GameScreenSpec();
@@ -160,7 +201,7 @@ export function buildAppContext(parent: Container): AppContext {
   }
 
   // ゲーム画面内のサンプル描画
-  drawGameSample(context.gameLayer, gameScreenSpec.current.width, gameScreenSpec.current.height);
+  drawGameSample(context.gameContentLayer, gameScreenSpec.current.width, gameScreenSpec.current.height);
 
   // キーボード入力イベント
   const unbindKeyboard = bindKeyboard(window, inputState);
@@ -194,7 +235,7 @@ export function buildAppContext(parent: Container): AppContext {
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
   gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
     const { detail } = ev as CustomEvent<GameScreen>;
-    drawGameSample(context.gameLayer, detail.width, detail.height);
+    drawGameSample(context.gameContentLayer, detail.width, detail.height);
   }, { signal: ac.signal });
 
   // // 毎回のリサイズでは「投影/カメラだけ更新」

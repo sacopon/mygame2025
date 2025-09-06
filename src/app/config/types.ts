@@ -1,4 +1,4 @@
-import { Container, Sprite } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import { GameRoot } from "@game/core";
 
 export interface AppContext {
@@ -10,8 +10,12 @@ export interface AppContext {
   deviceLayer: Container;
   /** 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー */
   frameLayer: Container;
-  /** 仮想ゲーム画面 */
+  /** 仮想ゲーム画面(中身 + マスク) */
   gameLayer: Container;
+  /** 仮想ゲーム画面(中身用) */
+  gameContentLayer: Container;
+  /** 仮想ゲーム画面用のマスク */
+  gameLayerMask: Graphics;
   /** 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー */
   overlayLayer: Container;
 
