@@ -20,7 +20,12 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
   });
 
   // スワイプバック誤動作軽減（完全には防げません）
-  history.pushState(null, "", location.href);
+  if (history.length <= 1) {
+    history.replaceState(null, "", location.href);
+  }
+  else {
+    history.pushState(null, "", location.href);
+  }
 
   // このイベントコールバックでゲーム内ポーズを出す等.
   // ブラウザバック自体は戻さずにゲームへフォーカス返す

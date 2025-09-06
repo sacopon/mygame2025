@@ -1,15 +1,11 @@
-import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
-import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { PAD_BIT } from "@/app/constants";
-import { InputState } from "@/app/input/input-state";
-import { bindKeyboard } from "@/app/input/bind-keyboard";
-import { buildUiContext } from "@/app/ui/virtualpad";
-import { updateButtonImages } from "@/app/ui/layout";
-import { SkinResolver } from "@/app/skin/resolver";
-import { createResizeHandler, onResize } from "@/app/system/resize";
-import { UIMode } from "@/app/ui/mode";
-import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@/app/screen/screen-spec";
+import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
+import { GameScreen, GameScreenSpec, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
+import { PAD_BIT, InputState } from "@/shared";
+import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser";
+import { bindKeyboard } from "@/app/input";
+import { buildUiContext, type UIMode, updateButtonImages } from "@/app/ui";
+import { createResizeHandler, onResize } from "@/app/resize";
 
 /**
  * リソース読み込み用URLを作成する
@@ -109,9 +105,9 @@ function loadInitialAssetsAsync() {
   window.addEventListener("pageshow", handleResize, opts);
 
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
-  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (e: any) => {
-    const spec: GameScreen = e.detail;
-    drawGameSample(context.gameLayer, spec.width, spec.height);
+  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
+    const { detail } = ev as CustomEvent<GameScreen>;
+    drawGameSample(context.gameLayer, detail.width, detail.height);
   }, { signal: ac.signal });
 
   // // 毎回のリサイズでは「投影/カメラだけ更新」
