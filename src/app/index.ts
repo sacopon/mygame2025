@@ -1,11 +1,10 @@
 export {
   GAME_SCREEN,
-  PAD_BIT,
-} from "@/app/constants";
+} from "./constants";
 
 export {
   type UiContext,
-} from "@/app/types";
+} from "./types";
 
 export {
   type GameScreen,
@@ -13,9 +12,9 @@ export {
   DefaultScreen,
   VIRTUAL_SCREEN_CHANGE,
   GameScreenSpec,
-} from "@/app/screen";
+} from "./screen";
 
 export {
   type Skin,
   SkinResolver,
-} from "@/app/skin";
+} from "./skin";

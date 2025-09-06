@@ -1,6 +1,6 @@
 import { Texture, Sprite, Application } from "pixi.js";
-import { GameScreenSpec, PAD_BIT, type Skin, type UiContext } from "@/app";
-import { InputState } from "@/app/input/input-state";
+import { GameScreenSpec, type Skin, type UiContext } from "@/app";
+import { InputState, PAD_BIT } from "@/shared";
 
 export type UIMode = "pad" | "bare";
 

@@ -1,4 +1,9 @@
 export {
   type Position,
   type Size,
-} from "@/shared/types";
+  PAD_BIT,
+} from "./types";
+
+export {
+  InputState,
+} from "./input-state";

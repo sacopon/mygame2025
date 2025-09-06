@@ -1,8 +1,9 @@
-import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
-import { GameScreen, GameScreenSpec, PAD_BIT, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
-import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { bindKeyboard, InputState } from "@/app/input";
+import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
+import { GameScreen, GameScreenSpec, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
+import { PAD_BIT, InputState } from "@/shared";
+import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser";
+import { bindKeyboard } from "@/app/input";
 import { buildUiContext, type UIMode, updateButtonImages } from "@/app/ui";
 import { createResizeHandler, onResize } from "@/app/resize";
 

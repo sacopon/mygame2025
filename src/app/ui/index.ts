@@ -1,16 +1,16 @@
 export {
   applySkin,
-} from "@/app/ui/applySkin";
+} from "./applySkin";
 
 export {
   relayoutViewport,
   relayoutViewportBare,
   type UIMode,
   updateButtonImages,
-} from "@/app/ui/layout";
+} from "./layout";
 
 export {
   buildUiContext,
   enableButtonTouch,
   enableDpadTouch,
-} from "@/app/ui/virtualpad";
+} from "./virtualpad";
