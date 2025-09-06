@@ -1,4 +1,5 @@
 import { Container, Sprite } from "pixi.js";
+import { GameRoot } from "@game/core";
 
 export interface AppContext {
   /** ルートコンテナ */
@@ -13,6 +14,9 @@ export interface AppContext {
   gameLayer: Container;
   /** 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー */
   overlayLayer: Container;
+
+  /** ゲーム側のルート */
+  gameRoot: GameRoot;
 }
 
 export interface VirtualPadSlots {

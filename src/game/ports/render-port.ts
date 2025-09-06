@@ -8,7 +8,14 @@ export interface SpriteSpec {
 }
 
 export interface RenderPort {
+  /**
+   * スプライトを生成し、そのスプライトへアクセスするためのハンドルを返す
+   *
+   * @param spec スプライトの仕様
+   * @returns スプライトのハンドル
+   */
   createSprite(spec: SpriteSpec): SpriteHandle;
+
   setSpriteTransform(view: SpriteHandle, t: Transform2D): void;
   setSpriteVisible?(view: SpriteHandle, visible: boolean): void;
   setSpriteLayer?(view: SpriteHandle, layer: number): void;

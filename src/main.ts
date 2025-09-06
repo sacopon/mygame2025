@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
+import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite } from "pixi.js";
 import { PAD_BIT, InputState } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -10,6 +10,14 @@ import { VirtualPadUI } from "@app/features/ui/virtual-pad";
 import { createResizeHandler, onResize } from "@app/services/resize";
 import { AppContext } from "@app/config";
 import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
+import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
+import { GameRoot } from "@game/core";
+import { SpriteHandle } from "@game/ports"; // TEST
+
+let render: PixiRenderAdapter;
+let smileHandle: SpriteHandle;
+let rot: number = 0;
+let scale: number = 0;
 
 /**
  * リソース読み込み用URLを作成する
@@ -35,11 +43,23 @@ function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
   g2.fill({ color: 0x0000ff, alpha: 1 });
   gameScreenContainer.addChild(g2);
 
-  const smile = Sprite.from("smile.png");
-  smile.texture.source.scaleMode = "nearest";
-  smile.anchor.set(0.5);
-  smile.position.set(w / 2, h / 2);
-  gameScreenContainer.addChild(smile);
+  // const smile = Sprite.from("smile.png");
+  // smile.texture.source.scaleMode = "nearest";
+  // smile.anchor.set(0.5);
+  // smile.position.set(w / 2, h / 2);
+  // gameScreenContainer.addChild(smile);
+
+  smileHandle = render.createSprite({
+    imageId: "smile.png",
+    transform: {
+      x: w / 2 - 8,
+      y: h / 2 - 8,
+      scaleX: 2,
+      scaleY: 2,
+      rotation: 0,
+    },
+    layer: 10,
+  });
 }
 
 function loadInitialAssetsAsync() {
@@ -49,7 +69,7 @@ function loadInitialAssetsAsync() {
     // バーチャルパッドUI
     makePath("textures/virtualui.json"),
     // ゲーム本編系画像(SAMPLE)
-    { alias: "smile.png", src: makePath("textures/smile.png") },
+    { alias: "smile.png", src: makePath("textures/smile.png"), data: { scaleMode: "nearest" } },
   ]);
 }
 
@@ -71,6 +91,7 @@ export function buildAppContext(parent: Container): AppContext {
   const frameLayer = new Container();
   // ゲーム画面レイヤー
   const gameLayer = new Container();
+  gameLayer.sortableChildren = true;
   // 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー
   const overlayLayer = new Container();
 
@@ -82,7 +103,13 @@ export function buildAppContext(parent: Container): AppContext {
   frameLayer.eventMode   = "none";
   overlayLayer.eventMode = "none";
 
-  return { root, background, deviceLayer, frameLayer, gameLayer, overlayLayer };
+  // ゲームのルートオブジェクトを作成
+  render = new PixiRenderAdapter(gameLayer);
+
+  // const gameRoot = new GameRoot(new PixiRenderAdapter(gameLayer));
+  const gameRoot = new GameRoot(render);
+
+  return { root, background, deviceLayer, frameLayer, gameLayer, overlayLayer, gameRoot };
 }
 
 (async () => {
@@ -123,9 +150,6 @@ export function buildAppContext(parent: Container): AppContext {
   if (mode === UIMODE.PAD) {
     padUI = VirtualPadUI.attach(context, skins.current, inputState);
   }
-
-  // // 初回の画面更新
-  // onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, true, mode);
 
   // 初期レイアウト
   if (mode === UIMODE.PAD) {
@@ -190,6 +214,19 @@ export function buildAppContext(parent: Container): AppContext {
     }
 
     inputState.next();
+
+    if (smileHandle) {
+      rot += 0.03;
+      scale += 0.03;
+
+      render.setSpriteTransform(smileHandle, {
+        // x: gameScreenSpec.current.width / 2 - 8,
+        // y: gameScreenSpec.current.height / 2 - 8,
+        scaleX: 2.5 + 1.5 * Math.sin(scale),
+        scaleY: 2.5 + 1.5 * Math.sin(scale),
+        rotation: rot,
+      });
+    }
   };
   app.ticker.add(tick);
 
