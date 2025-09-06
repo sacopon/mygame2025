@@ -53,7 +53,7 @@ export function onResize(app: Application, ctx: UiContext, gameScreenSpec: GameS
 
   if (mode === "pad") {
     // バーチャルキーUIの場合は従来の仮想解像度へ戻す
-    gameScreenSpec.update(DefaultScreen)
+    gameScreenSpec.update(DefaultScreen);
 
     // スキンが変わった時だけテクスチャの張り替えを行う
     if (skinChanged || forceApplySkin) {
@@ -69,26 +69,26 @@ export function onResize(app: Application, ctx: UiContext, gameScreenSpec: GameS
     relayoutViewportBare(app, ctx, gameScreenSpec, w, h, false);
   }
 
+  // // TODO(viewportmetrics): 必要になったら発火する
   // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
-  const { width: vw, height: vh } = gameScreenSpec.current;
-  // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
-  const scale =
-    mode === "pad"
-      ? (skins.current.screen.size.width / vw)
-      : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
+  // const { width: vw, height: vh } = gameScreenSpec.current;
+  // // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
+  // const scale =
+  //   mode === "pad"
+  //     ? (skins.current.screen.size.width / vw)
+  //     : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
 
-  const screenW = vw * scale;
-  const screenH = vh * scale;
-  const screenX = ((w - screenW) / 2) | 0;
-  const screenY = ((h - screenH) / 2) | 0;
+  // const screenW = vw * scale;
+  // const screenH = vh * scale;
+  // const screenX = ((w - screenW) / 2) | 0;
+  // const screenY = ((h - screenH) / 2) | 0;
 
-// TODO(viewportmetrics): 必要になったら発火する
-// viewportMetrics.update({
-//   view:   { w, h },
-//   screen: { x: screenX, y: screenY, w: screenW, h: screenH },
-//   scale,
-//   mode
-// });
+  // viewportMetrics.update({
+  //   view:   { w, h },
+  //   screen: { x: screenX, y: screenY, w: screenW, h: screenH },
+  //   scale,
+  //   mode
+  // });
 
   app.render();
 }

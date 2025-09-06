@@ -26,6 +26,7 @@ export default [
       semi: ["error", "always"],
       quotes: ["error", "double"],
       "no-unused-vars": "warn",
+      "no-underscore-dangle": ["error", { "allowAfterThis": false }],
       "@typescript-eslint/no-explicit-any": "warn",
     },
   },

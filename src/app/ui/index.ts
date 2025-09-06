@@ -7,7 +7,7 @@ export {
   relayoutViewportBare,
   type UIMode,
   updateButtonImages,
-} from "@/app/ui/layout"
+} from "@/app/ui/layout";
 
 export {
   buildUiContext,

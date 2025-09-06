@@ -9,29 +9,29 @@ export type VirtualScreenChangeEvent = CustomEvent<GameScreen>;
 
 export class GameScreenSpec extends EventTarget
 {
-  private _current: GameScreen;
+  #current: GameScreen;
 
   public constructor(initial = DefaultScreen) {
     super();
-    this._current = initial;
+    this.#current = initial;
   }
 
   get current(): GameScreen {
-    return this._current;
+    return this.#current;
   }
 
   setCurrent(v: GameScreen) {
-    this._current = v;
+    this.#current = v;
   }
 
   update(next: GameScreen) {
-    if (this._current.width === next.width && this._current.width === next.width) {
+    if (this.#current.width === next.width && this.#current.width === next.width) {
       return;
     }
 
-    this._current = next;
-    console.log(`next:${next}`);
+    this.#current = next;
     this.dispatchEvent(new CustomEvent<GameScreen>(VIRTUAL_SCREEN_CHANGE, { detail: next }));
+
     return true;
   }
 

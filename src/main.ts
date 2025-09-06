@@ -104,9 +104,9 @@ function loadInitialAssetsAsync() {
   window.addEventListener("pageshow", handleResize, opts);
 
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
-  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (e: any) => {
-    const spec: GameScreen = e.detail;
-    drawGameSample(context.gameLayer, spec.width, spec.height);
+  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
+    const { detail } = ev as CustomEvent<GameScreen>;
+    drawGameSample(context.gameLayer, detail.width, detail.height);
   }, { signal: ac.signal });
 
   // // 毎回のリサイズでは「投影/カメラだけ更新」
