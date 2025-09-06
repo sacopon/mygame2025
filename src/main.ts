@@ -2,8 +2,7 @@ import { Application, Assets, Container, Graphics, Sprite } from "pixi.js";
 import "@/index.css";
 import { GameScreen, GameScreenSpec, PAD_BIT, SkinResolver, VIRTUAL_SCREEN_CHANGE } from "@/app";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@/core/browser/browser-utils";
-import { InputState } from "@/app/input/input-state";
-import { bindKeyboard } from "@/app/input/bind-keyboard";
+import { bindKeyboard, InputState } from "@/app/input";
 import { buildUiContext, type UIMode, updateButtonImages } from "@/app/ui";
 import { createResizeHandler, onResize } from "@/app/resize";
 
