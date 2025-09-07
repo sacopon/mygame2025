@@ -14,6 +14,7 @@ import { GameScreenSpec } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { GameRoot } from "@game/core";
 import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
+import { InputPortAdapter } from "@app/adapters/input-port-adapter";
 
 /**
  * リソース読み込み用URLを作成する
@@ -148,7 +149,8 @@ export function buildAppContext(parent: Container): AppContext {
   // ポート・ゲーム側システムの作成
   const renderPort = new PixiRenderAdapter(context.gameLayer);
   const screenPort = new ScreenPortAdapter(gameScreenSpec);
-  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort });
+  const inputPort = new InputPortAdapter(inputState);
+  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort });
 
   let padUI: VirtualPadUI | null = null;
 
