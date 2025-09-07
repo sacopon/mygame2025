@@ -1,7 +1,4 @@
-export {
-  GameObject,
-} from "./game-object";
-
-export {
-  GameRoot,
-} from "./game-root";
+export * from "./game-component";
+export * from "./game-object";
+export * from "./game-root";
+export * from "./sprite-component";

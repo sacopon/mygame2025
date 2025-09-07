@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesheet } from "pixi.js";
+import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesheet, Ticker } from "pixi.js";
 import { PAD_BIT, InputState } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -31,28 +31,28 @@ const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
  * @param gameScreenContainer ゲーム画面用コンテナ 
  */
 function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
-  console.log("drawGameSample");
-  gameScreenContainer.removeChildren();
+  console.log(`w:${w}, h:${h}`);
+  // gameScreenContainer.removeChildren();
 
-  // 赤い四角
-  const g1 = new Graphics();
-  g1.rect(0, 0, w, h);
-  g1.fill({ color: 0xff0000, alpha: 1 });
-  gameScreenContainer.addChild(g1);
-  // 青い四角
-  const g2 = new Graphics();
-  g2.rect(0, 0, 16, 16);
-  g2.fill({ color: 0x0000ff, alpha: 1 });
-  gameScreenContainer.addChild(g2);
+  // // 赤い四角
+  // const g1 = new Graphics();
+  // g1.rect(0, 0, w, h);
+  // g1.fill({ color: 0xff0000, alpha: 1 });
+  // gameScreenContainer.addChild(g1);
+  // // 青い四角
+  // const g2 = new Graphics();
+  // g2.rect(0, 0, 16, 16);
+  // g2.fill({ color: 0x0000ff, alpha: 1 });
+  // gameScreenContainer.addChild(g2);
 
-  backgroundHandle = render.createSprite({
-    imageId: "bg358x224.png",
-    transform: {
-      x: w / 2,
-      y: h / 2,
-    },
-    layer: 10,
-  });
+  // backgroundHandle = render.createSprite({
+  //   imageId: "bg358x224.png",
+  //   transform: {
+  //     x: w / 2,
+  //     y: h / 2,
+  //   },
+  //   layer: 10,
+  // });
 
   smileHandle = render.createSprite({
     imageId: "smile.png",
@@ -186,6 +186,7 @@ export function buildAppContext(parent: Container): AppContext {
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
   const context = buildAppContext(app.stage);
 
+  const gameRoot = context.gameRoot;
   let padUI: VirtualPadUI | null = null;
 
   if (mode === UIMODE.PAD) {
@@ -245,7 +246,7 @@ export function buildAppContext(parent: Container): AppContext {
   // }, { signal: ac.signal });
 
   // 毎フレーム呼ばれる処理を追加
-  const tick = (/*deltaTime*/) => {
+  const tick = (ticker: Ticker) => {
     if (padUI) {
       padUI.updateButtonImages();
     }
@@ -255,6 +256,9 @@ export function buildAppContext(parent: Container): AppContext {
     }
 
     inputState.next();
+
+    // ゲーム側の更新処理
+    gameRoot.update(ticker.deltaTime);
 
     if (smileHandle) {
       rot += 0.03;

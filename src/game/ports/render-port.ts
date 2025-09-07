@@ -16,7 +16,7 @@ export interface RenderPort {
    */
   createSprite(spec: SpriteSpec): SpriteHandle;
 
-  setSpriteTransform(view: SpriteHandle, t: Transform2D): void;
+  setSpriteTransform(handle: SpriteHandle, transform: Partial<Transform2D>): void;
   setSpriteVisible?(view: SpriteHandle, visible: boolean): void;
   setSpriteLayer?(view: SpriteHandle, layer: number): void;
   destroyView(view: SpriteHandle): void;
