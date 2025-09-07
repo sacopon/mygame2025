@@ -14,9 +14,6 @@ export class PixiRenderAdapter implements RenderPort {
   }
 
   public createSprite(spec: SpriteSpec): SpriteHandle {
-    console.log(`PixiRenderAdapter#createSprite`);
-    console.log(spec);
-
     // 指定のアトラスキーから Sprite を作成
     // (事前にロードされているものとする)
     const sprite = Sprite.from(spec.imageId);

@@ -1,55 +1,43 @@
-import { GameComponent } from "@game/core";
-import { RenderPort } from "@game/ports";
-import { TransformComponent } from "./transform-component";
+import { GameComponent, TransformComponent } from "@game/core";
+import { RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {
-  #render: RenderPort | null = null;
+  #render: RenderPort;
   #components: GameComponent[] = [];
   #transform: TransformComponent;
-  #attached: boolean = false;
 
-  public constructor() {
+  public constructor(render: RenderPort) {
+    this.#render = render;
     this.#transform = new TransformComponent();
     this.addComponent(this.#transform);
   }
 
+  public get render(): Readonly<RenderPort> {
+    return this.#render;
+  }
+
+  public get transform(): Readonly<Transform2D> {
+    return this.#transform.transform;
+  }
+
+  public setPosition(x: number, y: number) {
+    this.#transform.transform = { x, y };
+  }
+
+  public setRotation(rotation: number) {
+    this.#transform.transform = { rotation };
+  }
+
+  public setScale(scale: number) {
+    this.#transform.transform = { scaleX: scale, scaleY: scale };
+  }
+
   public update(deltaTime: number) {
-    this.#components.forEach(c => c.update?.(this.#render!, deltaTime));
+    this.#components.forEach(c => c.update?.(this, deltaTime));
   }
 
   public addComponent(component: GameComponent) {
     this.#components.push(component);
-
-    if (this.#render) {
-      component.onAttach?.(this, this.#render);
-    }
-  }
-
-  // GameRoot からのみ呼び出される内部処理
-  static readonly __internal = {
-    bindRender(gameObject: GameObject, render: RenderPort) {
-      gameObject.bindRender(render);
-    },
-
-    unbindRender(gameObject: GameObject) {
-      gameObject.#render = null;
-    },
-  }
-
-  private bindRender(render: RenderPort) {
-    if (render === this.#render && this.#attached) {
-      return;
-    }
-
-    // 既にバインドされているなら一旦デタッチする
-    if (this.#render && this.#attached) {
-      this.#components.forEach(c => c.onDetach?.(this.#render!));
-      this.#attached = false;
-    }
-
-    // 全てのコンポーネントに再アタッチ
-    this.#render = render;
-    this.#components.forEach(c => c.onAttach?.(this, this.#render!));
-    this.#attached = true;
+    component.onAttach?.(this);
   }
 }

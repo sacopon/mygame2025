@@ -17,8 +17,8 @@ export type ViewState = {
   padUI: VirtualPadUI | null;
 }
 
+// TODO: main.ts 側に移したい
 function updateGameMask(context: AppContext, vw: number, vh: number) {
-  console.log(`vw:${vw}, vh:${vh}`);
   const g = context.gameLayerMask;
   g.clear();
   g.rect(0, 0, vw, vh).fill({ color: 0xffffff, alpha: 1 }); // 透過でもOK. 色は何でも構わない
@@ -105,7 +105,6 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
   const screenY = ((h - screenH) / 2) | 0;
 
   // ゲーム画面のマスク領域を更新
-  console.log(`gss.cur.wid:${gameScreenSpec.current.width}, gss.cur.hei:${gameScreenSpec.current.height}`);
   updateGameMask(ctx, gameScreenSpec.current.width, gameScreenSpec.current.height);
 
   // TODO(viewportmetrics): 必要になったら発火する

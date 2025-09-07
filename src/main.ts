@@ -12,60 +12,13 @@ import { AppContext } from "@app/config";
 import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { GameRoot } from "@game/core";
-import { SpriteHandle } from "@game/ports"; // TEST
 
 let render: PixiRenderAdapter;
-let smileHandle: SpriteHandle;
-let backgroundHandle: SpriteHandle;
-let rot: number = 0;
-let scale: number = 0;
 
 /**
  * リソース読み込み用URLを作成する
  */
 const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
-
-/**
- * ゲーム仮画面の描画
- *
- * @param gameScreenContainer ゲーム画面用コンテナ 
- */
-function drawGameSample(gameScreenContainer: Container, w: number, h: number) {
-  console.log(`w:${w}, h:${h}`);
-  // gameScreenContainer.removeChildren();
-
-  // // 赤い四角
-  // const g1 = new Graphics();
-  // g1.rect(0, 0, w, h);
-  // g1.fill({ color: 0xff0000, alpha: 1 });
-  // gameScreenContainer.addChild(g1);
-  // // 青い四角
-  // const g2 = new Graphics();
-  // g2.rect(0, 0, 16, 16);
-  // g2.fill({ color: 0x0000ff, alpha: 1 });
-  // gameScreenContainer.addChild(g2);
-
-  // backgroundHandle = render.createSprite({
-  //   imageId: "bg358x224.png",
-  //   transform: {
-  //     x: w / 2,
-  //     y: h / 2,
-  //   },
-  //   layer: 10,
-  // });
-
-  smileHandle = render.createSprite({
-    imageId: "smile.png",
-    transform: {
-      x: w / 2,
-      y: h / 2,
-      scaleX: 2,
-      scaleY: 2,
-      rotation: 0,
-    },
-    layer: 10,
-  });
-}
 
 function loadInitialAssetsAsync() {
   const resources = [
@@ -201,9 +154,6 @@ export function buildAppContext(parent: Container): AppContext {
     relayoutViewportBare(app, context, gameScreenSpec, window.innerWidth, window.innerHeight, true);
   }
 
-  // ゲーム画面内のサンプル描画
-  drawGameSample(context.gameContentLayer, gameScreenSpec.current.width, gameScreenSpec.current.height);
-
   // キーボード入力イベント
   const unbindKeyboard = bindKeyboard(window, inputState);
 
@@ -236,7 +186,6 @@ export function buildAppContext(parent: Container): AppContext {
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
   gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
     const { detail } = ev as CustomEvent<GameScreen>;
-    drawGameSample(context.gameContentLayer, detail.width, detail.height);
   }, { signal: ac.signal });
 
   // // 毎回のリサイズでは「投影/カメラだけ更新」
@@ -259,19 +208,6 @@ export function buildAppContext(parent: Container): AppContext {
 
     // ゲーム側の更新処理
     gameRoot.update(ticker.deltaTime);
-
-    if (smileHandle) {
-      rot += 0.03;
-      scale += 0.03;
-
-      render.setSpriteTransform(smileHandle, {
-        // x: gameScreenSpec.current.width / 2 - 8,
-        // y: gameScreenSpec.current.height / 2 - 8,
-        scaleX: 2.5 + 1.5 * Math.sin(scale),
-        scaleY: 2.5 + 1.5 * Math.sin(scale),
-        rotation: rot,
-      });
-    }
   };
   app.ticker.add(tick);
 

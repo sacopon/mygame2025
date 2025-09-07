@@ -1,4 +1,4 @@
-import { GameComponent } from "@game/core";
+import { GameComponent, GameObject } from "@game/core";
 import { identityTransform, RenderPort, Transform2D } from "@game/ports";
 
 export class TransformComponent implements GameComponent {
@@ -15,5 +15,5 @@ export class TransformComponent implements GameComponent {
     this.#transform = {...this.#transform, ...t};
   }
 
-  update?(render: RenderPort, deltaTime: number): void;
+  update?(gameObject: GameObject, deltaTime: number): void;
 }
