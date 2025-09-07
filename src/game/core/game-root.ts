@@ -1,14 +1,9 @@
-import { GameObject, isScreenSizeAware, ScreenSizeAware, SpriteComponent } from "@game/core";
-import { RenderPort, ScreenPort } from "@game/ports";
-
-export type GamePorts = {
-  render: RenderPort;
-  screen: ScreenPort;
-}
+import { GameObject, GamePorts, isScreenSizeAware, ScreenSizeAware, SpriteComponent } from "@game/core";
+import { GameButton } from "@game/ports";
 
 class Background extends GameObject implements ScreenSizeAware {
-  constructor(render: RenderPort, vw: number, vh: number) {
-    super(render);
+  constructor(ports: GamePorts, vw: number, vh: number) {
+    super(ports);
 
     const x = vw / 2;
     const y = vh / 2;
@@ -23,13 +18,17 @@ class Background extends GameObject implements ScreenSizeAware {
 
 class Smile extends GameObject implements ScreenSizeAware {
   #rot: number = 0;
-  #scale: number = 0;
+  #scale: number = 1.0;
+  #positionX: number = 0;
+  #positionY: number = 0;
 
-  constructor(render: RenderPort, vw: number, vh: number) {
-    super(render);
+  constructor(ports: GamePorts, vw: number, vh: number) {
+    super(ports);
 
     const x = vw / 2;
     const y = vh / 2;
+    this.#positionX = x;
+    this.#positionY = y;
     this.setPosition(x, y);
     this.addComponent(new SpriteComponent("smile.png"));
   }
@@ -38,10 +37,14 @@ class Smile extends GameObject implements ScreenSizeAware {
     super.update(deltaTime);
 
     this.#rot += 0.03;
-    this.#scale += 0.03;
+    this.#scale += this.input.isDown(GameButton.A) ? 0.03 : 0.0;
+    this.#scale -= this.input.isDown(GameButton.B) ? 0.03 : 0.0;
+    this.#positionX += this.input.axisX() * 5;
+    this.#positionY += this.input.axisY() * 5;
 
+    this.setPosition(this.#positionX, this.#positionY);
     this.setRotation(this.#rot);
-    this.setScale(2.5 + 1.5 * Math.sin(this.#scale));
+    this.setScale(this.#scale);
   }
 
   onScreenSizeChanged(width: number, height: number) {
@@ -54,7 +57,7 @@ export class GameRoot {
   #unsubscribeScreen?: () => void;
 
   public constructor(ports: GamePorts) {
-    const { render, screen } = ports;
+    const { screen } = ports;
     const { width, height } = screen.getGameSize();
 
     // 画面サイズ変更を購読
@@ -62,8 +65,8 @@ export class GameRoot {
       this.onScreenSizeChanged(size.width, size.height);
     });
 
-    this.spawnGameObject(new Background(render, width, height));
-    this.spawnGameObject(new Smile(render, width, height));
+    this.spawnGameObject(new Background(ports, width, height));
+    this.spawnGameObject(new Smile(ports, width, height));
 
     this.onScreenSizeChanged(width, height);
   }

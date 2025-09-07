@@ -1,21 +1,25 @@
-import { GameComponent, TransformComponent } from "@game/core";
+import { GameComponent, GamePorts, TransformComponent } from "@game/core";
 import { Ctor } from "@shared";
-import { RenderPort, Transform2D } from "@game/ports";
+import { InputPort, RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {
-  #render: RenderPort;
+  #ports: GamePorts;
   #components: GameComponent[] = [];
   #componentByType = new Map<Ctor<GameComponent>, GameComponent>();
   #transform: TransformComponent;
 
-  public constructor(render: RenderPort) {
-    this.#render = render;
+  public constructor(ports: GamePorts) {
+    this.#ports = ports;
     this.#transform = new TransformComponent();
     this.addComponent(this.#transform);
   }
 
   public get render(): Readonly<RenderPort> {
-    return this.#render;
+    return this.#ports.render;
+  }
+
+  public get input(): Readonly<InputPort> {
+    return this.#ports.input;
   }
 
   public get transform(): Readonly<Transform2D> {
