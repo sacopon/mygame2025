@@ -1,7 +1,12 @@
-import { GameObject, SpriteComponent } from "@game/core";
-import { RenderPort } from "@game/ports";
+import { GameObject, isScreenSizeAware, ScreenSizeAware, SpriteComponent } from "@game/core";
+import { RenderPort, ScreenPort } from "@game/ports";
 
-class Background extends GameObject {
+export type GamePorts = {
+  render: RenderPort;
+  screen: ScreenPort;
+}
+
+class Background extends GameObject implements ScreenSizeAware {
   constructor(render: RenderPort, vw: number, vh: number) {
     super(render);
 
@@ -10,9 +15,13 @@ class Background extends GameObject {
     this.setPosition(x, y);
     this.addComponent(new SpriteComponent("bg358x224.png"));
   }
+
+  onScreenSizeChanged(width: number, height: number) {
+    this.setPosition(width / 2, height / 2);
+  }
 }
 
-class Smile extends GameObject {
+class Smile extends GameObject implements ScreenSizeAware {
   #rot: number = 0;
   #scale: number = 0;
 
@@ -34,24 +43,58 @@ class Smile extends GameObject {
     this.setRotation(this.#rot);
     this.setScale(2.5 + 1.5 * Math.sin(this.#scale));
   }
+
+  onScreenSizeChanged(width: number, height: number) {
+    this.setPosition(width / 2, height / 2);
+  }
 }
 
 export class GameRoot {
-  #render: RenderPort;
   #objects: GameObject[] = [];
+  #unsubscribeScreen?: () => void;
 
-  public constructor(port: RenderPort) {
-    this.#render = port;
+  public constructor(ports: GamePorts) {
+    const { render, screen } = ports;
+    const { width, height } = screen.getGameSize();
 
-    this.spawnGameObject(new Background(this.#render, 256, 224));
-    this.spawnGameObject(new Smile(this.#render, 256, 224));
+    // 画面サイズ変更を購読
+    this.#unsubscribeScreen = screen.onGameSizeChanged(size => {
+      this.onScreenSizeChanged(size.width, size.height);
+    });
+
+    this.spawnGameObject(new Background(render, width, height));
+    this.spawnGameObject(new Smile(render, width, height));
+
+    this.onScreenSizeChanged(width, height);
   }
 
-  public spawnGameObject(gameObject: GameObject) {
+  public spawnGameObject<T extends GameObject>(gameObject: T): T {
     this.#objects.push(gameObject);
+    return gameObject;
   }
 
   public update(deltaTime: number) {
     this.#objects.forEach(o => o.update(deltaTime));
+  }
+
+  public dispose() {
+    this.#unsubscribeScreen?.();
+    this.#unsubscribeScreen = undefined;
+  }
+
+  /**
+   * ゲーム画面のサイズ変化時
+   *
+   * @param width  新しい幅
+   * @param height 新しい高さ
+   */
+  public onScreenSizeChanged(width: number, height: number) {
+    for (const go of this.#objects) {
+      if (!isScreenSizeAware(go)) {
+        continue;
+      }
+
+      go.onScreenSizeChanged(width, height);
+    }
   }
 }

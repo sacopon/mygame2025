@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { GameRoot } from "@game/core";
+import { ViewportMetrics } from "@app/services/viewport";
+// import { GameRoot } from "@game/core";
 
 export interface AppContext {
   /** ルートコンテナ */
@@ -18,9 +19,11 @@ export interface AppContext {
   gameLayerMask: Graphics;
   /** 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー */
   overlayLayer: Container;
+  /** ビューポート管理 */
+  viewportMetrics: ViewportMetrics;
 
-  /** ゲーム側のルート */
-  gameRoot: GameRoot;
+  // /** ゲーム側のルート */
+  // gameRoot: GameRoot;
 }
 
 export interface VirtualPadSlots {
