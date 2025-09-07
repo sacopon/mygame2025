@@ -4,10 +4,10 @@ import { RenderPort } from "@game/ports";
 class Background extends GameObject {
   constructor(render: RenderPort, vw: number, vh: number) {
     super(render);
+
     const x = vw / 2;
     const y = vh / 2;
     this.setPosition(x, y);
-
     this.addComponent(new SpriteComponent("bg358x224.png"));
   }
 }
@@ -18,6 +18,7 @@ class Smile extends GameObject {
 
   constructor(render: RenderPort, vw: number, vh: number) {
     super(render);
+
     const x = vw / 2;
     const y = vh / 2;
     this.setPosition(x, y);
