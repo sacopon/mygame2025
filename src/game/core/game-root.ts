@@ -1,11 +1,15 @@
 import { GameObject, isScreenSizeAware, ScreenSizeAware, SpriteComponent } from "@game/core";
-import { RenderPort } from "@game/ports";
+import { RenderPort, ScreenPort } from "@game/ports";
+
+export type GamePorts = {
+  render: RenderPort;
+  screen: ScreenPort;
+}
 
 class Background extends GameObject implements ScreenSizeAware {
   constructor(render: RenderPort, vw: number, vh: number) {
     super(render);
 
-    console.log(`vw: ${vw}, vh:${vh}`);
     const x = vw / 2;
     const y = vh / 2;
     this.setPosition(x, y);
@@ -48,9 +52,17 @@ class Smile extends GameObject implements ScreenSizeAware {
 export class GameRoot {
   #objects: GameObject[] = [];
 
-  public constructor(render: RenderPort) {
-    this.spawnGameObject(new Background(render, 0, 0));
-    this.spawnGameObject(new Smile(render, 0, 0));
+  public constructor(ports: GamePorts) {
+    const { render, screen } = ports;
+    const { width, height } = screen.getGameSize();
+
+    // 画面サイズ変更を購読
+    screen.onGameSizeChanged(size => {
+      this.onScreenSizeChanged(size.width, size.height);
+    });
+
+    this.spawnGameObject(new Background(render, width, height));
+    this.spawnGameObject(new Smile(render, width, height));
   }
 
   public spawnGameObject<T extends GameObject>(gameObject: T): T {

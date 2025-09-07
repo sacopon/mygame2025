@@ -8,13 +8,12 @@ import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
 import { SkinResolver } from "@app/features/ui/skin";
 import { VirtualPadUI } from "@app/features/ui/virtual-pad";
 import { createResizeHandler, onResize } from "@app/services/resize";
-import { VIEWPORT_METRICS_CHANGED, ViewportMetrics } from "@app/services/viewport";
+import { ViewportMetrics } from "@app/services/viewport";
 import { AppContext } from "@app/config";
-import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
+import { GameScreenSpec } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { GameRoot } from "@game/core";
-
-let render: PixiRenderAdapter;
+import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
 
 /**
  * リソース読み込み用URLを作成する
@@ -98,12 +97,6 @@ export function buildAppContext(parent: Container): AppContext {
   frameLayer.eventMode   = "none";
   overlayLayer.eventMode = "none";
 
-  // ゲームのルートオブジェクトを作成
-  render = new PixiRenderAdapter(gameContentLayer);
-
-  // const gameRoot = new GameRoot(new PixiRenderAdapter(gameLayer));
-  const gameRoot = new GameRoot(render);
-
   const viewportMetrics = new ViewportMetrics();
 
   return {
@@ -116,7 +109,6 @@ export function buildAppContext(parent: Container): AppContext {
     gameLayerMask,
     overlayLayer,
     viewportMetrics,
-    gameRoot
   };
 }
 
@@ -153,7 +145,11 @@ export function buildAppContext(parent: Container): AppContext {
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
   const context = buildAppContext(app.stage);
 
-  const gameRoot = context.gameRoot;
+  // ポート・ゲーム側システムの作成
+  const renderPort = new PixiRenderAdapter(context.gameLayer);
+  const screenPort = new ScreenPortAdapter(gameScreenSpec);
+  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort });
+
   let padUI: VirtualPadUI | null = null;
 
   if (mode === UIMODE.PAD) {
@@ -197,15 +193,13 @@ export function buildAppContext(parent: Container): AppContext {
     onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI });
   };
 
-  // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
-  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
-    const { width, height } = (ev as CustomEvent<GameScreen>).detail;
-    context.gameRoot.onScreenSizeChanged(width, height);
-  }, { signal: ac.signal });
+  // // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
+  // gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (_ev: Event) => {
+  // }, { signal: ac.signal });
 
-  // 毎回のリサイズでは「投影/カメラだけ更新」
-  context.viewportMetrics.addEventListener(VIEWPORT_METRICS_CHANGED, _ev => {
-  }, { signal: ac.signal });
+  // // 毎回のリサイズでは「投影/カメラだけ更新」
+  // context.viewportMetrics.addEventListener(VIEWPORT_METRICS_CHANGED, _ev => {
+  // }, { signal: ac.signal });
 
   // 毎フレーム呼ばれる処理を追加
   const tick = (ticker: Ticker) => {

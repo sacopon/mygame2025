@@ -96,7 +96,6 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
   const { width: vw, height: vh } = gameScreenSpec.current;
   // ゲーム画面のマスク領域を更新
   updateGameMask(ctx, vw, vh);
-  console.log(`vw:${vw}, vh:${vh}`);
 
   ctx.viewportMetrics.update(
     computeViewMetrics(
