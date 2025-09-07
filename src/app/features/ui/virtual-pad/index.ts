@@ -1,1 +1,1 @@
-export * from "./virtual-pad-ui"
+export * from "./virtual-pad-ui";

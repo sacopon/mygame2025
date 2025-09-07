@@ -48,15 +48,15 @@ export class PixiRenderAdapter implements RenderPort {
     this.applyTransform(sprite, transform);
   }
 
-  public setSpriteVisible?(view: SpriteHandle, visible: boolean): void {
+  public setSpriteVisible?(_view: SpriteHandle, _visible: boolean): void {
     throw new Error("Method not implemented.");
   }
 
-  public setSpriteLayer?(view: SpriteHandle, layer: number): void {
+  public setSpriteLayer?(_view: SpriteHandle, _layer: number): void {
     throw new Error("Method not implemented.");
   }
 
-  public destroyView(view: SpriteHandle): void {
+  public destroyView(_view: SpriteHandle): void {
     throw new Error("Method not implemented.");
   }
 

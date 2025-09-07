@@ -1,9 +1,11 @@
 import { GameComponent, TransformComponent } from "@game/core";
+import { Ctor } from "@shared";
 import { RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {
   #render: RenderPort;
   #components: GameComponent[] = [];
+  #componentByType = new Map<Ctor<GameComponent>, GameComponent>();
   #transform: TransformComponent;
 
   public constructor(render: RenderPort) {
@@ -36,8 +38,15 @@ export class GameObject {
     this.#components.forEach(c => c.update?.(this, deltaTime));
   }
 
-  public addComponent(component: GameComponent) {
+  public addComponent<T extends GameComponent>(component: T): T {
     this.#components.push(component);
+    this.#componentByType.set(component.constructor as Ctor<GameComponent>, component);
     component.onAttach?.(this);
+
+    return component;
+  }
+
+  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | undefined {
+    return this.#componentByType.get(ctor) as T | undefined;
   }
 }

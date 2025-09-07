@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, SCALE_MODES, Sprite, Spritesheet, Ticker } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
 import { PAD_BIT, InputState } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -9,7 +9,7 @@ import { SkinResolver } from "@app/features/ui/skin";
 import { VirtualPadUI } from "@app/features/ui/virtual-pad";
 import { createResizeHandler, onResize } from "@app/services/resize";
 import { AppContext } from "@app/config";
-import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
+import { GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { GameRoot } from "@game/core";
 
@@ -131,7 +131,7 @@ export function buildAppContext(parent: Container): AppContext {
   disableBrowserGestures(app.canvas);
 
   // 画像読み込み
-  await loadInitialAssetsAsync()
+  await loadInitialAssetsAsync();
 
   // 画面上のUI要素の構築
   const gameScreenSpec = new GameScreenSpec();
@@ -184,8 +184,8 @@ export function buildAppContext(parent: Container): AppContext {
   };
 
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
-  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
-    const { detail } = ev as CustomEvent<GameScreen>;
+  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (_ev: Event) => {
+    // const { detail } = ev as CustomEvent<GameScreen>;
   }, { signal: ac.signal });
 
   // // 毎回のリサイズでは「投影/カメラだけ更新」

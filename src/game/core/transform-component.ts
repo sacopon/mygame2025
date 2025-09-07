@@ -1,5 +1,5 @@
 import { GameComponent, GameObject } from "@game/core";
-import { identityTransform, RenderPort, Transform2D } from "@game/ports";
+import { identityTransform, Transform2D } from "@game/ports";
 
 export class TransformComponent implements GameComponent {
   #transform: Transform2D = { ...identityTransform };

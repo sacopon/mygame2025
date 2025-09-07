@@ -15,16 +15,13 @@ class Background extends GameObject {
 class Smile extends GameObject {
   #rot: number = 0;
   #scale: number = 0;
-  #sprite: SpriteComponent;
 
   constructor(render: RenderPort, vw: number, vh: number) {
     super(render);
     const x = vw / 2;
     const y = vh / 2;
     this.setPosition(x, y);
-
-    this.#sprite = new SpriteComponent("smile.png");
-    this.addComponent(this.#sprite);
+    this.addComponent(new SpriteComponent("smile.png"));
   }
 
   public update(deltaTime: number): void {

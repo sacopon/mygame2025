@@ -1,5 +1,5 @@
 import { GameComponent, GameObject } from "@game/core";
-import { RenderPort, SpriteHandle, Transform2D } from "@game/ports";
+import { SpriteHandle } from "@game/ports";
 
 export class SpriteComponent implements GameComponent {
   #handle: SpriteHandle | null = null;
@@ -11,7 +11,7 @@ export class SpriteComponent implements GameComponent {
     this.#layer = layer;
   }
 
-  public update(gameObject: GameObject, deltaTime: number): void {
+  public update(gameObject: GameObject, _deltaTime: number): void {
     if (!this.#handle) {
       return;
     }
