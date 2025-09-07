@@ -1,6 +1,10 @@
 import { Application } from "pixi.js";
-import { type AppContext, DefaultScreen, GameScreenSpec, SkinResolver } from "@/app";
-import { relayoutViewport, relayoutViewportBare, UIMODE, UIMode, VirtualPadUI } from "@/app/ui";
+import { AppContext } from "@app/config";
+import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
+import { UIMODE, UIMode } from "@app/features/ui/mode";
+import { VirtualPadUI } from "@app/features/ui/virtual-pad";
+import { DefaultScreen, GameScreenSpec } from "@app/services/screen";
+import { SkinResolver } from "@app/features/ui/skin";
 
 export type ResizeOptions = {
   mode: UIMode;
@@ -11,6 +15,13 @@ export type ResizeOptions = {
 export type ViewState = {
   mode: UIMode,
   padUI: VirtualPadUI | null;
+}
+
+// TODO: main.ts 側に移したい
+function updateGameMask(context: AppContext, vw: number, vh: number) {
+  const g = context.gameLayerMask;
+  g.clear();
+  g.rect(0, 0, vw, vh).fill({ color: 0xffffff, alpha: 1 }); // 透過でもOK. 色は何でも構わない
 }
 
 /**
@@ -81,20 +92,21 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
     relayoutViewportBare(app, ctx, gameScreenSpec, w, h, false);
   }
 
-  // // TODO(viewportmetrics): 必要になったら発火する
-  // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
+  // ゲーム画面のマスク領域を更新
+  updateGameMask(ctx, gameScreenSpec.current.width, gameScreenSpec.current.height);
+
+  // TODO(viewportmetrics): 必要になったら発火する
+  // // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
   // const { width: vw, height: vh } = gameScreenSpec.current;
   // // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
   // const scale =
   //   mode === UIMODE.PAD
   //     ? (skins.current.screen.size.width / vw)
   //     : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
-
-  // const screenW = vw * scale;
-  // const screenH = vh * scale;
+  // const screenW = (vw * scale) | 0;
+  // const screenH = (vh * scale) | 0;
   // const screenX = ((w - screenW) / 2) | 0;
   // const screenY = ((h - screenH) / 2) | 0;
-
   // viewportMetrics.update({
   //   view:   { w, h },
   //   screen: { x: screenX, y: screenY, w: screenW, h: screenH },

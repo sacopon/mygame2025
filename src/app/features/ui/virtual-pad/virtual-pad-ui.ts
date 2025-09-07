@@ -1,6 +1,7 @@
 import { Circle, FederatedPointerEvent, Sprite, Texture } from "pixi.js";
-import { AppContext, Skin, VirtualPadSlots } from "@/app";
-import { InputState, PAD_BIT } from "@/shared";
+import { AppContext, VirtualPadSlots } from "@app/config";
+import { Skin } from "@app/features/ui/skin";
+import { InputState, PAD_BIT } from "@shared";
 
 export class VirtualPadUI {
   readonly #app: AppContext;

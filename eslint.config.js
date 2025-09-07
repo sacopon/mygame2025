@@ -29,7 +29,8 @@ export default [
       quotes: ["error", "double"],
       "import/no-cycle": "warn",
       "import/no-internal-modules": ["off"], // barrel 経由推奨なら "warn" でも
-      "no-unused-vars": "warn",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
       "no-underscore-dangle": ["error", { "allowAfterThis": false }],
       "@typescript-eslint/no-explicit-any": "warn",
     },
