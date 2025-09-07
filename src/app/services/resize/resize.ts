@@ -5,6 +5,7 @@ import { UIMODE, UIMode } from "@app/features/ui/mode";
 import { VirtualPadUI } from "@app/features/ui/virtual-pad";
 import { DefaultScreen, GameScreenSpec } from "@app/services/screen";
 import { SkinResolver } from "@app/features/ui/skin";
+import { computeViewMetrics } from "../viewport";
 
 export type ResizeOptions = {
   mode: UIMode;
@@ -92,27 +93,18 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
     relayoutViewportBare(app, ctx, gameScreenSpec, w, h, false);
   }
 
+  const { width: vw, height: vh } = gameScreenSpec.current;
   // ゲーム画面のマスク領域を更新
-  updateGameMask(ctx, gameScreenSpec.current.width, gameScreenSpec.current.height);
+  updateGameMask(ctx, vw, vh);
+  console.log(`vw:${vw}, vh:${vh}`);
 
-  // TODO(viewportmetrics): 必要になったら発火する
-  // // 現在のスクリーン矩形・スケールを知らせる（ゲームはこれで投影更新）
-  // const { width: vw, height: vh } = gameScreenSpec.current;
-  // // pad の gameLayer スケールは skin 幅 / 仮想幅、bare は短辺フィットの値
-  // const scale =
-  //   mode === UIMODE.PAD
-  //     ? (skins.current.screen.size.width / vw)
-  //     : Math.min(w / vw, h / vh) | 0;  // 整数化してるなら同じ丸めに揃える
-  // const screenW = (vw * scale) | 0;
-  // const screenH = (vh * scale) | 0;
-  // const screenX = ((w - screenW) / 2) | 0;
-  // const screenY = ((h - screenH) / 2) | 0;
-  // viewportMetrics.update({
-  //   view:   { w, h },
-  //   screen: { x: screenX, y: screenY, w: screenW, h: screenH },
-  //   scale,
-  //   mode
-  // });
+  ctx.viewportMetrics.update(
+    computeViewMetrics(
+      mode,
+      w,
+      h,
+      gameScreenSpec.current,
+      mode === UIMODE.PAD ? skins.current : undefined));
 
   app.render();
 }

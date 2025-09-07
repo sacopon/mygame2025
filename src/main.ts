@@ -8,8 +8,9 @@ import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
 import { SkinResolver } from "@app/features/ui/skin";
 import { VirtualPadUI } from "@app/features/ui/virtual-pad";
 import { createResizeHandler, onResize } from "@app/services/resize";
+import { VIEWPORT_METRICS_CHANGED, ViewportMetrics } from "@app/services/viewport";
 import { AppContext } from "@app/config";
-import { GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
+import { GameScreen, GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { GameRoot } from "@game/core";
 
@@ -103,7 +104,20 @@ export function buildAppContext(parent: Container): AppContext {
   // const gameRoot = new GameRoot(new PixiRenderAdapter(gameLayer));
   const gameRoot = new GameRoot(render);
 
-  return { root, background, deviceLayer, frameLayer, gameLayer, gameContentLayer, gameLayerMask, overlayLayer, gameRoot };
+  const viewportMetrics = new ViewportMetrics();
+
+  return {
+    root,
+    background,
+    deviceLayer,
+    frameLayer,
+    gameLayer,
+    gameContentLayer,
+    gameLayerMask,
+    overlayLayer,
+    viewportMetrics,
+    gameRoot
+  };
 }
 
 (async () => {
@@ -184,15 +198,14 @@ export function buildAppContext(parent: Container): AppContext {
   };
 
   // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
-  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (_ev: Event) => {
-    // const { detail } = ev as CustomEvent<GameScreen>;
+  gameScreenSpec.addEventListener(VIRTUAL_SCREEN_CHANGE, (ev: Event) => {
+    const { width, height } = (ev as CustomEvent<GameScreen>).detail;
+    context.gameRoot.onScreenSizeChanged(width, height);
   }, { signal: ac.signal });
 
-  // // 毎回のリサイズでは「投影/カメラだけ更新」
-  // gameScreenSpec.addEventListener(VIEWPORT_METRICS, (e: any) => {
-  //   const { screen, scale, mode } = e.detail;
-  //   game.updateProjection(screen.x, screen.y, screen.w, screen.h, scale, mode);
-  // }, { signal: ac.signal });
+  // 毎回のリサイズでは「投影/カメラだけ更新」
+  context.viewportMetrics.addEventListener(VIEWPORT_METRICS_CHANGED, _ev => {
+  }, { signal: ac.signal });
 
   // 毎フレーム呼ばれる処理を追加
   const tick = (ticker: Ticker) => {

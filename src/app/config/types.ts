@@ -1,4 +1,5 @@
 import { Container, Graphics, Sprite } from "pixi.js";
+import { ViewportMetrics } from "@app/services/viewport";
 import { GameRoot } from "@game/core";
 
 export interface AppContext {
@@ -18,6 +19,8 @@ export interface AppContext {
   gameLayerMask: Graphics;
   /** 仮想のゲーム機UI(仮想ゲーム画面の前面に置かれる画像)用のレイヤー */
   overlayLayer: Container;
+  /** ビューポート管理 */
+  viewportMetrics: ViewportMetrics;
 
   /** ゲーム側のルート */
   gameRoot: GameRoot;
