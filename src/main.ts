@@ -224,9 +224,11 @@ export function buildAppContext(parent: Container): AppContext {
   // abort 時の終了処理
   ac.signal.addEventListener("abort", () => {
     app.ticker.remove(tick);
+
+    gameRoot.dispose();
     unbindKeyboard();
   });
 
   // 終了時に abort を呼び出す設定
-  window.addEventListener("unload", () => ac.abort(), { once: true });
+  window.addEventListener("pagehide", () => ac.abort(), { once: true });
 })();

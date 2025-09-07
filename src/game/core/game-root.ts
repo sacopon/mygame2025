@@ -51,18 +51,21 @@ class Smile extends GameObject implements ScreenSizeAware {
 
 export class GameRoot {
   #objects: GameObject[] = [];
+  #unsubscribeScreen?: () => void;
 
   public constructor(ports: GamePorts) {
     const { render, screen } = ports;
     const { width, height } = screen.getGameSize();
 
     // 画面サイズ変更を購読
-    screen.onGameSizeChanged(size => {
+    this.#unsubscribeScreen = screen.onGameSizeChanged(size => {
       this.onScreenSizeChanged(size.width, size.height);
     });
 
     this.spawnGameObject(new Background(render, width, height));
     this.spawnGameObject(new Smile(render, width, height));
+
+    this.onScreenSizeChanged(width, height);
   }
 
   public spawnGameObject<T extends GameObject>(gameObject: T): T {
@@ -72,6 +75,11 @@ export class GameRoot {
 
   public update(deltaTime: number) {
     this.#objects.forEach(o => o.update(deltaTime));
+  }
+
+  public dispose() {
+    this.#unsubscribeScreen?.();
+    this.#unsubscribeScreen = undefined;
   }
 
   /**
