@@ -90,7 +90,7 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
   else {
     // バーチャルキーUIなしの場合は仮想解像度を再計算する
     gameScreenSpec.update(GameScreenSpec.computeBareVirtualScreen(w, h));
-    relayoutViewportBare(app, ctx, gameScreenSpec, w, h, false);
+    relayoutViewportBare(app, ctx, gameScreenSpec, w, h);
   }
 
   const { width: vw, height: vh } = gameScreenSpec.current;

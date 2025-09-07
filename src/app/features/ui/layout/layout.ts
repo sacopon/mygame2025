@@ -38,11 +38,22 @@ export function relayoutViewportBare(app: Application, ctx: AppContext, gameScre
   ctx.deviceLayer.scale.set(1);
   ctx.deviceLayer.position.set(0, 0);
 
-  // 短辺フィットにスケーリング
   const { width: vw, height: vh } = gameScreenSpec.current;
-  const sx = w / vw;
-  const sy = h / vh;
-  let scale = Math.min(sx, sy);
+  const viewAspect = w / h;
+  const CAP_ASPECT = 16 / 9; // 上限とするアスペクト（これ以上横長は左右余白＝pillarbox）
+
+  // 16:9 までは「幅フィット」＝上下見切れ
+  // それ以上の横長は「高さフィット」＝左右余白
+  let scale: number = 0;
+
+  if (viewAspect <= CAP_ASPECT) {
+    scale = w / vw; // 幅フィット
+  } else {
+    // 高さに合わせた “16:9 の表示幅” を基準に、常に同じトリム量に固定
+    const displayWidthAtCap = h * CAP_ASPECT;     // ここが 16:9 の表示箱の横幅
+    scale = displayWidthAtCap / vw;               // ← これで 16:9 位置でのスケールを維持
+    // 同値式: scale = (h / vh) * (CAP_ASPECT / (vw/vh))
+  }
 
   if (pixelPerfect) {
     scale = Math.max(1, Math.floor(scale));

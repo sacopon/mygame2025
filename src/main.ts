@@ -163,7 +163,7 @@ export function buildAppContext(parent: Container): AppContext {
     relayoutViewport(app, context, gameScreenSpec, skins.current, window.innerWidth, window.innerHeight);
   }
   else {
-    relayoutViewportBare(app, context, gameScreenSpec, window.innerWidth, window.innerHeight, true);
+    relayoutViewportBare(app, context, gameScreenSpec, window.innerWidth, window.innerHeight);
   }
 
   // キーボード入力イベント
