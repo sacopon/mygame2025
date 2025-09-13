@@ -1,6 +1,9 @@
 import { GameObject, GamePorts, isScreenSizeAware } from "@game/core";
 import { GameObjectAccess, SceneManager } from "@game/scene";
 
+/**
+ * シーンとゲームオブジェクトを管理するルートとなるクラス
+ */
 export class GameRoot implements GameObjectAccess {
   #sceneManager: SceneManager;
   #objects: GameObject[] = [];

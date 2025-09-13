@@ -21,7 +21,7 @@ export class TransformComponent implements GameComponent<typeof TransformCompone
   update?(gameObject: GameObject, deltaTime: number): void;
 }
 
-declare module "@game/core/component-registry" {
+declare module "@game/component/component-registry" {
   interface ComponentRegistry {
     [TransformComponent.typeId]: TransformComponent;
   }

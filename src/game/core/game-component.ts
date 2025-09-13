@@ -17,9 +17,6 @@ export class GameComponents {
   #components: GameComponent[] = [];
   #componentById = new Map<ComponentTypeId, GameComponent>();
 
-  public constructor() {
-  }
-
   public update(deltaTime: number, gameObject: GameObject) {
     const list = this.#components.slice();
 

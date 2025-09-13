@@ -42,7 +42,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   }
 }
 
-declare module "@game/core/component-registry" {
+declare module "@game/component/component-registry" {
   interface ComponentRegistry {
     [SpriteComponent.typeId]: SpriteComponent;
   }
