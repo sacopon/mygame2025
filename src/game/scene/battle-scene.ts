@@ -1,4 +1,4 @@
-import { Background, Smile } from "@game/game-object";
+import { Background, BattleBackground, MainWindow, Smile } from "@game/game-object";
 import { Scene, SceneContext, SceneId } from "./scene";
 
 export class BattleScene implements Scene {
@@ -9,6 +9,8 @@ export class BattleScene implements Scene {
     const { width, height } = context.ports.screen.getGameSize();
 
     context.gameObjectAccess.spawnGameObject(new Background(context.ports, width, height));
+    context.gameObjectAccess.spawnGameObject(new BattleBackground(context.ports, width, height));
+    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ports, width, height));
     context.gameObjectAccess.spawnGameObject(new Smile(context.ports, width, height));
   }
 
