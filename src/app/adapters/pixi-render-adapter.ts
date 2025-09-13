@@ -1,12 +1,12 @@
-import { Container, Sprite } from "pixi.js";
-import { identityTransform, RenderPort, SpriteHandle, SpriteSpec, Transform2D } from "@game/ports";
+import { Container, NineSliceSprite, Sprite, Texture } from "pixi.js";
+import { identityTransform, NineSliceSpriteSpec, RenderPort, SpriteHandle, SpriteSpec, Transform2D } from "@game/ports";
 
 /**
  * pixi.js 実装の RenderAdapter
  */
 export class PixiRenderAdapter implements RenderPort {
   #rootContainer: Container;
-  #views = new Map<SpriteHandle, Sprite>();
+  #views = new Map<SpriteHandle, Sprite | NineSliceSprite>();
   #idCounter = 0;
 
   public constructor(rootContainer: Container) {
@@ -38,6 +38,55 @@ export class PixiRenderAdapter implements RenderPort {
     return handle;
   }
 
+  createNineSliceSprite(spec: NineSliceSpriteSpec): SpriteHandle {
+    const tex = Texture.from(spec.imageId);
+    const sprite = new NineSliceSprite({
+      texture: tex,
+      leftWidth: spec.border.left,
+      rightWidth: spec.border.right,
+      topHeight: spec.border.top,
+      bottomHeight: spec.border.bottom,
+    });
+
+    // 初期サイズ
+    sprite.width = spec.size.width;
+    sprite.height = spec.size.height;
+
+    // Transform2D を適用(指定がなければ identityTransform)
+    const transform: Transform2D = { ...identityTransform, ...spec.transform };
+    this.applyTransform(sprite, transform);
+
+    // 回転時の中心点
+    sprite.anchor.set(0.5);
+
+    // 表示順
+    sprite.zIndex = spec.layer ?? 0;
+    sprite.visible = spec.visible ?? true;
+
+    this.#rootContainer.addChild(sprite);
+
+    // ハンドル生成
+    const handle = `sprite-${this.#idCounter++}`;
+    this.#views.set(handle, sprite);
+
+    return handle;
+  }
+
+  setNineSpriteSize(handle: SpriteHandle, size: { width: number; height: number; }): void {
+    const sprite = this.#views.get(handle);
+
+    if (!sprite) {
+      return;
+    }
+
+    if (!(sprite instanceof NineSliceSprite)) {
+      return;
+    }
+
+    sprite.width = size.width;
+    sprite.height = size.height;
+  }
+
   public setSpriteTransform(handle: SpriteHandle, transform: Partial<Transform2D>): void {
     const sprite = this.#views.get(handle);
 
@@ -60,7 +109,7 @@ export class PixiRenderAdapter implements RenderPort {
     throw new Error("Method not implemented.");
   }
 
-  private applyTransform(sprite: Sprite, transform: Partial<Transform2D>) {
+  private applyTransform(sprite: Sprite | NineSliceSprite, transform: Partial<Transform2D>) {
     sprite.x = transform.x ?? sprite.x;
     sprite.y = transform.y ?? sprite.y;
     sprite.rotation = transform.rotation ?? sprite.rotation;
