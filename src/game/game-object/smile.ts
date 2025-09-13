@@ -1,4 +1,5 @@
-import { GameObject, GamePorts, ScreenSizeAware, SpriteComponent } from "@game/core";
+import { SpriteComponent } from "@game/component";
+import { GameObject, GamePorts, ScreenSizeAware } from "@game/core";
 import { GameButton } from "@game/ports";
 
 export class Smile extends GameObject implements ScreenSizeAware {
