@@ -1,58 +1,8 @@
-import { GameObject, GamePorts, isScreenSizeAware, ScreenSizeAware, SpriteComponent } from "@game/core";
-import { GameButton } from "@game/ports";
+import { GameObject, GamePorts, isScreenSizeAware } from "@game/core";
+import { GameObjectAccess, SceneManager } from "@game/scene";
 
-class Background extends GameObject implements ScreenSizeAware {
-  constructor(ports: GamePorts, vw: number, vh: number) {
-    super(ports);
-
-    const x = vw / 2;
-    const y = vh / 2;
-    this.setPosition(x, y);
-    this.addComponent(new SpriteComponent("bg358x224.png"));
-  }
-
-  onScreenSizeChanged(width: number, height: number) {
-    this.setPosition(width / 2, height / 2);
-  }
-}
-
-class Smile extends GameObject implements ScreenSizeAware {
-  #rot: number = 0;
-  #scale: number = 1.0;
-  #positionX: number = 0;
-  #positionY: number = 0;
-
-  constructor(ports: GamePorts, vw: number, vh: number) {
-    super(ports);
-
-    const x = vw / 2;
-    const y = vh / 2;
-    this.#positionX = x;
-    this.#positionY = y;
-    this.setPosition(x, y);
-    this.addComponent(new SpriteComponent("smile.png"));
-  }
-
-  public update(deltaTime: number): void {
-    super.update(deltaTime);
-
-    this.#rot += 0.03;
-    this.#scale += this.input.isDown(GameButton.A) ? 0.03 : 0.0;
-    this.#scale -= this.input.isDown(GameButton.B) ? 0.03 : 0.0;
-    this.#positionX += this.input.axisX() * 5;
-    this.#positionY += this.input.axisY() * 5;
-
-    this.setPosition(this.#positionX, this.#positionY);
-    this.setRotation(this.#rot);
-    this.setScale(this.#scale);
-  }
-
-  onScreenSizeChanged(width: number, height: number) {
-    this.setPosition(width / 2, height / 2);
-  }
-}
-
-export class GameRoot {
+export class GameRoot implements GameObjectAccess {
+  #sceneManager: SceneManager;
   #objects: GameObject[] = [];
   #unsubscribeScreen?: () => void;
 
@@ -65,9 +15,8 @@ export class GameRoot {
       this.onScreenSizeChanged(size.width, size.height);
     });
 
-    this.spawnGameObject(new Background(ports, width, height));
-    this.spawnGameObject(new Smile(ports, width, height));
-
+    // シーンマネージャ作成
+    this.#sceneManager = new SceneManager("Battle", { ports, gameObjectAccess: this });
     this.onScreenSizeChanged(width, height);
   }
 
@@ -77,7 +26,13 @@ export class GameRoot {
   }
 
   public update(deltaTime: number) {
-    this.#objects.forEach(o => o.update(deltaTime));
+    this.#sceneManager.update(deltaTime);
+
+    const list = this.#objects.slice();
+
+    for (const o of list) {
+      o.update(deltaTime);
+    }
   }
 
   public dispose() {

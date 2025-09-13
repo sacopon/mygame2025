@@ -1,17 +1,15 @@
-import { GameComponent, GamePorts, TransformComponent } from "@game/core";
+import { GameComponents, GameComponent, GamePorts, TransformComponent } from "@game/core";
 import { Ctor } from "@shared";
 import { InputPort, RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {
   #ports: GamePorts;
-  #components: GameComponent[] = [];
-  #componentByType = new Map<Ctor<GameComponent>, GameComponent>();
-  #transform: TransformComponent;
+  #components: GameComponents;
 
   public constructor(ports: GamePorts) {
     this.#ports = ports;
-    this.#transform = new TransformComponent();
-    this.addComponent(this.#transform);
+    this.#components = new GameComponents();
+    this.addComponent(new TransformComponent());
   }
 
   public get render(): Readonly<RenderPort> {
@@ -23,34 +21,40 @@ export class GameObject {
   }
 
   public get transform(): Readonly<Transform2D> {
-    return this.#transform.transform;
+    return this.#components.getComponent(TransformComponent)!.transform;
   }
 
   public setPosition(x: number, y: number) {
-    this.#transform.transform = { x, y };
+    this.#transform.patch({ x, y });
   }
 
   public setRotation(rotation: number) {
-    this.#transform.transform = { rotation };
+    this.#transform.patch({ rotation });
   }
 
   public setScale(scale: number) {
-    this.#transform.transform = { scaleX: scale, scaleY: scale };
+    this.#transform.patch({ scaleX: scale, scaleY: scale });
   }
 
   public update(deltaTime: number) {
-    this.#components.forEach(c => c.update?.(this, deltaTime));
+    this.#components.update(deltaTime, this);
   }
 
-  public addComponent<T extends GameComponent>(component: T): T {
-    this.#components.push(component);
-    this.#componentByType.set(component.constructor as Ctor<GameComponent>, component);
-    component.onAttach?.(this);
+  get #transform(): TransformComponent {
+    return this.#components.getComponent(TransformComponent)!;
+  }
 
+  public addComponent<T extends GameComponent>(component: T): T | null {
+    // 既に同じものが追加されていたら処理しない
+    if (!this.#components.addComponent(component)) {
+      return null;
+    }
+
+    component.onAttach?.(this);
     return component;
   }
 
-  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | undefined {
-    return this.#componentByType.get(ctor) as T | undefined;
+  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | null {
+    return this.#components.getComponent(ctor);
   }
 }

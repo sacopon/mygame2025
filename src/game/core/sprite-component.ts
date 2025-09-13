@@ -1,14 +1,17 @@
 import { GameComponent, GameObject } from "@game/core";
 import { SpriteHandle } from "@game/ports";
 
+export type SpriteSpec = {
+  imageId: string;
+  layer: number;
+};
+
 export class SpriteComponent implements GameComponent {
   #handle: SpriteHandle | null = null;
-  #imageId: string;
-  #layer: number;
+  #spec: SpriteSpec;
 
   public constructor(imageId: string, layer = 0) {
-    this.#imageId = imageId;
-    this.#layer = layer;
+    this.#spec = { imageId, layer };
   }
 
   public update(gameObject: GameObject, _deltaTime: number): void {
@@ -21,8 +24,8 @@ export class SpriteComponent implements GameComponent {
 
   public onAttach(gameObject: GameObject): void {
     this.#handle = gameObject.render.createSprite({
-      imageId: this.#imageId,
-      layer: this.#layer,
+      imageId: this.#spec.imageId,
+      layer: this.#spec.layer,
     });
   }
 

@@ -11,7 +11,7 @@ export class TransformComponent implements GameComponent {
     return this.#transform;
   }
 
-  public set transform(t: Partial<Transform2D>) {
+  public patch(t: Partial<Transform2D>) {
     this.#transform = {...this.#transform, ...t};
   }
 

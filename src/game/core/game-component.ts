@@ -1,9 +1,40 @@
 import { GameObject } from "@game/core";
+import { Ctor } from "@shared";
 
 export interface GameComponent {
   update?(gameObject: GameObject, deltaTime: number): void;
   onAttach?(gameObject: GameObject): void;
   onDetach?(gameObject: GameObject): void;
+}
+
+export class GameComponents {
+  #components: GameComponent[] = [];
+  #componentByType = new Map<Ctor<GameComponent>, GameComponent>();
+
+  public constructor() {
+  }
+
+  public update(deltaTime: number, gameObject: GameObject) {
+    const list = this.#components.slice();
+
+    for (const c of list) {
+      c.update?.(gameObject, deltaTime);
+    }
+  }
+
+  public addComponent<T extends GameComponent>(component: T): T | null {
+    if (this.getComponent(component.constructor as Ctor<GameComponent>)) {
+      return null;
+    }
+
+    this.#components.push(component);
+    this.#componentByType.set(component.constructor as Ctor<GameComponent>, component);
+    return component;
+  }
+
+  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | null {
+    return this.#componentByType.get(ctor) as T | null;
+  }
 }
 
 export interface ScreenSizeAware {

@@ -19,4 +19,4 @@ export const PAD_BIT = {
   BUTTON4: 7,
 };
 
-export type Ctor<T> = new (...args: unknown[]) => T;
+export type Ctor<T> = abstract new (...args: unknown[]) => T;
