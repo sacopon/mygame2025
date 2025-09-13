@@ -1,3 +1,4 @@
+export * from "./component-registry";
 export * from "./game-component";
 export * from "./game-object";
 export * from "./game-ports";

@@ -1,12 +1,19 @@
 import { GameObject } from "@game/core";
 import { Ctor } from "@shared";
 
-export interface GameComponent {
+/**
+ * GameComponent の共通インターフェース
+ */
+export interface GameComponent<T extends symbol = symbol> {
+  readonly typeId: T;
   update?(gameObject: GameObject, deltaTime: number): void;
   onAttach?(gameObject: GameObject): void;
   onDetach?(gameObject: GameObject): void;
 }
 
+/**
+ * 複数の GameComponent を束ねるクラス
+ */
 export class GameComponents {
   #components: GameComponent[] = [];
   #componentByType = new Map<Ctor<GameComponent>, GameComponent>();

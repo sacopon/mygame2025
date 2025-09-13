@@ -7,6 +7,9 @@ export type SpriteSpec = {
 };
 
 export class SpriteComponent implements GameComponent {
+  static readonly typeId = Symbol("SpriteComponent");
+  readonly typeId: typeof SpriteComponent.typeId = SpriteComponent.typeId;
+
   #handle: SpriteHandle | null = null;
   #spec: SpriteSpec;
 

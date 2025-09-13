@@ -1,7 +1,10 @@
 import { GameComponent, GameObject } from "@game/core";
 import { identityTransform, Transform2D } from "@game/ports";
 
-export class TransformComponent implements GameComponent {
+export class TransformComponent implements GameComponent<typeof TransformComponent.typeId> {
+  static readonly typeId: unique symbol = Symbol("TransformComponent");
+  readonly typeId: typeof TransformComponent.typeId = TransformComponent.typeId;
+
   #transform: Transform2D = { ...identityTransform };
 
   public constructor() {
@@ -16,4 +19,10 @@ export class TransformComponent implements GameComponent {
   }
 
   update?(gameObject: GameObject, deltaTime: number): void;
+}
+
+declare module "@game/core/component-registry" {
+  interface ComponentRegistry {
+    [TransformComponent.typeId]: TransformComponent;
+  }
 }
