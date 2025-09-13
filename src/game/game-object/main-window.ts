@@ -7,14 +7,14 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
 
     const pos = this.#calcPosition(vw, vh);
     this.setPosition(pos.x, pos.y);
-    this.addComponent(new NineSliceSpriteComponent("window.png", { left: 4, top: 4, right: 4, bottom: 4 }, this.#calcSize(vw, vh)));
+    this.addComponent(new NineSliceSpriteComponent("window.png", { left: 4, top: 4, right: 4, bottom: 4 }, this.#calcSize()));
   }
 
   onScreenSizeChanged(vw: number, vh: number) {
     const pos = this.#calcPosition(vw, vh);
     this.setPosition(pos.x, pos.y);
 
-    const size = this.#calcSize(vw, vh);
+    const size = this.#calcSize();
     this.getComponent(NineSliceSpriteComponent.typeId)!.setSize(size.width, size.height);
   }
 
@@ -25,7 +25,7 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
     };
   }
 
-  #calcSize(_vw: number, _vh: number): { width: number, height: number } {
+  #calcSize(): { width: number, height: number } {
     return {
       width: 256 + 8,
       height: 136,
