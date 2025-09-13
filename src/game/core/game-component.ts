@@ -1,5 +1,4 @@
-import { GameObject } from "@game/core";
-import { Ctor } from "@shared";
+import { ComponentById, ComponentTypeId, GameObject } from "@game/core";
 
 /**
  * GameComponent の共通インターフェース
@@ -16,7 +15,7 @@ export interface GameComponent<T extends symbol = symbol> {
  */
 export class GameComponents {
   #components: GameComponent[] = [];
-  #componentByType = new Map<Ctor<GameComponent>, GameComponent>();
+  #componentById = new Map<ComponentTypeId, GameComponent>();
 
   public constructor() {
   }
@@ -29,18 +28,21 @@ export class GameComponents {
     }
   }
 
-  public addComponent<T extends GameComponent>(component: T): T | null {
-    if (this.getComponent(component.constructor as Ctor<GameComponent>)) {
+  public addComponent<I extends ComponentTypeId, T extends GameComponent<I>>(component: T): T | null {
+    const id: ComponentTypeId = component.typeId;
+
+    if (this.#componentById.has(id)) {
       return null;
     }
 
     this.#components.push(component);
-    this.#componentByType.set(component.constructor as Ctor<GameComponent>, component);
+    this.#componentById.set(id, component);
+
     return component;
   }
 
-  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | null {
-    return this.#componentByType.get(ctor) as T | null;
+  public getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
+    return (this.#componentById.get(id) as ComponentById<T> | undefined) ?? null;
   }
 }
 

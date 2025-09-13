@@ -6,8 +6,8 @@ export type SpriteSpec = {
   layer: number;
 };
 
-export class SpriteComponent implements GameComponent {
-  static readonly typeId = Symbol("SpriteComponent");
+export class SpriteComponent implements GameComponent<typeof SpriteComponent.typeId> {
+  static readonly typeId: unique symbol = Symbol("SpriteComponent");
   readonly typeId: typeof SpriteComponent.typeId = SpriteComponent.typeId;
 
   #handle: SpriteHandle | null = null;
@@ -39,5 +39,11 @@ export class SpriteComponent implements GameComponent {
 
     gameObject.render.destroyView(this.#handle);
     this.#handle = null;
+  }
+}
+
+declare module "@game/core/component-registry" {
+  interface ComponentRegistry {
+    [SpriteComponent.typeId]: SpriteComponent;
   }
 }

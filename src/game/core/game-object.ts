@@ -1,5 +1,4 @@
-import { GameComponents, GameComponent, GamePorts, TransformComponent } from "@game/core";
-import { Ctor } from "@shared";
+import { GameComponents, GameComponent, GamePorts, TransformComponent, ComponentTypeId, ComponentById } from "@game/core";
 import { InputPort, RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {
@@ -21,7 +20,7 @@ export class GameObject {
   }
 
   public get transform(): Readonly<Transform2D> {
-    return this.#components.getComponent(TransformComponent)!.transform;
+    return this.#components.getComponent(TransformComponent.typeId)!.transform;
   }
 
   public setPosition(x: number, y: number) {
@@ -41,10 +40,10 @@ export class GameObject {
   }
 
   get #transform(): TransformComponent {
-    return this.#components.getComponent(TransformComponent)!;
+    return this.#components.getComponent(TransformComponent.typeId)!;
   }
 
-  public addComponent<T extends GameComponent>(component: T): T | null {
+  public addComponent<I extends ComponentTypeId, T extends GameComponent<I>>(component: T): T | null {
     // 既に同じものが追加されていたら処理しない
     if (!this.#components.addComponent(component)) {
       return null;
@@ -54,7 +53,7 @@ export class GameObject {
     return component;
   }
 
-  public getComponent<T extends GameComponent>(ctor: Ctor<T>): T | null {
-    return this.#components.getComponent(ctor);
+  public getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
+    return this.#components.getComponent(id);
   }
 }
