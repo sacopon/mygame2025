@@ -1,4 +1,4 @@
-export type SpriteHandle = string;
+export type ViewHandle = string;
 
 export interface Transform2D {
   x: number;

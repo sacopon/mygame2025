@@ -1,5 +1,5 @@
 import { GameComponent, GameObject } from "@game/core";
-import { SpriteHandle } from "@game/ports";
+import { ViewHandle } from "@game/ports";
 
 export type SpriteSpec = {
   imageId: string;
@@ -10,7 +10,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   static readonly typeId: unique symbol = Symbol("SpriteComponent");
   readonly typeId: typeof SpriteComponent.typeId = SpriteComponent.typeId;
 
-  #handle: SpriteHandle | null = null;
+  #handle: ViewHandle | null = null;
   #spec: SpriteSpec;
 
   public constructor(imageId: string, layer = 0) {
