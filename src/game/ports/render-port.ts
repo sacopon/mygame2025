@@ -72,6 +72,27 @@ export interface TextSpec {
   style?: TextStyleSpec;
 }
 
+/**
+ * 矩形情報
+ */
+export interface RectSpec {
+  /** 位置情報 */
+  transform?: Partial<Transform2D>;
+  /** 大きさ */
+  size: {
+    width: number,
+    height: number,
+  };
+  /** 色 */
+  color?: number;
+  /** アルファ値 */
+  alpha?: number,
+  /** 描画優先度 */
+  layer?: number;
+  /** 表示/非表示フラグ */
+  visible?: boolean;
+}
+
 export interface RenderPort {
   /**
    * スプライトを生成し、そのスプライトへアクセスするためのハンドルを返す
@@ -88,6 +109,14 @@ export interface RenderPort {
    * @returns スプライトのハンドル
    */
   createNineSliceSprite(spec: NineSliceSpriteSpec): ViewHandle;
+
+  /**
+   * 矩形を生成し、その矩形へアクセスするためのハンドルを返す
+   *
+   * @param spec 矩形の仕様
+   * @resturns 生成したオブジェクトのハンドル
+   */
+  createRect(spec: RectSpec): ViewHandle;
 
   /**
    * Nine-Slice スプライトのサイズを設定する

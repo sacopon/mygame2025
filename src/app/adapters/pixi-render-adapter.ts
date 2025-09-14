@@ -1,12 +1,12 @@
-import { Container, NineSliceSprite, Sprite, Text, TextStyle, Texture } from "pixi.js";
-import { identityTransform, NineSliceSpriteSpec, RenderPort, ViewHandle, SpriteSpec, TextSpec, TextStyleSpec, Transform2D } from "@game/ports";
+import { Container, Graphics, NineSliceSprite, Sprite, Text, TextStyle, Texture } from "pixi.js";
+import { identityTransform, NineSliceSpriteSpec, RenderPort, ViewHandle, SpriteSpec, TextSpec, TextStyleSpec, Transform2D, RectSpec } from "@game/ports";
 
 /**
  * pixi.js 実装の RenderAdapter
  */
 export class PixiRenderAdapter implements RenderPort {
   #rootContainer: Container;
-  #views = new Map<ViewHandle, Sprite | NineSliceSprite | Text>();
+  #views = new Map<ViewHandle, Sprite | NineSliceSprite | Text | Graphics>();
   #idCounter = 0;
 
   public constructor(rootContainer: Container) {
@@ -96,6 +96,30 @@ export class PixiRenderAdapter implements RenderPort {
     return handle;
   }
 
+  public createRect(spec: RectSpec): ViewHandle {
+    const g = new Graphics();
+    g.eventMode = "none";
+    g.rect(
+      spec.transform?.x ?? 0,
+      spec.transform?.y ?? 0,
+      spec.size.width,
+      spec.size.height);
+    g.alpha = spec.alpha ?? 1.0;
+    g.fill(spec.color ?? 0xFFFFFF);
+
+    // 表示順
+    g.zIndex = spec.layer ?? 0;
+    g.visible = spec.visible ?? true;
+
+    this.#rootContainer.addChild(g);
+
+    // ハンドル生成
+    const handle = `graphics-${this.#idCounter++}`;
+    this.#views.set(handle, g);
+
+    return handle;
+  }
+
   public setTextContent(handle: ViewHandle, text: string): void {
     const n = this.#views.get(handle);
     if (n && n instanceof Text) {
@@ -152,7 +176,7 @@ export class PixiRenderAdapter implements RenderPort {
     throw new Error("Method not implemented.");
   }
 
-  private applyTransform(sprite: Sprite | NineSliceSprite | Text, transform: Partial<Transform2D>) {
+  private applyTransform(sprite: Sprite | NineSliceSprite | Text | Graphics, transform: Partial<Transform2D>) {
     sprite.x = transform.x ?? sprite.x;
     sprite.y = transform.y ?? sprite.y;
     sprite.rotation = transform.rotation ?? sprite.rotation;

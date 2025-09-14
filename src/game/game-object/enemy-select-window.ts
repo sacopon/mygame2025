@@ -1,4 +1,4 @@
-import { NineSliceSpriteComponent, TextListComponent } from "@game/component";
+import { NineSliceSpriteComponent, RectComponent, TextListComponent } from "@game/component";
 import { GameObject, GamePorts, ScreenSizeAware} from "@game/core";
 
 export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
@@ -8,16 +8,31 @@ export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, _vw: number, _vh: number) {
     super(ports);
 
-    this.setPosition(160 / 2, 148);
+    const windowSpec = {
+      x: 160 / 2,
+      y: 148,
+      width: 168,
+      height: 68,
+    };
+
+    this.setPosition(windowSpec.x, windowSpec.y);
+
+    // ウィンドウ背景
+    this.addComponent(new RectComponent({
+      size: {
+        width: windowSpec.width,
+        height: windowSpec.height,
+      },
+      color: 0x000000,
+      alpha: 0.75, // 濃いめ
+    }));
 
     // ウィンドウ枠
     this.#panel = this.addComponent(new NineSliceSpriteComponent({
       imageId: "window.png",
       border: { left: 8, top: 8, right: 8, bottom: 8 },
-      size: { width: 168, height: 68 },
+      size: { width: windowSpec.width, height: windowSpec.height },
     }))!;
-
-    // ウィンドウ背景
 
     // 中身
     this.#textList = this.addComponent(new TextListComponent(
