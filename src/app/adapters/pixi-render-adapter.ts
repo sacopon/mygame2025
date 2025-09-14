@@ -23,7 +23,7 @@ export class PixiRenderAdapter implements RenderPort {
     this.applyTransform(sprite, transform);
 
     // 回転時の中心点
-    sprite.anchor.set(0.5);
+    sprite.anchor.set(spec.anchor?.x ?? 0, spec.anchor?.y ?? 0);
 
     // 表示順
     sprite.zIndex = spec.layer ?? 0;
@@ -57,7 +57,7 @@ export class PixiRenderAdapter implements RenderPort {
     this.applyTransform(sprite, transform);
 
     // 回転時の中心点
-    sprite.anchor.set(0.5);
+    sprite.anchor.set(spec.anchor?.x ?? 0, spec.anchor?.y ?? 0);
 
     // 表示順
     sprite.zIndex = spec.layer ?? 0;

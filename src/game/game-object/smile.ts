@@ -16,7 +16,10 @@ export class Smile extends GameObject implements ScreenSizeAware {
     this.#positionX = x;
     this.#positionY = y;
     this.setPosition(x, y);
-    this.addComponent(new SpriteComponent("smile.png"));
+    this.addComponent(new SpriteComponent({
+      imageId: "smile.png",
+      anchor: { x: 0.5, y: 0.5 },
+    }));
   }
 
   public update(deltaTime: number): void {

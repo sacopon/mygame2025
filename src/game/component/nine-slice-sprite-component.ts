@@ -9,13 +9,8 @@ export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceS
   #handle: ViewHandle | null = null;
   #spec: NineSliceSpriteSpec;
 
-  public constructor(imageId: string, border: { left: number, top: number, right: number, bottom: number }, size: { width: number, height: number }, layer = 0) {
-    this.#spec = {
-      imageId,
-      layer,
-      border,
-      size,
-    };
+  public constructor(spec: Partial<NineSliceSpriteSpec> & Required<Pick<NineSliceSpriteSpec, "imageId" | "border" | "size">>) {
+    this.#spec = { ...spec };
   }
 
   public update(gameObject: GameObject, _deltaTime: number): void {

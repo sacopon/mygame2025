@@ -7,7 +7,12 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
 
     const pos = this.#calcPosition(vw, vh);
     this.setPosition(pos.x, pos.y);
-    this.addComponent(new NineSliceSpriteComponent("window.png", { left: 8, top: 8, right: 8, bottom: 8 }, this.#calcSize()));
+    this.addComponent(new NineSliceSpriteComponent({
+      imageId: "window.png",
+      border: { left: 8, top: 8, right: 8, bottom: 8 },
+      size: this.#calcSize(),
+      anchor: { x: 0.5, y: 0.5 },
+    }));
   }
 
   onScreenSizeChanged(vw: number, vh: number) {

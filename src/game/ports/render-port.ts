@@ -10,6 +10,11 @@ export interface SpriteSpec {
   transform?: Partial<Transform2D>;
   /** 描画優先度 */
   layer?: number;
+  /** 原点 */
+  anchor?: {
+    x?: number,
+    y?: number,
+  },
   /** 表示/非表示フラグ */
   visible?: boolean;
 }

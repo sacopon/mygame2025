@@ -1,10 +1,5 @@
 import { GameComponent, GameObject } from "@game/core";
-import { ViewHandle } from "@game/ports";
-
-export type SpriteSpec = {
-  imageId: string;
-  layer: number;
-};
+import { SpriteSpec, ViewHandle } from "@game/ports";
 
 export class SpriteComponent implements GameComponent<typeof SpriteComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("SpriteComponent");
@@ -13,8 +8,8 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   #handle: ViewHandle | null = null;
   #spec: SpriteSpec;
 
-  public constructor(imageId: string, layer = 0) {
-    this.#spec = { imageId, layer };
+  public constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
+    this.#spec = { ...spec };
   }
 
   public update(gameObject: GameObject, _deltaTime: number): void {
@@ -26,10 +21,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   }
 
   public onAttach(gameObject: GameObject): void {
-    this.#handle = gameObject.render.createSprite({
-      imageId: this.#spec.imageId,
-      layer: this.#spec.layer,
-    });
+    this.#handle = gameObject.render.createSprite(this.#spec);
   }
 
   public onDetach(gameObject: GameObject): void {

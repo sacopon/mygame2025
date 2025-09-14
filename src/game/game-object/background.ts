@@ -9,7 +9,10 @@ export class Background extends GameObject implements ScreenSizeAware {
     const y = vh / 2;
     this.setPosition(x, y);
     // this.addComponent(new SpriteComponent("bg358x224.png"));
-    this.addComponent(new SpriteComponent("fieldbgsample.png"));
+    this.addComponent(new SpriteComponent({
+      imageId: "fieldbgsample.png",
+      anchor: { x: 0.5, y: 0.5 },
+    }));
   }
 
   onScreenSizeChanged(width: number, height: number) {
