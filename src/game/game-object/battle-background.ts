@@ -8,7 +8,10 @@ export class BattleBackground extends GameObject implements ScreenSizeAware {
     const x = vw / 2;
     const y = vh / 2 - 18;
     this.setPosition(x, y);
-    this.addComponent(new SpriteComponent("bgsample.png"));
+    this.addComponent(new SpriteComponent({
+      imageId: "bgsample.png",
+      anchor: { x: 0.5, y: 0.5 },
+    }));
   }
 
   onScreenSizeChanged(vw: number, vh: number) {

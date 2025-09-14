@@ -1,4 +1,4 @@
-import { Background, BattleBackground, Enemy, MainWindow, Smile } from "@game/game-object";
+import { Background, BattleBackground, Enemy, EnemySelectWindow, MainWindow, Smile } from "@game/game-object";
 import { Scene, SceneContext, SceneId } from "./scene";
 
 export class BattleScene implements Scene {
@@ -20,6 +20,7 @@ export class BattleScene implements Scene {
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 6));
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 7));
     context.gameObjectAccess.spawnGameObject(new Smile(context.ports, width, height));
+    context.gameObjectAccess.spawnGameObject(new EnemySelectWindow(context.ports, width, height));
   }
 
   next(): SceneId {

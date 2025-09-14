@@ -1,21 +1,16 @@
 import { GameComponent, GameObject } from "@game/core";
-import { NineSliceSpriteSpec, SpriteHandle } from "@game/ports";
+import { NineSliceSpriteSpec, ViewHandle } from "@game/ports";
 
 export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceSpriteComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("NineSliceSpriteComponent");
   readonly typeId: typeof NineSliceSpriteComponent.typeId = NineSliceSpriteComponent.typeId;
 
   #owner: GameObject | null = null;
-  #handle: SpriteHandle | null = null;
+  #handle: ViewHandle | null = null;
   #spec: NineSliceSpriteSpec;
 
-  public constructor(imageId: string, border: { left: number, top: number, right: number, bottom: number }, size: { width: number, height: number }, layer = 0) {
-    this.#spec = {
-      imageId,
-      layer,
-      border,
-      size,
-    };
+  public constructor(spec: Partial<NineSliceSpriteSpec> & Required<Pick<NineSliceSpriteSpec, "imageId" | "border" | "size">>) {
+    this.#spec = { ...spec };
   }
 
   public update(gameObject: GameObject, _deltaTime: number): void {

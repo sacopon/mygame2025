@@ -10,7 +10,10 @@ export class Enemy extends GameObject implements ScreenSizeAware {
     this.#index = index;
     const pos = this.#calcPosition(vw, vh, this.#index);
     this.setPosition(pos.x, pos.y);
-    this.addComponent(new SpriteComponent("enemy24x24.png"));
+    this.addComponent(new SpriteComponent({
+      imageId: "enemy24x24.png",
+      anchor: { x: 0.5, y: 0.5 },
+    }));
   }
 
   onScreenSizeChanged(vw: number, vh: number) {

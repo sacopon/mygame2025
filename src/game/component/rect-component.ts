@@ -1,15 +1,17 @@
 import { GameComponent, GameObject } from "@game/core";
-import { SpriteSpec, ViewHandle } from "@game/ports";
+import { RectSpec, ViewHandle } from "@game/ports";
 
-export class SpriteComponent implements GameComponent<typeof SpriteComponent.typeId> {
-  static readonly typeId: unique symbol = Symbol("SpriteComponent");
-  readonly typeId: typeof SpriteComponent.typeId = SpriteComponent.typeId;
+export class RectComponent implements GameComponent<typeof RectComponent.typeId> {
+  static readonly typeId: unique symbol = Symbol("RectComponent");
+  readonly typeId: typeof RectComponent.typeId = RectComponent.typeId;
 
   #handle: ViewHandle | null = null;
-  #spec: SpriteSpec;
+  #spec: RectSpec;
 
-  public constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
-    this.#spec = { ...spec };
+  public constructor(spec: { size: { width: number, height: number }, color?: number, alpha?: number}) {
+    this.#spec = {
+      ...spec,
+    };
   }
 
   public update(gameObject: GameObject, _deltaTime: number): void {
@@ -21,7 +23,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   }
 
   public onAttach(gameObject: GameObject): void {
-    this.#handle = gameObject.render.createSprite(this.#spec);
+    this.#handle = gameObject.render.createRect(this.#spec);
   }
 
   public onDetach(gameObject: GameObject): void {
@@ -36,6 +38,6 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
 
 declare module "@game/component/component-registry" {
   interface ComponentRegistry {
-    [SpriteComponent.typeId]: SpriteComponent;
+    [RectComponent.typeId]: RectComponent;
   }
 }
