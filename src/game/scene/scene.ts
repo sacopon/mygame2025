@@ -1,7 +1,7 @@
 import { GameObject, GamePorts } from "@game/core";
 
 export interface GameObjectAccess {
-  spawnGameObject(gameObject: GameObject): void;
+  spawnGameObject(gameObject: GameObject): GameObject;
 }
 
 export interface SceneContext {
