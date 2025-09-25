@@ -45,12 +45,12 @@ export type NineSliceSpriteSpec = SpriteSpec & {
 }
 
 /**
- * テキスト表示の文字スタイルの指定
+ * テキスト表示の共通文字スタイルの指定
  */
-export interface TextStyleSpec {
-  fontFamily?: string;   // 例: "Noto Sans JP"
+export interface TextStyle {
+  fontFamily?: string
   fontSize?: number;     // px
-  fill?: number;         // 0xffffff
+  color?: number;         // 0xffffff 動的Text の fill、ビットマップText の tint を吸収する共通名
   align?: "left" | "center" | "right";
   wordWrap?: boolean;    // デフォルト true にしてもOK
   wordWrapWidth?: number;
@@ -69,7 +69,7 @@ export interface TextSpec {
   /** 表示/非表示フラグ */
   visible?: boolean;
   /** 文字スタイル情報 */
-  style?: TextStyleSpec;
+  style?: TextStyle;
 }
 
 /**
@@ -137,5 +137,10 @@ export interface RenderPort {
   // テキスト描画
   createText(spec: TextSpec): ViewHandle;
   setTextContent(handle: ViewHandle, text: string): void;
-  setTextStyle?(handle: ViewHandle, style: Partial<TextStyleSpec>): void;
+  setTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void;
+
+  // ビットマップフォント描画
+  createBitmapText(spec: TextSpec): ViewHandle;
+  setBitmapTextContent(handle: ViewHandle, text: string): void;
+  setBitmapTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void;
 }

@@ -1,7 +1,15 @@
 import { NineSliceSpriteComponent, RectComponent, TextListComponent } from "@game/component";
-import { GameObject, GamePorts, ScreenSizeAware} from "@game/core";
+import { GameObject, GamePorts } from "@game/core";
 
-export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
+const borderHeight = 4;
+const marginTop = 4;
+const marginBottom = 4;
+const fontSize = 10;
+const lineMargin = Math.floor(fontSize * 0.5);
+const lineHeight = fontSize + lineMargin;
+const maxLines = 5;
+
+export class EnemySelectWindow extends GameObject {
   #panel: NineSliceSpriteComponent;
   #textList: TextListComponent;
   #windowSpec = {
@@ -9,7 +17,7 @@ export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
     x: 0,
     y: 0,
     width: 168,
-    height: 68,
+    height: borderHeight + marginTop + (fontSize + lineMargin) * maxLines - lineMargin + marginBottom + borderHeight,
   };
 
   constructor(ports: GamePorts, _vw: number, _vh: number) {
@@ -36,12 +44,15 @@ export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
 
     // 中身
     this.#textList = this.addComponent(new TextListComponent(
-      ["キングスライム　─　1匹", "キングスライム　─　1匹"],
-      { fontSize: 12, },
+      ["キングスライム　ー　８ぴき", "グリズリー　　ー　８ぴき", "さまようよろい　ー　８ぴき", "キングスライム　ー　８ぴき", "スライム　ー　８ぴき"],
       {
-        offsetX: 4 + 2 + 14,
-        offsetY: 4 + 2,
-        lineHeight: 16,
+        fontFamily: "BestTen",
+        fontSize,
+      },
+      {
+        offsetX: 4 + 2 + 10,
+        offsetY: borderHeight + marginTop,
+        lineHeight,
       }))!;
   }
 
@@ -51,8 +62,5 @@ export class EnemySelectWindow extends GameObject implements ScreenSizeAware {
 
   getHeight(): number {
     return this.#windowSpec.height;
-  }
-
-  onScreenSizeChanged(_vw: number, _vh: number) {
   }
 }

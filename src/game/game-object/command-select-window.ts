@@ -1,11 +1,17 @@
-import { NineSliceSpriteComponent, RectComponent, TextListComponent } from "@game/component";
+import {  NineSliceSpriteComponent, RectComponent, TextListComponent } from "@game/component";
 import { GameObject, GamePorts } from "@game/core";
 
-const fontSize = 14;
-const marginY = 4;
-const borderWidth = 6;
-const lineCount = 4;
+const fontSize = 10;
+const borderWidth = 4;
+const borderHeight = 4;
+const marginTop = 4;
+const marginBottom = 4;
+const marginLeft = 4;
+const marginRight = 4;
 const maxCharCount = 5;
+const lineMargin = Math.floor(fontSize * 0.5);
+const lineHeight = fontSize + lineMargin;
+const maxLines = 4;
 
 export class CommandSelectWindow extends GameObject {
   #panel: NineSliceSpriteComponent;
@@ -14,8 +20,8 @@ export class CommandSelectWindow extends GameObject {
     // 位置は UILayoutCoordinator が決定する
     x: 0,
     y: 0,
-    width: borderWidth + fontSize * maxCharCount + borderWidth,
-    height: borderWidth + marginY + (fontSize + marginY) * lineCount + borderWidth,
+    width: borderWidth + marginLeft + fontSize * maxCharCount + marginRight + borderWidth,
+    height: borderHeight + marginTop + lineHeight * maxLines  - lineMargin + marginBottom + borderHeight,
   };
 
   constructor(ports: GamePorts, _vw: number, _vh: number) {
@@ -43,11 +49,11 @@ export class CommandSelectWindow extends GameObject {
     // 中身
     this.#textList = this.addComponent(new TextListComponent(
       ["たたかう", "ぼうぎょ", "じゅもん", "どうぐ"],
-      { fontSize: 12, },
+      { fontFamily: "BestTen", fontSize: 10, },
       {
-        offsetX: 4 + 2 + 14,
-        offsetY: 4 + 2 + 4,
-        lineHeight: 14 + 4,
+        offsetX: borderWidth + marginLeft + fontSize,
+        offsetY: borderHeight + marginTop,
+        lineHeight,
       }))!;
   }
 

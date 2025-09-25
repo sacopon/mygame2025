@@ -1,5 +1,5 @@
 import { GameComponent, GameObject } from "@game/core";
-import { TextSpec, TextStyleSpec, ViewHandle } from "@game/ports";
+import { TextSpec, TextStyle, ViewHandle } from "@game/ports";
 
 export class TextComponent implements GameComponent<typeof TextComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TextComponent");
@@ -7,14 +7,14 @@ export class TextComponent implements GameComponent<typeof TextComponent.typeId>
 
   #handle: ViewHandle | null = null;
   #text: string = "";
-  #style: TextStyleSpec;
+  #style: TextStyle;
 
-  public constructor(text: string, style?: Partial<TextStyleSpec>) {
+  public constructor(text: string, style?: Partial<TextStyle>) {
     this.#text = text;
     this.#style = {
       fontFamily: "sans-serif",
       fontSize: 20,
-      fill: 0xFFFFFF,
+      color: 0xFFFFFF,
       align: "left",
       wordWrap: true,
       wordWrapWidth: 300,

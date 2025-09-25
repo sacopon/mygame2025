@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
+import { Application, Assets, BitmapFont, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
 import { PAD_BIT, InputState } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -29,30 +29,46 @@ function loadInitialAssetsAsync() {
     { alias: "virtualui.json", src: makePath("textures/virtualui.json") },
     // ゲーム本編系画像(SAMPLE)
     { alias: "game.json", src: makePath("textures/game.json") },
-    // { alias: "smile.png", src: makePath("textures/smile.png"), data: { scaleMode: "nearest" } },
   ];
 
-  const nearestTargets = new Set([
+  const nearestSpriteSheets = new Set([
     "game.json",
+  ]);
+
+  const nearestBitmapFonts = new Set([
   ]);
 
   const promises = Assets
     .load(resources)
     .then(()  => {
-      resources.forEach(res => {
-        const { alias } = res;
+      // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
+      // スプライトシート
+      nearestSpriteSheets.forEach(alias => {
+        const sheet = Assets.get(alias) as Spritesheet | undefined;
 
-        if (!nearestTargets.has(alias)) {
+        if (!sheet) {
           return;
         }
 
-        const spritesheet = Assets.get(alias) as Spritesheet;
-
-        for (const tex of Object.values(spritesheet.textures)) {
+        for (const tex of Object.values(sheet.textures)) {
           tex.source.scaleMode = "nearest";
         }
       });
-    });
+
+      // ビットマップフォント
+      nearestBitmapFonts.forEach(alias => {
+        const font = Assets.get<BitmapFont>(alias);
+
+        if (!font) {
+          return;
+        }
+
+        for (const page of font.pages) {
+          page.texture.source.scaleMode = "nearest";
+        }
+      });
+    })
+    .then(() => document.fonts.load("20px \"BestTen\""));
 
   return promises;
 }

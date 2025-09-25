@@ -54,3 +54,9 @@ canvas {
   -webkit-user-drag: none;
   image-rendering: pixelated;
 }
+
+@font-face {
+  font-family: "BestTen";
+  src: url("/fonts/BestTen-DOT.otf") format("opentype");
+  font-display: swap;
+}

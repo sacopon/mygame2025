@@ -32,7 +32,7 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
 
   #calcSize(): { width: number, height: number } {
     return {
-      width: 256 + 8,
+      width: 256 + 8, // TODO: ウィンドウ枠の内側角が見えてしまっているのをどうにかしたい
       height: 136,
     };
   }
