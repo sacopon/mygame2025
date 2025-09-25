@@ -1,5 +1,6 @@
-import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object";
+import { Background, BattleBackground, CommandSelectWindow, Enemy, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object/elements";
 import { Scene, SceneContext, SceneId } from "./scene";
+import { EnemySelectWindowBuilder } from "@game/game-object";
 
 export class BattleScene implements Scene {
   public constructor() {
@@ -20,9 +21,13 @@ export class BattleScene implements Scene {
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 6));
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 7));
     context.gameObjectAccess.spawnGameObject(new Smile(context.ports, width, height));
+
+    // コマンド選択ウィンドウ
     const commandSelectWindow = context.gameObjectAccess.spawnGameObject(new CommandSelectWindow(context.ports, width, height)) as CommandSelectWindow;
-    const enemySelectWindow = context.gameObjectAccess.spawnGameObject(new EnemySelectWindow(context.ports, width, height)) as EnemySelectWindow;
-    context.gameObjectAccess.spawnGameObject(new UILayoutCoordinator(context.ports, width, height, { commandSelectWindow, enemySelectWindow }));
+
+    // 敵選択ウィンドウ
+    const enemySelectWindowBuilder = new EnemySelectWindowBuilder(context.gameObjectAccess, context.ports);
+    context.gameObjectAccess.spawnGameObject(new UILayoutCoordinator(context.ports, width, height, { commandSelectWindow, enemySelectWindow: enemySelectWindowBuilder.build() }));
   }
 
   next(): SceneId {
