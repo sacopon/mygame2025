@@ -1,3 +1,6 @@
+/**
+ * 敵選択ウィンドウ関係の部品間で共通使用する定数定義
+ */
 export const ENEMY_SELECT_WINDOW_SETTINGS = Object.freeze({
   borderHeight: 4,
   marginTop: 4,

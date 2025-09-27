@@ -1,9 +1,12 @@
 import { GamePorts } from "@game/core";
 import { GameObjectAccess } from "@game/scene";
 import { EnemySelectWindowBase } from "./enemy-select-window-base";
-import { EnemySelectWindowEnemyNames } from "./enemy-select-window-enemy-names";
+import { EnemySelectWindowEnemyTexts } from "./enemy-select-window-enemy-texts";
 import { EnemySelectWindow } from "./enemy-select-window";
 
+/**
+ * 敵選択ウィンドウの部品を生成して、敵選択ウィンドウを組み立てるクラス
+ */
 export class EnemySelectWindowBuilder {
   #gameObjectAccess: GameObjectAccess;
   #ports: GamePorts;
@@ -14,9 +17,19 @@ export class EnemySelectWindowBuilder {
   }
 
   build() {
-    const enemySelectWindowBase = this.#gameObjectAccess.spawnGameObject(new EnemySelectWindowBase(this.#ports)) as EnemySelectWindowBase;
-    const enemySelectWindowEnemyNames = this.#gameObjectAccess.spawnGameObject(new EnemySelectWindowEnemyNames(this.#ports)) as EnemySelectWindowEnemyNames;
+    const enemySelectWindowBase = new EnemySelectWindowBase(this.#ports, EnemySelectWindow.width, EnemySelectWindow.height);
+    const enemySelectWindowEnemyName = new EnemySelectWindowEnemyTexts(this.#ports, ["キングスライム", "グリズリー", "さまようよろい", "ドラキー", "スライム"]);
+    const enemySelectWindowEnemyCount = new EnemySelectWindowEnemyTexts(this.#ports, ["ー　１匹", "ー　３匹", "ー　４匹", "ー　７匹", "ー　８匹"]);
+    const enemySelectWindow = new EnemySelectWindow(
+      this.#ports,
+      enemySelectWindowBase,
+      enemySelectWindowEnemyName,
+      enemySelectWindowEnemyCount);
 
-    return this.#gameObjectAccess.spawnGameObject(new EnemySelectWindow(this.#ports, enemySelectWindowBase, enemySelectWindowEnemyNames)) as EnemySelectWindow;
+    this.#gameObjectAccess.spawnGameObject(enemySelectWindowBase);
+    this.#gameObjectAccess.spawnGameObject(enemySelectWindowEnemyName);
+    this.#gameObjectAccess.spawnGameObject(enemySelectWindowEnemyCount);
+
+    return this.#gameObjectAccess.spawnGameObject(enemySelectWindow) as EnemySelectWindow;
   }
 }
