@@ -1,5 +1,5 @@
 import { GameObject, GamePorts, ScreenSizeAware } from "@game/core";
-import { CommandSelectWindow } from "@game/game-object/elements";
+import { CommandSelectWindow } from "@game/game-object/command-select-window";
 import { EnemySelectWindow } from "@game/game-object/enemy-select-window";
 
 /**
