@@ -1,6 +1,7 @@
-import { Background, BattleBackground, CommandSelectWindow, Enemy, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object/elements";
+import { Background, BattleBackground, Enemy, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object/elements";
 import { Scene, SceneContext, SceneId } from "./scene";
 import { EnemySelectWindowBuilder } from "@game/game-object";
+import { CommandSelectWindow } from "@game/game-object/command-select-window";
 
 export class BattleScene implements Scene {
   public constructor() {
