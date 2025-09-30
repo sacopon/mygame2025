@@ -13,7 +13,7 @@ export class TextListComponent implements GameComponent<typeof TextListComponent
   #style: TextStyle;
   #layout = { offsetX: 0, offsetY: 0, lineHeight: 14 };
 
-  public constructor(lines: string[], style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
+  constructor(lines: string[], style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
     this.#lines = lines.slice();
     this.#style = {
       fontFamily: "sans-serif",
@@ -32,7 +32,7 @@ export class TextListComponent implements GameComponent<typeof TextListComponent
     };
   }
 
-  public update(gameObject: GameObject, _deltaTime: number): void {
+  update(gameObject: GameObject, _deltaTime: number): void {
     this.#handles.forEach((handle, i) => {
       gameObject.render.setSpriteTransform(handle, {
         x: gameObject.transform.x + this.#layout.offsetX,
@@ -41,16 +41,20 @@ export class TextListComponent implements GameComponent<typeof TextListComponent
     });
   }
 
-  public onAttach(gameObject: GameObject): void {
+  onAttach(gameObject: GameObject): void {
     this.#handles = this.#createAllLines(gameObject);
   }
 
-  public onDetach(gameObject: GameObject): void {
+  onDetach(gameObject: GameObject): void {
     for (let handle of this.#handles) {
       gameObject.render.destroyView(handle);
     }
 
     this.#handles = [];
+  }
+
+  get lines() {
+    return this.#lines.concat();
   }
 
   #createAllLines(gameObject: GameObject) {

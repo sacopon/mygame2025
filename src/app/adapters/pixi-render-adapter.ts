@@ -234,8 +234,14 @@ console.log("effective scaleY=", sy);
     this.#applyTransform(sprite, transform);
   }
 
-  setSpriteVisible?(_view: ViewHandle, _visible: boolean): void {
-    throw new Error("Method not implemented.");
+  setSpriteVisible(handle: ViewHandle, visible: boolean): void {
+    const sprite = this.#views.get(handle);
+
+    if (!sprite) {
+      return;
+    }
+
+    sprite.visible = visible;
   }
 
   setSpriteLayer?(_view: ViewHandle, _layer: number): void {

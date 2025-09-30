@@ -229,10 +229,11 @@ export function buildAppContext(parent: Container): AppContext {
       toggleMode();
     }
 
-    inputState.next();
-
     // ゲーム側の更新処理
     gameRoot.update(ticker.deltaTime);
+
+    // キー入力を次のフレームに備える
+    inputState.next();
   };
   app.ticker.add(tick);
 

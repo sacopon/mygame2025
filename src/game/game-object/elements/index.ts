@@ -4,3 +4,4 @@ export * from "./enemy";
 export * from "./main-window";
 export * from "./smile";
 export * from "./ui-layout-coordinator";
+export * from "./window-cursor";

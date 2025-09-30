@@ -130,7 +130,7 @@ export interface RenderPort {
   setNineSpriteSize(handle: ViewHandle, size: { width: number, height: number }): void;
 
   setSpriteTransform(handle: ViewHandle, transform: Partial<Transform2D>): void;
-  setSpriteVisible?(view: ViewHandle, visible: boolean): void;
+  setSpriteVisible(view: ViewHandle, visible: boolean): void;
   setSpriteLayer?(view: ViewHandle, layer: number): void;
   destroyView(view: ViewHandle): void;
 

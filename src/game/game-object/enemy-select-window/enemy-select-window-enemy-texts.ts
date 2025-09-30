@@ -22,4 +22,8 @@ export class EnemySelectWindowEnemyTexts extends GameObject {
         lineHeight: ENEMY_SELECT_WINDOW_SETTINGS.lineHeight,
       }))!;
   }
+
+  get textLines() {
+    return this.#textList.lines.concat();
+  }
 }

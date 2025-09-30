@@ -7,24 +7,34 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
 
   #handle: ViewHandle | null = null;
   #spec: SpriteSpec;
+  #visible: boolean = true;
 
   public constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
     this.#spec = { ...spec };
   }
 
-  public update(gameObject: GameObject, _deltaTime: number): void {
+  update(gameObject: GameObject, _deltaTime: number): void {
     if (!this.#handle) {
       return;
     }
 
     gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
+    gameObject.render.setSpriteVisible(this.#handle, this.#visible);
   }
 
-  public onAttach(gameObject: GameObject): void {
+  get visible() {
+    return this.#visible;
+  }
+
+  set visible(value: boolean) {
+    this.#visible = value;
+  }
+
+  onAttach(gameObject: GameObject): void {
     this.#handle = gameObject.render.createSprite(this.#spec);
   }
 
-  public onDetach(gameObject: GameObject): void {
+  onDetach(gameObject: GameObject): void {
     if (!this.#handle) {
       return;
     }

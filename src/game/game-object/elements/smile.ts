@@ -28,8 +28,8 @@ export class Smile extends GameObject implements ScreenSizeAware {
     this.#rot += 0.03;
     this.#scale += this.input.isDown(GameButton.A) ? 0.03 : 0.0;
     this.#scale -= this.input.isDown(GameButton.B) ? 0.03 : 0.0;
-    this.#positionX += this.input.axisX() * 5;
-    this.#positionY += this.input.axisY() * 5;
+    // this.#positionX += this.input.axisX() * 5;
+    // this.#positionY += this.input.axisY() * 5;
 
     this.setPosition(this.#positionX, this.#positionY);
     this.setRotation(this.#rot);
