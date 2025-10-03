@@ -5,7 +5,7 @@ import { GameButton } from "@game/ports";
 import { EnemySelectWindowEnemyTexts } from "./enemy-select-window-enemy-texts";
 
 /**
- * 敵生成ウィンドウの挙動や配置を司るクラス
+ * 敵選択ウィンドウの挙動や配置を司るクラス
  */
 export class EnemySelectWindow extends GameObject {
   static readonly #windowSize = {
