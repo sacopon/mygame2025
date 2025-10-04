@@ -5,6 +5,10 @@ import { CommandSelectWindowBase } from "@game/game-object/window/command-select
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command-select-window/command-select-window-constants";
 import { GameButton } from "@game/ports";
 
+/**
+ * コマンド選択ウィンドウ
+ * TODO: 中身を Content として分離し、ウィンドウそのものは共通化する
+ */
 export class CommandSelectWindow extends GameObject {
   #base: CommandSelectWindowBase;
   #commandTextsObject: CommandSelectWindowCommandTexts;
