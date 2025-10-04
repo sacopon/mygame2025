@@ -6,13 +6,15 @@ import { GameObject, GamePorts } from "@game/core";
  * 初期状態では非表示なので setEnable(true) で表示状態にすること
  */
 export class WindowCursor extends GameObject {
-  #blinkCounter: number = 0;
+  #timeMS: number = 0;
   #enable: boolean = false;
   #sprite: SpriteComponent;
 
-  static readonly settings = {
+  static readonly Settings = {
     blinkRate: 40,
     displayCount: 30,
+    onMS: 30,
+    offMS: 10,
   };
 
   constructor(ports: GamePorts) {
@@ -28,12 +30,20 @@ export class WindowCursor extends GameObject {
   update(deltaTime: number) {
     super.update(deltaTime);
 
+    // 無効時は消して終了する
     if (!this.#enable) {
+      if (this.#sprite.visible) {
+        this.#sprite.visible = false;
+      }
       return;
     }
 
-    ++this.#blinkCounter;
-    this.#sprite.visible = this.#blinkCounter % WindowCursor.settings.blinkRate < WindowCursor.settings.displayCount;
+    // 実時間ベースで点滅させる
+    this.#timeMS += Math.min(deltaTime, 1000);  // 1秒を超える deltaTime は無視
+    const cycle = WindowCursor.Settings.onMS + WindowCursor.Settings.offMS;
+    const phase = this.#timeMS % cycle;
+    const isOn = phase < WindowCursor.Settings.onMS;
+    this.#sprite.visible = isOn;
   }
 
   setEnable(enable: boolean) {
@@ -52,6 +62,6 @@ export class WindowCursor extends GameObject {
   }
 
   #resetAnimation() {
-    this.#blinkCounter = 0;
+    this.#timeMS = 0;
   }
 }

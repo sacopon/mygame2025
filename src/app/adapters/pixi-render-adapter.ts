@@ -153,11 +153,6 @@ export class PixiRenderAdapter implements RenderPort {
     const handle = `bitmaptext-${this.#idCounter++}`;
     this.#views.set(handle, t);
 
-let n: any = t;
-let sy = 1;
-while (n) { sy *= n.scale?.y ?? 1; n = n.parent; }
-console.log("effective scaleY=", sy);
-
     return handle;
   }
 
@@ -166,11 +161,6 @@ console.log("effective scaleY=", sy);
     if (n && n instanceof BitmapText) {
       n.text = text;
     }
-
-let nn: any = n;
-let sy = 1;
-while (nn) { sy *= nn.scale?.y ?? 1; nn = nn.parent; }
-console.log("effective scaleY=", sy);
   }
 
   setBitmapTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void {
