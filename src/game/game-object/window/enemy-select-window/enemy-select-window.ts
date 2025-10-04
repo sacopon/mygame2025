@@ -1,8 +1,9 @@
 import { GameObject, GamePorts } from "@game/core";
-import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/enemy-select-window";
-import { WindowCursor } from "../elements/window-cursor";
+import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/enemy-select-window";
+import { WindowCursor } from "../../elements/window-cursor";
 import { GameButton } from "@game/ports";
-import { EnemySelectWindowEnemyTexts } from "./enemy-select-window-enemy-texts";
+import { EnemySelectWindowEnemyTexts } from "@game/game-object/window/enemy-select-window/enemy-select-window-enemy-texts";
+import { EnemySelectWindowBase } from "@game/game-object/window/enemy-select-window/enemy-select-window-base";
 
 /**
  * 敵選択ウィンドウの挙動や配置を司るクラス
@@ -18,26 +19,26 @@ export class EnemySelectWindow extends GameObject {
       + ENEMY_SELECT_WINDOW_SETTINGS.marginBottom
       + ENEMY_SELECT_WINDOW_SETTINGS.borderHeight,
   };
-  #base: GameObject;
+  #base: EnemySelectWindowBase;
   #enemyNamesObject: EnemySelectWindowEnemyTexts;
   #enemyCountObject: GameObject;
   #cursor: WindowCursor;
-  #selctedIndex = 0;
+  #selectedIndex = 0;
 
   constructor(
     ports: GamePorts,
     gameObjects: {
-      base: GameObject,
+      base: EnemySelectWindowBase,
       enemyNamesObject: EnemySelectWindowEnemyTexts,
-      enemyCountObject: GameObject,
-      cursor: GameObject,
+      enemyCountObject: EnemySelectWindowEnemyTexts,
+      cursor: WindowCursor,
     }) {
     super(ports);
 
     this.#base = gameObjects.base;
     this.#enemyNamesObject = gameObjects.enemyNamesObject;
     this.#enemyCountObject = gameObjects.enemyCountObject;
-    this.#cursor = gameObjects.cursor as WindowCursor;
+    this.#cursor = gameObjects.cursor;
     this.setPosition(0, 0); // 位置は UILayoutCoordinator が決める
   }
 
@@ -51,7 +52,7 @@ export class EnemySelectWindow extends GameObject {
     const enemyCountPos = { x: 112, y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop };
     this.#enemyCountObject?.setPosition(x + enemyCountPos.x, y + enemyCountPos.y);
 
-    const cursorPos = this.getCursorPos(this.#selctedIndex);
+    const cursorPos = this.getCursorPos(this.#selectedIndex);
     this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
   }
 
@@ -66,23 +67,31 @@ export class EnemySelectWindow extends GameObject {
 
   public update(_: number): void {
     if (this.input.pressed(GameButton.Up)) {
-      --this.#selctedIndex;
+      --this.#selectedIndex;
 
-      if (this.#selctedIndex < 0) {
-        this.#selctedIndex = this.#enemyNamesObject.textLines.length - 1;
+      if (this.#selectedIndex < 0) {
+        this.#selectedIndex = this.#enemyNamesObject.textLines.length - 1;
       }
     }
 
     if (this.input.pressed(GameButton.Down)) {
-      ++this.#selctedIndex;
+      ++this.#selectedIndex;
 
-      if (this.#enemyNamesObject.textLines.length <= this.#selctedIndex) {
-        this.#selctedIndex = 0;
+      if (this.#enemyNamesObject.textLines.length <= this.#selectedIndex) {
+        this.#selectedIndex = 0;
       }
     }
 
-    const cursorPos = this.getCursorPos(this.#selctedIndex);
+    const cursorPos = this.getCursorPos(this.#selectedIndex);
     this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+  }
+
+  get width(): number {
+    return EnemySelectWindow.width;
+  }
+
+  get height(): number {
+    return EnemySelectWindow.height;
   }
 
   static get width(): number {

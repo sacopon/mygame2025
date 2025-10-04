@@ -1,6 +1,6 @@
 import { GameObject, GamePorts, ScreenSizeAware } from "@game/core";
-import { CommandSelectWindow } from "@game/game-object/command-select-window";
-import { EnemySelectWindow } from "@game/game-object/enemy-select-window";
+import { CommandSelectWindow } from "@game/game-object/window/command-select-window";
+import { EnemySelectWindow } from "@game/game-object/window/enemy-select-window";
 
 /**
  * 描画を持たないゲームオブジェクト
@@ -23,11 +23,11 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   #place(width: number, _height: number) {
-    const windowWidth = this.#commandWindow.getWidth() + EnemySelectWindow.width;
+    const windowWidth = this.#commandWindow.width + this.#enemySelectWindow.width;
     const x = Math.floor((width - windowWidth) / 2);
     const y = 132;  // TODO: とりあえず適当な値
 
     this.#commandWindow.setPosition(x, y);
-    this.#enemySelectWindow.setPosition(x + this.#commandWindow.getWidth(), y);
+    this.#enemySelectWindow.setPosition(x + this.#commandWindow.width, y);
   }
 }

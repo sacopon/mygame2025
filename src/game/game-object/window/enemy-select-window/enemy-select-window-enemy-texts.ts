@@ -1,6 +1,6 @@
 import { TextListComponent } from "@game/component";
 import { GameObject, GamePorts } from "@game/core";
-import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/enemy-select-window";
+import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/enemy-select-window";
 
 /**
  * 敵選択ウィンドウのテキスト表示(複数行)
@@ -15,7 +15,7 @@ export class EnemySelectWindowEnemyTexts extends GameObject {
     this.#textList = this.addComponent(new TextListComponent(
       texts,
       {
-        fontFamily: "BestTen",
+        fontFamily: ENEMY_SELECT_WINDOW_SETTINGS.fontFamily,
         fontSize: ENEMY_SELECT_WINDOW_SETTINGS.fontSize,
       },
       {
