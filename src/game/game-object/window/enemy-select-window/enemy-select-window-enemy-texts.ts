@@ -26,4 +26,9 @@ export class EnemySelectWindowEnemyTexts extends GameObject {
   get textLines() {
     return this.#textList.lines.concat();
   }
+
+  getLineMidY(index: number) {
+    const top = this.transform.y;
+    return top + ENEMY_SELECT_WINDOW_SETTINGS.lineHeight * index + Math.floor(ENEMY_SELECT_WINDOW_SETTINGS.lineHeight / 2);
+  }
 }

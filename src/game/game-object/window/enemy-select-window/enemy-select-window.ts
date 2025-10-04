@@ -40,6 +40,8 @@ export class EnemySelectWindow extends GameObject {
     this.#enemyCountObject = gameObjects.enemyCountObject;
     this.#cursor = gameObjects.cursor;
     this.setPosition(0, 0); // 位置は UILayoutCoordinator が決める
+
+    this.#cursor.setEnable(true);
   }
 
   setPosition(x: number, y: number) {
@@ -57,15 +59,18 @@ export class EnemySelectWindow extends GameObject {
   }
 
   getCursorPos(index: number): { x: number, y: number } {
-    const cursorMargin = 4;
+    const cursorOffsetX = -4;
+    const cursorOffsetY = -2;
 
     return {
-      x: this.#enemyNamesObject?.transform.x - cursorMargin,
-      y: this.#enemyNamesObject?.transform.y + ENEMY_SELECT_WINDOW_SETTINGS.lineHeight * index + Math.floor(ENEMY_SELECT_WINDOW_SETTINGS.lineHeight / 2) - 2,
+      x: this.#enemyNamesObject?.transform.x + cursorOffsetX,
+      y: this.#enemyNamesObject?.getLineMidY(index) + cursorOffsetY,
     };
   }
 
-  public update(_: number): void {
+  update(_: number): void {
+    const prevSelectedIndex = this.#selectedIndex;
+
     if (this.input.pressed(GameButton.Up)) {
       --this.#selectedIndex;
 
@@ -82,8 +87,10 @@ export class EnemySelectWindow extends GameObject {
       }
     }
 
-    const cursorPos = this.getCursorPos(this.#selectedIndex);
-    this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+    if (this.#selectedIndex !== prevSelectedIndex) {
+      const cursorPos = this.getCursorPos(this.#selectedIndex);
+      this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+    }
   }
 
   get width(): number {
