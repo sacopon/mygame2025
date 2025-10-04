@@ -4,6 +4,7 @@ import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command
 
 /**
  * キャラクターのコマンド選択ウィンドウのテキスト表示(複数行)
+ * TODO: 敵選択ウィンドウと合わせて WindowTextsVertical としてクラス作成する(引数として各種サイズをとる)
  */
 export class CommandSelectWindowCommandTexts extends GameObject {
   #textList: TextListComponent;
@@ -11,7 +12,7 @@ export class CommandSelectWindowCommandTexts extends GameObject {
   constructor(ports: GamePorts, texts: string[]) {
     super(ports);
 
-    this.setPosition(0, 0); // 位置は EnemySelectWindow が決める
+    this.setPosition(0, 0); // 位置は CommandSelectWindow が決める
     this.#textList = this.addComponent(new TextListComponent(
       texts,
       {
@@ -25,5 +26,10 @@ export class CommandSelectWindowCommandTexts extends GameObject {
 
   get textLines() {
     return this.#textList.lines.concat();
+  }
+
+  getLineMidY(index: number) {
+    const top = this.transform.y;
+    return top + COMMAND_SELECT_WINDOW_SETTINGS.lineHeight * index + Math.floor(COMMAND_SELECT_WINDOW_SETTINGS.lineHeight / 2);
   }
 }

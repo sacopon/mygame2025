@@ -53,18 +53,24 @@ export class BattleScene implements Scene {
 
     // コマンド選択ウィンドウ
     const commandSelectWindowBuilder = new CommandSelectWindowBuilder(context.gameObjectAccess, context.ports);
+    const commandSelectWindow = commandSelectWindowBuilder.build();
 
     // 敵選択ウィンドウ
     const enemySelectWindowBuilder = new EnemySelectWindowBuilder(context.gameObjectAccess, context.ports);
+    const enemySelectWindow = enemySelectWindowBuilder.build();
 
     // レイアウトコーディネイター
     context.gameObjectAccess.spawnGameObject(
       new UILayoutCoordinator(
         context.ports, width, height, {
-          commandSelectWindow: commandSelectWindowBuilder.build(),
-          enemySelectWindow: enemySelectWindowBuilder.build(),
+          commandSelectWindow,
+          enemySelectWindow,
         })
     );
+
+    // TODO: [テスト]コマンド選択ウィンドウをアクティブに
+    // enemySelectWindow.setActive(true);
+    commandSelectWindow.setActive(true);
   }
 
   next(): SceneId {
