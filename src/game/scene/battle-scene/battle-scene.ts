@@ -3,6 +3,7 @@ import { Scene, SceneContext, SceneId } from "@game/scene/core";
 import { CommandSelectWindowBuilder, EnemySelectWindowBuilder } from "@game/game-object";
 import { BattleSceneContext, BattleSceneState, BattleSceneStateSelectCharacterCommand } from "./states/index.internal";
 import { ActorId, findActor } from "@game/repository";
+import { StateStack } from "@game/shared";
 
 /**
  * 戦闘でのキャラクターの行動コマンド
@@ -24,11 +25,9 @@ export type CommandChoice = {
 
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
-  #stateStack: BattleSceneState[] = [];
-  #pendingStateProcs: (() => void)[] = [];
-
-  public constructor() {
-  }
+  // #stateStack: BattleSceneState[] = [];
+  // #pendingStateProcs: (() => void)[] = [];
+  #stateStack!: StateStack<BattleSceneContext>;
 
   onEnter(context: SceneContext) {
     const { width, height } = context.ports.screen.getGameSize();
@@ -69,6 +68,7 @@ export class BattleScene implements Scene {
       enemySelectWindow,
       commandChoices: [],
     };
+    this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
 
     // キャラクターコマンド選択から開始
     this.#startOrNextActor(1);
@@ -85,7 +85,6 @@ export class BattleScene implements Scene {
     const state = new BattleSceneStateSelectCharacterCommand(this, actorId, (c) => {
       const actor = findActor(c.actorId);
       console.log(`${actor!.name} が ${c.target!} に ${c.command}`);
-      // CommandDecider を導入する
       // コマンド選択ウィンドウと敵選択ウィンドウの共通クラスを作る
       // コマンド選択ウィンドウのあたまにキャラクタ名をひょうじできるようにする
 
@@ -96,11 +95,11 @@ export class BattleScene implements Scene {
       this.#startOrNextActor(actorId + 1);
     });
 
-    if (this.#hasState()) {
-      this.requestPushState(state);
+    if (this.#stateStack.hasAny()) {
+      this.#stateStack.requestPush(state);
     }
     else {
-      this.#pushState(state);
+      this.#stateStack.push(state);
     }
   }
 
@@ -109,21 +108,15 @@ export class BattleScene implements Scene {
   }
 
   update(deltaTime: number): boolean {
-    if (!this.#hasState()) {
+    if (!this.#stateStack.hasAny()) {
       // TODO: シーン終了
       return true;
     }
 
     // ステートの処理を実行
-    this.#topState().update(deltaTime);
+    this.#stateStack.update(deltaTime);
 
-    // ステート遷移の実行
-    const procs = this.#pendingStateProcs;
-    this.#pendingStateProcs = [];
-    procs.forEach(proc => proc());
-
-    // 遷移の結果全部スタックが捌けた場合
-    if (!this.#hasState()) {
+    if (!this.#stateStack.hasAny()) {
       // TODO: シーン終了
       return true;
     }
@@ -132,61 +125,22 @@ export class BattleScene implements Scene {
   }
 
   requestPushState(state: BattleSceneState): void {
-    this.#pendingStateProcs.push(() => {
-      this.#pushState(state);
-    });
+    this.#stateStack.requestPush(state);
   }
 
   requestPopState(): void {
-    this.#pendingStateProcs.push(() => {
-      this.#popState();
-    });
+    this.#stateStack.requestPop();
   }
 
   requestReplaceTopState(state: BattleSceneState): void {
-    this.#pendingStateProcs.push(() => {
-      this.#replaceTopState(state);
-    });
+    this.#stateStack.requestReplaceTop(state);
   }
 
-  #topState(): BattleSceneState {
-    return this.#stateStack.at(-1)!;
+  requestRewindTo(depth: number): void {
+    this.#stateStack.requestRewindTo(depth);
   }
 
-  #hasState(): boolean {
-    return 0 < this.#stateStack.length;
-  }
-
-  #pushState(state: BattleSceneState): void {
-    if (this.#hasState()) {
-      const current = this.#stateStack[this.#stateStack.length - 1];
-      current.onSuspend();
-    }
-
-    this.#stateStack.push(state);
-    state.onEnter(this.#context!);
-  }
-
-  #popState(): void {
-    if (!this.#hasState()) {
-      return;
-    }
-
-    const state = this.#stateStack.pop()!;
-    state.onLeave(this.#context!);
-
-    if (0 < this.#stateStack.length) {
-      this.#stateStack[this.#stateStack.length - 1].onResume();
-    }
-  }
-
-  #replaceTopState(nextState: BattleSceneState): void {
-    if (this.#hasState()) {
-      const state = this.#stateStack.pop()!;
-      state.onLeave(this.#context!);
-    }
-
-    this.#stateStack.push(nextState);
-    nextState.onEnter(this.#context!);
+  markState(): number {
+    return this.#stateStack.mark();
   }
 }

@@ -9,7 +9,7 @@ import { EnemySelectWindowBase } from "@game/game-object/window/enemy-select-win
  */
 export class EnemySelectWindow extends GameObject {
   static readonly #windowSize = {
-    width: 168,
+    width: 144,
     height: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight
       + ENEMY_SELECT_WINDOW_SETTINGS.marginTop
       + (ENEMY_SELECT_WINDOW_SETTINGS.fontSize
@@ -48,7 +48,7 @@ export class EnemySelectWindow extends GameObject {
     const enemyNamesPos = { x: 4 + 2 + 10, y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop };
     this.#enemyNamesObject?.setPosition(x + enemyNamesPos.x, y + enemyNamesPos.y);
 
-    const enemyCountPos = { x: 112, y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop };
+    const enemyCountPos = { x: 100, y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop };
     this.#enemyCountObject?.setPosition(x + enemyCountPos.x, y + enemyCountPos.y);
 
     this.#updateCursorPos();

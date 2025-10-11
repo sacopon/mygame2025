@@ -1,6 +1,7 @@
 import { GamePorts } from "@game/core";
 import { CommandSelectWindow, EnemySelectWindow } from "@game/game-object";
 import { CommandChoice } from "@game/scene/battle-scene";
+import { StackState } from "@game/shared";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -12,15 +13,10 @@ export type BattleSceneContext = Readonly<{
   commandChoices: CommandChoice[];
 }>;
 
-/**
- * バトルシーン状態
- */
-export interface BattleSceneState {
+export interface BattleSceneState extends StackState<BattleSceneContext> {
   onEnter(context: BattleSceneContext): void;
   onLeave(context: BattleSceneContext): void;
-  // 上に他のステートが積まれたので一時停止する
   onSuspend(): void;
-  // 上のステートが取り除かれて再びアクティブになる
   onResume(): void;
   update(deltaTime: number): void;
 }
