@@ -1,15 +1,16 @@
-import { GameObject, GamePorts } from "@game/core";
-import { WindowCursor } from "@game/game-object/elements";
-import { CommandSelectWindowCommandTexts } from "@game/game-object/window/command-select-window/command-select-window-command-texts";
-import { CommandSelectWindowBase } from "@game/game-object/window/command-select-window/command-select-window-base";
-import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command-select-window/command-select-window-constants";
-import { BattleCommand } from "@game/scene/battle-scene";
+import { GroupGameObject } from "../../../core/group-game-object";
+import { CommandSelectWindowBase } from "./command-select-window-base";
+import { CommandSelectWindowCommandTexts } from "./command-select-window-command-texts";
+import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
+import { WindowCursor } from "../..";
+import { GamePorts } from "@game/core";
+import { BattleCommand } from "@game/scene";
 
 /**
  * コマンド選択ウィンドウ
  * TODO: 中身を Content として分離し、ウィンドウそのものは共通化する
  */
-export class CommandSelectWindow extends GameObject {
+export class CommandSelectWindow extends GroupGameObject {
   #base: CommandSelectWindowBase;
   #commandTextsObject: CommandSelectWindowCommandTexts;
   #cursor: WindowCursor;

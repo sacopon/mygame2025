@@ -1,4 +1,4 @@
-import { assertNever } from "@shared/utils";
+import { assertNever } from "@shared";
 
 /**
  * 各状態(ステート)のインターフェース

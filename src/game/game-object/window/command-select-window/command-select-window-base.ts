@@ -1,6 +1,7 @@
+import { GameObject } from "../../../core/game-object";
+import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
-import { GameObject, GamePorts } from "@game/core";
-import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command-select-window/command-select-window-constants";
+import { GamePorts } from "@game/core";
 
 /**
  * コマンド選択ウィンドウの枠 + 背景表示

@@ -1,5 +1,6 @@
+import { GameComponent, GameComponents } from "./game-component";
+import { GamePorts } from "./game-ports";
 import { ComponentById, ComponentTypeId, TransformComponent } from "@game/component";
-import { GameComponents, GameComponent, GamePorts } from "@game/core";
 import { InputPort, RenderPort, Transform2D } from "@game/ports";
 
 export class GameObject {

@@ -1,8 +1,9 @@
-import { GameButton } from "@game/ports";
-import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "@game/scene/battle-scene";
-import { BaseBattleSceneState, BattleSceneContext, BattleSceneStateSelectEnemy } from "./index.internal";
-import { ActorId, findActor } from "@game/repository";
+import { BaseBattleSceneState, BattleSceneContext } from "./battle-scene-state";
+import { BattleSceneStateSelectEnemy } from "./select-enemy-state";
+import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "..";
 import { assertNever } from "@shared";
+import { GameButton } from "@game/ports";
+import { ActorId, findActor } from "@game/repository";
 
 /**
  * バトルシーン状態: キャラクターの行動選択

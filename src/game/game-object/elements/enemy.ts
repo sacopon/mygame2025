@@ -1,5 +1,7 @@
+import { ScreenSizeAware } from "../../core/game-component";
+import { GameObject } from "../../core/game-object";
 import { SpriteComponent } from "@game/component";
-import { GameObject, GamePorts, ScreenSizeAware } from "@game/core";
+import { GamePorts } from "@game/core";
 
 export class Enemy extends GameObject implements ScreenSizeAware {
   #index: number;

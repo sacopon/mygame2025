@@ -1,1 +1,1 @@
-export { bindKeyboard } from "./bind-keyboard";
+export * from "./bind-keyboard";

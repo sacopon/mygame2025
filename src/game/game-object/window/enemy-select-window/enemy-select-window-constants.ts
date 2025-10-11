@@ -1,4 +1,4 @@
-import { DEFAULT_WINDOW_SETTINGS } from "@game/game-object/window/constants";
+import { DEFAULT_WINDOW_SETTINGS } from "../constants/window-constants";
 
 /**
  * 敵選択ウィンドウ関係の部品間で共通使用する定数定義

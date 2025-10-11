@@ -1,10 +1,10 @@
+import { CommandSelectWindow } from "./command-select-window";
+import { CommandSelectWindowBase } from "./command-select-window-base";
+import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
+import { WindowTextsVertical } from "..";
+import { WindowCursor } from "../../";
 import { GamePorts } from "@game/core";
-import { WindowCursor } from "@game/game-object/elements";
-import { CommandSelectWindow } from "@game/game-object/window/command-select-window";
-import { CommandSelectWindowBase } from "@game/game-object/window/command-select-window/command-select-window-base";
-import { CommandSelectWindowCommandTexts } from "./command-select-window-command-texts";
-import { BattleCommand } from "@game/scene/battle-scene";
-import { GameObjectAccess } from "@game/scene";
+import { GameObjectAccess, BattleCommand } from "@game/scene";
 
 /**
  * コマンド選択ウィンドウの部品を生成して、コマンド選択ウィンドウを組み立てるクラス
@@ -26,7 +26,15 @@ export class CommandSelectWindowBuilder {
       BattleCommand.Defence,
       BattleCommand.Item,
     ];
-    const commandSelectWindowCommandTexts = new CommandSelectWindowCommandTexts(this.#ports, commands);
+    const commandSelectWindowCommandTexts = new WindowTextsVertical(
+      this.#ports,
+      commands,
+      {
+        fontFamily: COMMAND_SELECT_WINDOW_SETTINGS.fontFamily,
+        fontSize: COMMAND_SELECT_WINDOW_SETTINGS.fontSize,
+        lineHeight: COMMAND_SELECT_WINDOW_SETTINGS.lineHeight,
+      });
+
     const cursor = new WindowCursor(this.#ports);
     const commandSelectWindow = new CommandSelectWindow(
       this.#ports,

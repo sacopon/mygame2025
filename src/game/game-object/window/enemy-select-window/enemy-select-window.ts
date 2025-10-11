@@ -1,8 +1,9 @@
-import { GameObject, GamePorts } from "@game/core";
-import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/enemy-select-window";
-import { WindowCursor } from "../../elements/window-cursor";
-import { EnemySelectWindowEnemyTexts } from "@game/game-object/window/enemy-select-window/enemy-select-window-enemy-texts";
-import { EnemySelectWindowBase } from "@game/game-object/window/enemy-select-window/enemy-select-window-base";
+import { GameObject } from "../../../core/game-object";
+import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
+import { EnemySelectWindowBase } from "./enemy-select-window-base";
+import { EnemySelectWindowEnemyTexts } from "./enemy-select-window-enemy-texts";
+import { WindowCursor } from "../..";
+import { GamePorts } from "@game/core";
 
 /**
  * 敵選択ウィンドウの挙動や配置を司るクラス

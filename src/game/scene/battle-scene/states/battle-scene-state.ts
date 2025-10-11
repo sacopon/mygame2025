@@ -1,7 +1,7 @@
+import { StackState } from "../../../shared/state-stack";
+import { CommandChoice } from "..";
 import { GamePorts } from "@game/core";
 import { CommandSelectWindow, EnemySelectWindow } from "@game/game-object";
-import { CommandChoice } from "@game/scene/battle-scene";
-import { StackState } from "@game/shared";
 
 /**
  * バトルシーンの共有オブジェクト

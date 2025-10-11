@@ -1,4 +1,6 @@
-import { GameObject, GamePorts, isScreenSizeAware } from "@game/core";
+import { isScreenSizeAware } from "./game-component";
+import { GameObject } from "./game-object";
+import { GamePorts } from "./game-ports";
 import { GameObjectAccess, SceneManager } from "@game/scene";
 
 /**

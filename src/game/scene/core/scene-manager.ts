@@ -1,4 +1,5 @@
-import { Scene, SceneContext, SceneFactory, SceneId } from "@game/scene/core";
+import { Scene, SceneContext, SceneId } from "./scene";
+import { SceneFactory } from "./scene-factory";
 
 /**
  * ゲーム内のシーン管理

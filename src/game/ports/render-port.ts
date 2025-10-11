@@ -1,4 +1,4 @@
-import { ViewHandle, Transform2D } from "@game/ports";
+import { Transform2D, ViewHandle } from "./types";
 
 /**
  * スプライト用の指定

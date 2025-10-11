@@ -1,6 +1,7 @@
+import { GameObject } from "../../../core/game-object";
+import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
-import { GameObject, GamePorts } from "@game/core";
-import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/enemy-select-window";
+import { GamePorts } from "@game/core";
 
 /**
  * 敵選択ウィンドウの枠 + 背景表示

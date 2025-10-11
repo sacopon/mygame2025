@@ -1,5 +1,5 @@
+import { BattleCommand } from "../battle-scene";
 import { ActorId } from "@game/repository";
-import { BattleCommand } from "@game/scene/battle-scene";
 
 export type BattleCommandFlowType = typeof BattleCommandDecider.FlowType[keyof typeof BattleCommandDecider.FlowType];
 

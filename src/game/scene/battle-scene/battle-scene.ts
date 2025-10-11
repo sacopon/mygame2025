@@ -1,8 +1,9 @@
-import { Background, BattleBackground, Enemy, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object/elements";
-import { Scene, SceneContext, SceneId } from "@game/scene/core";
-import { CommandSelectWindowBuilder, EnemySelectWindowBuilder } from "@game/game-object";
-import { BattleSceneContext, BattleSceneState, BattleSceneStateSelectCharacterCommand } from "./states/index.internal";
+import { Scene } from "../../scene/core/scene";
+import { BattleSceneContext, BattleSceneState } from "./states/battle-scene-state";
+import { BattleSceneStateSelectCharacterCommand } from "./states/character-command-state";
+import { Background, BattleBackground, CommandSelectWindowBuilder, Enemy, EnemySelectWindowBuilder, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object";
 import { ActorId, findActor } from "@game/repository";
+import { SceneContext, SceneId } from "@game/scene";
 import { StateStack } from "@game/shared";
 
 /**
@@ -25,8 +26,6 @@ export type CommandChoice = {
 
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
-  // #stateStack: BattleSceneState[] = [];
-  // #pendingStateProcs: (() => void)[] = [];
   #stateStack!: StateStack<BattleSceneContext>;
 
   onEnter(context: SceneContext) {

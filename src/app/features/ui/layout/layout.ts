@@ -1,7 +1,7 @@
-import { AppContext } from "@app/config";
-import { Skin } from "@app/features/ui/skin";
-import { GameScreenSpec } from "@app/services/screen";
 import { Application } from "pixi.js";
+import { Skin } from "../";
+import { AppContext } from "@app/config";
+import { GameScreenSpec } from "@app/services";
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;

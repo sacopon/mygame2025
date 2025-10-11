@@ -1,5 +1,5 @@
-import { BattleScene } from "@game/scene/battle-scene";
-import { BaseBattleSceneState, BattleSceneContext } from "./index.internal";
+import { BaseBattleSceneState, BattleSceneContext } from "./battle-scene-state";
+import { BattleScene } from "..";
 import { GameButton } from "@game/ports";
 
 export type EnemySelectEvents = {

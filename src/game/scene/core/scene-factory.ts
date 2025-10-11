@@ -1,5 +1,5 @@
-import { BattleScene } from "@game/scene/battle-scene";
-import type { Scene, SceneId } from "./scene";
+import { Scene, SceneId } from ".";
+import { BattleScene } from "..";
 
 export class SceneFactory {
   public static createScene(id: SceneId): Scene {

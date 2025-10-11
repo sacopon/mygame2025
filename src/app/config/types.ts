@@ -1,6 +1,5 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { ViewportMetrics } from "@app/services/viewport";
-// import { GameRoot } from "@game/core";
+import { ViewportMetrics } from "@app/services";
 
 export interface AppContext {
   /** ルートコンテナ */
@@ -21,15 +20,9 @@ export interface AppContext {
   overlayLayer: Container;
   /** ビューポート管理 */
   viewportMetrics: ViewportMetrics;
-
-  // /** ゲーム側のルート */
-  // gameRoot: GameRoot;
 }
 
 export interface VirtualPadSlots {
-  // /** バーチャルキーUI */
-  // uiLayer: Container;
-  // バーチャルキーUIに配置される Sprite
   /** バーチャルキーUIの本体画像(4分割) */
   body: Sprite[];
   /** バーチャルキーUIの方向キー */

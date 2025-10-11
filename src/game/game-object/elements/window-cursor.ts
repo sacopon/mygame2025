@@ -1,5 +1,6 @@
+import { GameObject } from "../../core/game-object";
 import { SpriteComponent } from "@game/component";
-import { GameObject, GamePorts } from "@game/core";
+import { GamePorts } from "@game/core";
 
 /**
  * ウィンドウ内に表示する点滅カーソル

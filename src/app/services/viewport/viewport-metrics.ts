@@ -1,6 +1,5 @@
-import { UIMODE, UIMode } from "@app/features/ui/mode";
-import { GameScreen } from "@app/services/screen";
-import { Skin } from "@app/features/ui/skin";
+import { GameScreen } from "..";
+import { Skin, UIMODE, UIMode } from "@app/features";
 
 export type ViewRect = {
   x: number;
@@ -47,7 +46,7 @@ function compareViewMetricsState(a: ViewportMetricsState, b: ViewportMetricsStat
  *
  * `update()` が呼ばれると内部状態を更新し、前回から値が変わっていれば
  * {@link VIEWPORT_METRICS_CHANGED} イベントを発火します。
- * 
+ *
  * ゲームロジックやカメラ、UI レイアウトなどはこのクラスを購読することで
  * 画面リサイズやモード切替に追従できます。
  *

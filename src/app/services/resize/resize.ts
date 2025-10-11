@@ -1,11 +1,7 @@
 import { Application } from "pixi.js";
+import { computeViewMetrics, DefaultScreen, GameScreenSpec } from "..";
 import { AppContext } from "@app/config";
-import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
-import { UIMODE, UIMode } from "@app/features/ui/mode";
-import { VirtualPadUI } from "@app/features/ui/virtual-pad";
-import { DefaultScreen, GameScreenSpec } from "@app/services/screen";
-import { SkinResolver } from "@app/features/ui/skin";
-import { computeViewMetrics } from "../viewport";
+import { relayoutViewport, relayoutViewportBare, SkinResolver, UIMODE, UIMode, VirtualPadUI } from "@app/features";
 
 export type ResizeOptions = {
   mode: UIMode;
@@ -28,7 +24,7 @@ function updateGameMask(context: AppContext, vw: number, vh: number) {
 /**
  * 画面のサイズを取得する.
  * 可能なら visualViewport を優先
- * @returns 
+ * @returns
  */
 function readViewportSize() {
   const vv = window.visualViewport;
