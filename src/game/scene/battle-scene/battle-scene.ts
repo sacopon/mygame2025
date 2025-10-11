@@ -76,7 +76,7 @@ export class BattleScene implements Scene {
 
   #startOrNextActor(actorId: ActorId): void {
     // TODO: ID と人数は別で管理する
-    if (5 <= actorId) {
+    if (4 <= this.#context.commandChoices.length) {
       console.log("全員確定!");
       // TODO: 次のステートへ
       return;

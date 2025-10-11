@@ -64,7 +64,21 @@ export class CommandSelectWindow extends GameObject {
     return this.#commands[this.#selectedIndex];
   }
 
+  select(index: number) {
+    if (index < 0 || this.#selectionCount <= index) {
+      return;
+    }
+
+    if (index === this.#selectedIndex) {
+      return;
+    }
+
+    this.#selectedIndex = index;
+    this.#updateCursorPos();
+  }
+
   selectNext(): void {
+    // TODO: select() を利用する
     ++this.#selectedIndex;
 
     if (this.#commandTextsObject.textLines.length <= this.#selectedIndex) {
@@ -75,6 +89,7 @@ export class CommandSelectWindow extends GameObject {
   }
 
   selectPrev(): void {
+    // TODO: select() を利用する
     --this.#selectedIndex;
 
     if (this.#selectedIndex < 0) {
@@ -85,8 +100,7 @@ export class CommandSelectWindow extends GameObject {
   }
 
   reset(): void {
-    this.#selectedIndex = 0;
-    this.#updateCursorPos();
+    this.select(0);
   }
 
   get width(): number {
@@ -103,6 +117,10 @@ export class CommandSelectWindow extends GameObject {
 
   static get height(): number {
     return CommandSelectWindow.#windowSpec.height;
+  }
+
+  get #selectionCount(): number {
+    return this.#commandTextsObject.textLines.length;
   }
 
   #updateCursorPos() {

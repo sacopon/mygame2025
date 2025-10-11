@@ -1,7 +1,8 @@
 import { GameButton } from "@game/ports";
-import { BattleCommand, BattleScene, CommandChoice } from "@game/scene/battle-scene";
+import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "@game/scene/battle-scene";
 import { BaseBattleSceneState, BattleSceneContext, BattleSceneStateSelectEnemy } from "./index.internal";
 import { ActorId, findActor } from "@game/repository";
+import { assertNever } from "@shared";
 
 /**
  * バトルシーン状態: キャラクターの行動選択
@@ -46,27 +47,7 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     if (ok) {
       console.log("決定");
       const command = this.context.commandSelectWindow.getCurrent();
-
-      if (command === BattleCommand.Attack) {
-        this.#scene.requestPushState(new BattleSceneStateSelectEnemy(this.#scene, target => {
-          // 敵選択確定時
-          this.context.commandSelectWindow.reset();
-          this.context.enemySelectWindow.reset();
-
-          this.#scene.requestPopState();
-          this.#onDecide({
-            actorId: this.#actorId,
-            command,
-            target,
-          });
-        }));
-      }
-      else {
-        // TODO: コマンドによって次のステートは異なる
-        // TODO: 「じゅもん」選択時 - BattleSceneStateSelectSpell
-        // TODO: 「どうぐ」選択時 - BattleSceneStateSelectItem
-        // TODO: 「ぼうぎょ」選択時 - (次のキャララクターの)BattleSceneStateSelectCharacterCommand
-      }
+      this.#runFlow(command, BattleCommandDecider.next(this.#actorId, command));
     }
     else if (up) {
       // カーソル上移動
@@ -75,6 +56,56 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     else if (down) {
       // カーソル下移動
       this.context.commandSelectWindow.selectNext();
+    }
+  }
+
+  #runFlow(command: BattleCommand, nextFlow: BattleCommandNextFlow): void {
+    switch (nextFlow.kind) {
+      case BattleCommandDecider.FlowType.Immediate:
+        // 即確定
+        this.context.commandSelectWindow.reset();
+
+        // 自身のステートも取り除く
+        this.#scene.requestPopState();
+
+        this.#onDecide({
+          actorId: this.#actorId,
+          command,
+        });
+        break;
+
+      case BattleCommandDecider.FlowType.NeedEnemyTarget:
+        this.#scene.requestPushState(new BattleSceneStateSelectEnemy(
+          this.#scene,
+          {
+            // 敵選択決定時
+            onConfirm: target => {
+              // 妥当性チェック(選択できない相手を選んでいないか)
+              // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+
+              this.context.commandSelectWindow.reset();
+              this.context.enemySelectWindow.reset();
+
+              // 敵選択のステートを取り除く
+              this.#scene.requestPopState();
+              // 自身のステートも取り除く
+              this.#scene.requestPopState();
+
+              this.#onDecide({
+                actorId: this.#actorId,
+                command,
+                target,
+              });
+            },
+            // キャンセル時
+            onCancel: () => {
+              this.#scene.requestPopState();
+            }
+          }));
+        break;
+
+      default:
+        assertNever(nextFlow.kind);
     }
   }
 

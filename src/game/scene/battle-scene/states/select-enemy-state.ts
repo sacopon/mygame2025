@@ -2,18 +2,23 @@ import { BattleScene } from "@game/scene/battle-scene";
 import { BaseBattleSceneState, BattleSceneContext } from "./index.internal";
 import { GameButton } from "@game/ports";
 
+export type EnemySelectEvents = {
+  onConfirm: (target: string) => void;
+  onCancel: () => void;
+}
+
 /**
  * バトルシーン状態: 攻撃対象選択
  */
 export class BattleSceneStateSelectEnemy extends BaseBattleSceneState {
   #scene: BattleScene;
-  #onDecide: (t: string) => void;
   #selectedEnemy: string | null = null;
+  #callbacks;
 
-  constructor(scene: BattleScene, onDecide: (t: string) => void) {
+  constructor(scene: BattleScene, callbacks: EnemySelectEvents) {
     super();
     this.#scene = scene;
-    this.#onDecide = onDecide;
+    this.#callbacks = callbacks;
   }
 
   onEnter(context: BattleSceneContext) {
@@ -42,13 +47,13 @@ export class BattleSceneStateSelectEnemy extends BaseBattleSceneState {
 
     if (cancel) {
       // キャンセル
-      this.context.enemySelectWindow.select(0);
-      this.#scene.requestPopState();
+      this.context.enemySelectWindow.reset();
+      this.#callbacks.onCancel();
     }
     else if (ok) {
       // 決定
-      this.#scene.requestPopState();
-      this.#onDecide(this.context.enemySelectWindow.getCurrent());
+      const target = this.context.enemySelectWindow.getCurrent();
+      this.#callbacks.onConfirm(target);
     }
     else if (up) {
       // カーソル上移動

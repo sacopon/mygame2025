@@ -77,6 +77,7 @@ export class EnemySelectWindow extends GameObject {
   }
 
   selectNext(): void {
+    // TODO: select() を利用する
     ++this.#selectedIndex;
 
     if (this.#enemyNamesObject.textLines.length <= this.#selectedIndex) {
@@ -87,6 +88,7 @@ export class EnemySelectWindow extends GameObject {
   }
 
   selectPrev(): void {
+    // TODO: select() を利用する
     --this.#selectedIndex;
 
     if (this.#selectedIndex < 0) {
@@ -97,8 +99,7 @@ export class EnemySelectWindow extends GameObject {
   }
 
   reset(): void {
-    this.#selectedIndex = 0;
-    this.#updateCursorPos();
+    this.select(0);
   }
 
   get width(): number {
