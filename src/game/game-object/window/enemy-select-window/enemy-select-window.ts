@@ -1,7 +1,6 @@
 import { GameObject, GamePorts } from "@game/core";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/enemy-select-window";
 import { WindowCursor } from "../../elements/window-cursor";
-import { GameButton } from "@game/ports";
 import { EnemySelectWindowEnemyTexts } from "@game/game-object/window/enemy-select-window/enemy-select-window-enemy-texts";
 import { EnemySelectWindowBase } from "@game/game-object/window/enemy-select-window/enemy-select-window-base";
 
@@ -52,37 +51,54 @@ export class EnemySelectWindow extends GameObject {
     const enemyCountPos = { x: 112, y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop };
     this.#enemyCountObject?.setPosition(x + enemyCountPos.x, y + enemyCountPos.y);
 
-    const cursorPos = this.#getCursorPos(this.#selectedIndex);
-    this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+    this.#updateCursorPos();
   }
 
   setActive(active: boolean): void {
     this.#cursor.setEnable(active);
   }
 
-  update(_: number): void {
-    const prevSelectedIndex = this.#selectedIndex;
+  getCurrent(): string {
+    // TODO: ID的なものに
+    return this.#enemyNamesObject.textLines[this.#selectedIndex];
+  }
 
-    if (this.input.pressed(GameButton.Up)) {
-      --this.#selectedIndex;
-
-      if (this.#selectedIndex < 0) {
-        this.#selectedIndex = this.#enemyNamesObject.textLines.length - 1;
-      }
+  select(index: number) {
+    if (index < 0 || this.#selectionCount <= index) {
+      return;
     }
 
-    if (this.input.pressed(GameButton.Down)) {
-      ++this.#selectedIndex;
-
-      if (this.#enemyNamesObject.textLines.length <= this.#selectedIndex) {
-        this.#selectedIndex = 0;
-      }
+    if (index === this.#selectedIndex) {
+      return;
     }
 
-    if (this.#selectedIndex !== prevSelectedIndex) {
-      const cursorPos = this.#getCursorPos(this.#selectedIndex);
-      this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+    this.#selectedIndex = index;
+    this.#updateCursorPos();
+  }
+
+  selectNext(): void {
+    ++this.#selectedIndex;
+
+    if (this.#enemyNamesObject.textLines.length <= this.#selectedIndex) {
+      this.#selectedIndex = 0;
     }
+
+    this.#updateCursorPos();
+  }
+
+  selectPrev(): void {
+    --this.#selectedIndex;
+
+    if (this.#selectedIndex < 0) {
+      this.#selectedIndex = this.#enemyNamesObject.textLines.length - 1;
+    }
+
+    this.#updateCursorPos();
+  }
+
+  reset(): void {
+    this.#selectedIndex = 0;
+    this.#updateCursorPos();
   }
 
   get width(): number {
@@ -99,6 +115,15 @@ export class EnemySelectWindow extends GameObject {
 
   static get height(): number {
     return EnemySelectWindow.#windowSize.height;
+  }
+
+  get #selectionCount(): number {
+    return this.#enemyNamesObject.textLines.length;
+  }
+
+  #updateCursorPos() {
+    const cursorPos = this.#getCursorPos(this.#selectedIndex);
+    this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
   }
 
   #getCursorPos(index: number): { x: number, y: number } {

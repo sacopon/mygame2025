@@ -3,7 +3,7 @@ import { WindowCursor } from "@game/game-object/elements";
 import { CommandSelectWindowCommandTexts } from "@game/game-object/window/command-select-window/command-select-window-command-texts";
 import { CommandSelectWindowBase } from "@game/game-object/window/command-select-window/command-select-window-base";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command-select-window/command-select-window-constants";
-import { GameButton } from "@game/ports";
+import { BattleCommand } from "@game/scene/battle-scene";
 
 /**
  * コマンド選択ウィンドウ
@@ -13,6 +13,7 @@ export class CommandSelectWindow extends GameObject {
   #base: CommandSelectWindowBase;
   #commandTextsObject: CommandSelectWindowCommandTexts;
   #cursor: WindowCursor;
+  #commands: BattleCommand[];
   #selectedIndex = 0;
 
   static readonly #windowSpec = {
@@ -29,13 +30,15 @@ export class CommandSelectWindow extends GameObject {
 
   constructor(
     ports: GamePorts,
+    commands: BattleCommand[],
     gameObjects: {
       base: CommandSelectWindowBase,
-      commandTextsObject: CommandSelectWindowCommandTexts,
+      commandTextsObject: CommandSelectWindowCommandTexts,  // TODO: 外からもらうのではなく中で作った方が良さそう
       cursor: WindowCursor,
     }) {
     super(ports);
 
+    this.#commands = commands;
     this.#base = gameObjects.base;
     this.#commandTextsObject = gameObjects.commandTextsObject;
     this.#cursor = gameObjects.cursor;
@@ -49,8 +52,7 @@ export class CommandSelectWindow extends GameObject {
     const commandTextsPos = { x: 4 + 2 + 10, y: COMMAND_SELECT_WINDOW_SETTINGS.borderHeight + COMMAND_SELECT_WINDOW_SETTINGS.marginTop };
     this.#commandTextsObject?.setPosition(x + commandTextsPos.x, y + commandTextsPos.y);
 
-    const cursorPos = this.#getCursorPos(this.#selectedIndex);
-    this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
+    this.#updateCursorPos();
   }
 
   setActive(active: boolean): void {
@@ -58,29 +60,33 @@ export class CommandSelectWindow extends GameObject {
     // TODO: 非アクティブ時は薄暗くする？
   }
 
-  update(_: number): void {
-    const prevSelectedIndex = this.#selectedIndex;
+  getCurrent(): BattleCommand {
+    return this.#commands[this.#selectedIndex];
+  }
 
-    if (this.input.pressed(GameButton.Up)) {
-      --this.#selectedIndex;
+  selectNext(): void {
+    ++this.#selectedIndex;
 
-      if (this.#selectedIndex < 0) {
-        this.#selectedIndex = this.#commandTextsObject.textLines.length - 1;
-      }
+    if (this.#commandTextsObject.textLines.length <= this.#selectedIndex) {
+      this.#selectedIndex = 0;
     }
 
-    if (this.input.pressed(GameButton.Down)) {
-      ++this.#selectedIndex;
+    this.#updateCursorPos();
+  }
 
-      if (this.#commandTextsObject.textLines.length <= this.#selectedIndex) {
-        this.#selectedIndex = 0;
-      }
+  selectPrev(): void {
+    --this.#selectedIndex;
+
+    if (this.#selectedIndex < 0) {
+      this.#selectedIndex = this.#commandTextsObject.textLines.length - 1;
     }
 
-    if (this.#selectedIndex !== prevSelectedIndex) {
-      const cursorPos = this.#getCursorPos(this.#selectedIndex);
-      this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
-    }
+    this.#updateCursorPos();
+  }
+
+  reset(): void {
+    this.#selectedIndex = 0;
+    this.#updateCursorPos();
   }
 
   get width(): number {
@@ -97,6 +103,11 @@ export class CommandSelectWindow extends GameObject {
 
   static get height(): number {
     return CommandSelectWindow.#windowSpec.height;
+  }
+
+  #updateCursorPos() {
+    const cursorPos = this.#getCursorPos(this.#selectedIndex);
+    this.#cursor?.setCursorMiddleRight(cursorPos.x, cursorPos.y);
   }
 
   #getCursorPos(index: number): { x: number, y: number } {

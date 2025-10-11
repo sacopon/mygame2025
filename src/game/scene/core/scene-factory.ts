@@ -1,4 +1,4 @@
-import { BattleScene } from "./battle-scene";
+import { BattleScene } from "@game/scene/battle-scene";
 import type { Scene, SceneId } from "./scene";
 
 export class SceneFactory {
