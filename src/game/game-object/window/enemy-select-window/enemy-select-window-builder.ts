@@ -19,8 +19,8 @@ export class EnemySelectWindowBuilder {
 
   build() {
     const enemySelectWindowBase = new EnemySelectWindowBase(this.#ports, EnemySelectWindow.width, EnemySelectWindow.height);
-    const enemySelectWindowEnemyName = new EnemySelectWindowEnemyTexts(this.#ports, ["キングスライム", "グリズリー", "さまようよろい", "ドラキー", "スライム"]);
-    const enemySelectWindowEnemyCount = new EnemySelectWindowEnemyTexts(this.#ports, ["ー　１匹", "ー　３匹", "ー　４匹", "ー　７匹", "ー　８匹"]);
+    const enemySelectWindowEnemyName = new EnemySelectWindowEnemyTexts(this.#ports, ["グレイトドラゴン", "グリズリー", "さまようよろい", "ドラキー", "スライム"]);
+    const enemySelectWindowEnemyCount = new EnemySelectWindowEnemyTexts(this.#ports, ["ー １匹", "ー ３匹", "ー ４匹", "ー ７匹", "ー ８匹"]);
     const cursor = new WindowCursor(this.#ports);
     const enemySelectWindow = new EnemySelectWindow(
       this.#ports,

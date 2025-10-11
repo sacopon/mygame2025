@@ -1,10 +1,11 @@
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
 import { GameObject, GamePorts } from "@game/core";
+import { COMMAND_SELECT_WINDOW_SETTINGS } from "@game/game-object/window/command-select-window/command-select-window-constants";
 
 /**
- * 敵選択ウィンドウの枠 + 背景表示
+ * コマンド選択ウィンドウの枠 + 背景表示
  */
-export class EnemySelectWindowBase extends GameObject {
+export class CommandSelectWindowBase extends GameObject {
   constructor(ports: GamePorts, width: number, height: number) {
     super(ports);
 
@@ -17,7 +18,7 @@ export class EnemySelectWindowBase extends GameObject {
         height,
       },
       color: 0x000000,
-      alpha: 0.75, // 濃いめ
+      alpha: COMMAND_SELECT_WINDOW_SETTINGS.baseAlpha,
     }));
 
     // ウィンドウ枠

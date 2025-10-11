@@ -7,10 +7,11 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
 
   #handle: ViewHandle | null = null;
   #spec: SpriteSpec;
-  #visible: boolean = true;
+  #visible: boolean;
 
   public constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
     this.#spec = { ...spec };
+    this.#visible = this.#spec.visible ?? true;
   }
 
   update(gameObject: GameObject, _deltaTime: number): void {
