@@ -18,6 +18,6 @@ export const ENEMY_SELECT_WINDOW_SETTINGS = Object.freeze({
   cursorMarginX: DEFAULT_WINDOW_SETTINGS.cursorMarginX,
   cursorBaselineTweak: DEFAULT_WINDOW_SETTINGS.cursorBaselineTweak,
 
-  //　このウィンドウの固有値
-  maxLines: 5,
+  // このウィンドウの固有値
+  maxLines: 4,
 });

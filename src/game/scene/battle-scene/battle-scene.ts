@@ -55,10 +55,9 @@ export class BattleScene implements Scene {
     // 敵選択ウィンドウ
     const enemies = [
       { name: "グレイトドラゴン", count:1 },
-      { name: "グリズリー", count: 3 },
+      { name: "スライム", count: 8 },
       { name: "さまようよろい", count: 4 },
       { name: "ドラキー", count: 7 },
-      { name: "スライム", count: 8 },
     ];
 
     const enemySelectWindow = context.gameObjectAccess
