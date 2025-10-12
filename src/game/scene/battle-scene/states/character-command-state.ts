@@ -10,16 +10,30 @@ import { ActorId, findActor } from "@game/repository";
  */
 export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState {
   #scene: BattleScene;
-  #onDecide: (c: CommandChoice) => void;
+  #callbacks: {
+    onDecide: (c: CommandChoice) => void,
+    canDecide: (c: CommandChoice) => boolean,
+    onCancel: (actorId: ActorId) => void,
+    canCancel: (actorId: ActorId) => boolean,
+  };
   #actorId: ActorId;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
 
-  constructor(scene: BattleScene, actorId: ActorId, onDecide: (c: CommandChoice) => void) {
+  constructor(
+    scene: BattleScene,
+    actorId: ActorId,
+    callbacks: {
+      onDecide: (c: CommandChoice) => void,
+      canDecide: (c: CommandChoice) => boolean,
+      onCancel: (actorId: ActorId) => void,
+      canCancel: (actorId: ActorId) => boolean,
+    }
+  ) {
     super();
     this.#scene = scene;
     this.#actorId = actorId;
-    this.#onDecide = onDecide;
+    this.#callbacks = callbacks;
   }
 
   override onEnter(context: BattleSceneContext): void {
@@ -53,6 +67,7 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
 
     const inp = this.context.ports.input;
     const ok = inp.pressed(GameButton.A);
+    const cancel = inp.pressed(GameButton.B);
     const up = inp.pressed(GameButton.Up);
     const down = inp.pressed(GameButton.Down);
 
@@ -61,6 +76,22 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
       this.#locked = true;
       const command = this.context.commandSelectWindow.getCurrent();
       this.#runFlow(command, BattleCommandDecider.next(this.#actorId, command));
+    }
+    // キャンセル
+    else if (cancel) {
+      this.#locked = true;
+
+      if (!this.#callbacks.canCancel(this.#actorId)) {
+        this.#locked = false;
+        return;
+      }
+
+      // 各種選択ウィンドウのカーソル位置をリセットしておく
+      this.context.commandSelectWindow.reset();
+      // このステート自身を取り除く
+      this.#scene.requestPopState();
+      // キャンセル処理
+      this.#callbacks.onCancel(this.#actorId);
     }
     else if (up) {
       // カーソル上移動
@@ -80,7 +111,12 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     switch (nextFlow.kind) {
       // 即確定
       case BattleCommandDecider.FlowType.Immediate:
-        this.#onConfirmCommand(command, mark);
+        this.#onConfirmCommand(
+          {
+            actorId: this.#actorId,
+            command,
+          },
+          mark);
         break;
 
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
@@ -89,13 +125,21 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
           {
             // 敵選択決定時
             onConfirm: target => {
+              const choice: CommandChoice = {
+                actorId: this.#actorId,
+                command,
+                target,
+              };
+
               // 妥当性チェック(選択できない相手を選んでいないか)
-              // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+              if (!this.#callbacks.canDecide(choice)) {
+                // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+              }
 
               // 確定処理
-              this.#onConfirmCommand(command, mark, target);
+              this.#onConfirmCommand(choice, mark);
             },
-            // キャンセル時
+            // 敵選択キャンセル時
             onCancel: () => {
               this.#scene.requestPopState();
             }
@@ -108,16 +152,7 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
   }
 
   // キャラクターの行動確定時
-  #onConfirmCommand(command: BattleCommand, rewindMarker: number, target?: string): void {
-    const choice: CommandChoice = {
-      actorId: this.#actorId,
-      command,
-    };
-
-    if (target) {
-      choice.target = target;
-    }
-
+  #onConfirmCommand(command: CommandChoice, rewindMarker: number): void {
     // 各種選択ウィンドウのカーソル位置をリセットしておく
     this.#resetSelectionWindows();
     // このステートの上に乗せられたものは全て解除
@@ -125,7 +160,7 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     // このステート自身を取り除く
     this.#scene.requestPopState();
     // 確定処理
-    this.#onDecide(choice);
+    this.#callbacks.onDecide(command);
   }
 
   #resetSelectionWindows(): void {

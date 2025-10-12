@@ -158,7 +158,8 @@ export class StateStack<Context> {
   update(deltaTime: number): void {
     this.top()?.update(deltaTime);
 
-    if (0 < this.#scheduledOperations.length) {
+    // スケジュールされた操作がなくなるまでスタック操作を実行する
+    while (0 < this.#scheduledOperations.length) {
       this.#isFlushing = true;
       const operations = this.#scheduledOperations;
       this.#scheduledOperations = [];
@@ -174,12 +175,12 @@ export class StateStack<Context> {
       }
 
       this.#isFlushing = false;
-    }
 
-    // フラッシュ中に追加された分を反映する
-    if (0 < this.#pendingOperations.length) {
-      this.#scheduledOperations = [...this.#pendingOperations];
-      this.#pendingOperations.length = 0;
+      // フラッシュ中に追加された分を反映する
+      if (0 < this.#pendingOperations.length) {
+        this.#scheduledOperations = [...this.#pendingOperations];
+        this.#pendingOperations.length = 0;
+      }
     }
   }
 
