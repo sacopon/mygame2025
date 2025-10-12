@@ -3,10 +3,6 @@ import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { EnemySelectWindowContents } from "./enemy-select-window-contents";
 import { GamePorts } from "@game/core";
 
-// TODO:
-// ・CommandSelectWindow の上部にキャラクタ名を表示する
-// ・コマンドの決定自体をキャンセルして前のキャラクタのコマンド選択に戻れるようにする
-
 /**
  * 敵選択ウィンドウの挙動や配置を司るクラス
  */
@@ -30,7 +26,7 @@ export class EnemySelectWindow extends ListSelectWindow<string> {
       ports,
       { width: EnemySelectWindow.#windowSpec.width, height: EnemySelectWindow.#windowSpec.height },
       EnemySelectWindow.#windowSpec.baseAlpha,
-      (ports: GamePorts) => new EnemySelectWindowContents(ports, enemies));
+      (ports: GamePorts) => new EnemySelectWindowContents(ports, EnemySelectWindow.#windowSpec, enemies));
 
     this.#enemyNames = enemies.map(e => e.name);
     this.reset();

@@ -1,7 +1,8 @@
-import { GameComponent, GameObject } from "@game/core";
+import { BaseGameComponent } from "../core/game-component";
+import { GameObject } from "@game/core";
 import { SpriteSpec, ViewHandle } from "@game/ports";
 
-export class SpriteComponent implements GameComponent<typeof SpriteComponent.typeId> {
+export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("SpriteComponent");
   readonly typeId: typeof SpriteComponent.typeId = SpriteComponent.typeId;
 
@@ -10,6 +11,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   #visible: boolean;
 
   constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
+    super();
     this.#spec = { ...spec };
     this.#visible = this.#spec.visible ?? true;
   }
@@ -31,16 +33,16 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
     this.#visible = value;
   }
 
-  onAttach(gameObject: GameObject): void {
-    this.#handle = gameObject.render.createSprite(this.#spec);
+  protected override onAttached(): void {
+    this.#handle = this.owner.render.createSprite(this.#spec);
   }
 
-  onDetach(gameObject: GameObject): void {
+  protected override onDetached(): void {
     if (!this.#handle) {
       return;
     }
 
-    gameObject.render.destroyView(this.#handle);
+    this.owner.render.destroyView(this.#handle);
     this.#handle = null;
   }
 }

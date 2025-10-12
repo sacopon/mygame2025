@@ -12,6 +12,49 @@ export interface GameComponent<T extends symbol = symbol> {
 }
 
 /**
+ * GameComponent の共通部分
+ */
+export abstract class BaseGameComponent<T extends symbol> implements GameComponent<T> {
+  abstract readonly typeId: T;
+  #owner: GameObject | null = null;
+
+  protected onAttached?(): void;
+  protected onDetached?(): void;
+
+  protected get isAttached(): boolean {
+    return this.#owner !== null;
+  }
+
+  protected get owner(): GameObject {
+    if (!this.#owner) {
+      throw new Error(`${this.constructor.name}: owner is not attached yet`);
+    }
+
+    return this.#owner;
+  }
+
+  onAttach(gameObject: GameObject): void {
+    if (this.isAttached) {
+      console.warn(`${this.constructor.name}: 二重にアタッチされました`);
+      return;
+    }
+
+    this.#owner = gameObject;
+    this.onAttached?.();
+  }
+
+  onDetach(_gameObject: GameObject): void {
+    if (!this.isAttached) {
+      console.warn(`${this.constructor.name}: アタッチされてないのにでタッチされました`);
+      return;
+    }
+
+    this.onDetached?.();
+    this.#owner = null;
+  }
+}
+
+/**
  * 複数の GameComponent を束ねるクラス
  */
 export class GameComponents {

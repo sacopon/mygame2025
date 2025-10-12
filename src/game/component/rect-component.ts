@@ -8,7 +8,7 @@ export class RectComponent implements GameComponent<typeof RectComponent.typeId>
   #handle: ViewHandle | null = null;
   #spec: RectSpec;
 
-  constructor(spec: { size: { width: number, height: number }, color?: number, alpha?: number}) {
+  constructor(spec: { size: { width: number, height: number }, color?: number, alpha?: number, offset?: { x?: number, y?: number }}) {
     this.#spec = {
       ...spec,
     };
@@ -19,7 +19,15 @@ export class RectComponent implements GameComponent<typeof RectComponent.typeId>
       return;
     }
 
-    gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
+    gameObject.render.setSpriteTransform(
+      this.#handle,
+      {
+        ...gameObject.transform,
+        ...{
+          x: gameObject.transform.x + (this.#spec.offset?.x ?? 0),
+          y: gameObject.transform.y + (this.#spec.offset?.y ?? 0),
+        },
+      });
   }
 
   onAttach(gameObject: GameObject): void {

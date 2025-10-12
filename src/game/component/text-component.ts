@@ -1,15 +1,18 @@
-import { GameComponent, GameObject } from "@game/core";
+import { BaseGameComponent } from "../core/game-component";
+import { GameObject } from "@game/core";
 import { TextSpec, TextStyle, ViewHandle } from "@game/ports";
 
-export class TextComponent implements GameComponent<typeof TextComponent.typeId> {
+export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TextComponent");
   readonly typeId: typeof TextComponent.typeId = TextComponent.typeId;
 
   #handle: ViewHandle | null = null;
   #text: string = "";
   #style: TextStyle;
+  #anchor: { x: number, y: number };
 
-  constructor(text: string, style?: Partial<TextStyle>) {
+  constructor(text: string, options: { style?: Partial<TextStyle>; anchor?: { x?: number, y?: number } } = {}) {
+    super();
     this.#text = text;
     this.#style = {
       fontFamily: "sans-serif",
@@ -18,7 +21,12 @@ export class TextComponent implements GameComponent<typeof TextComponent.typeId>
       align: "left",
       wordWrap: true,
       wordWrapWidth: 300,
-      ...style,
+      ...(options.style ?? {}),
+    };
+
+    this.#anchor = {
+      x: options.anchor?.x ?? 0.0,
+      y: options.anchor?.y ?? 0.0,
     };
   }
 
@@ -30,22 +38,41 @@ export class TextComponent implements GameComponent<typeof TextComponent.typeId>
     gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
   }
 
-  onAttach(gameObject: GameObject): void {
+  protected override onAttached(): void {
     const spec: TextSpec = {
       text: this.#text,
       style: this.#style,
+      anchor: this.#anchor,
+      transform: {
+        x: this.owner.transform.x,
+        y: this.owner.transform.y,
+      },
     };
 
-    this.#handle = gameObject.render.createText(spec);
+    this.#handle = this.owner.render.createText(spec);
   }
 
-  onDetach(gameObject: GameObject): void {
+  protected override onDetached(): void {
     if (!this.#handle) {
       return;
     }
 
-    gameObject.render.destroyView(this.#handle);
+    this.owner.render.destroyView(this.#handle);
     this.#handle = null;
+  }
+
+  get text() {
+    return this.#text;
+  }
+
+  set text(s: string) {
+    this.#text = s;
+
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.setTextContent(this.#handle, this.#text);
   }
 }
 

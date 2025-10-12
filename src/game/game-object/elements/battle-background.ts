@@ -8,7 +8,7 @@ export class BattleBackground extends GameObject implements ScreenSizeAware {
     super(ports);
 
     const x = vw / 2;
-    const y = vh / 2 - 18;
+    const y = vh / 2 - 28;
     this.setPosition(x, y);
     this.addComponent(new SpriteComponent({
       imageId: "bgsample.png",
@@ -17,6 +17,6 @@ export class BattleBackground extends GameObject implements ScreenSizeAware {
   }
 
   onScreenSizeChanged(vw: number, vh: number) {
-    this.setPosition(vw / 2, vh / 2 - 18);
+    this.setPosition(vw / 2, vh / 2 - 28);
   }
 }

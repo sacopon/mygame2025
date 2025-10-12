@@ -1,10 +1,11 @@
-import { GameComponent, GameObject } from "@game/core";
+import { BaseGameComponent } from "../core/game-component";
+import { GameObject } from "@game/core";
 import { TextStyle, ViewHandle } from "@game/ports";
 
 /**
  * 複数行のテキストから成るコンポーネント
  */
-export class TextListComponent implements GameComponent<typeof TextListComponent.typeId> {
+export class TextListComponent extends BaseGameComponent<typeof TextListComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TextListComponent");
   readonly typeId: typeof TextListComponent.typeId = TextListComponent.typeId;
 
@@ -14,6 +15,7 @@ export class TextListComponent implements GameComponent<typeof TextListComponent
   #layout = { offsetX: 0, offsetY: 0, lineHeight: 14 };
 
   constructor(lines: string[], style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
+    super();
     this.#lines = lines.slice();
     this.#style = {
       fontFamily: "sans-serif",
@@ -41,13 +43,13 @@ export class TextListComponent implements GameComponent<typeof TextListComponent
     });
   }
 
-  onAttach(gameObject: GameObject): void {
-    this.#handles = this.#createAllLines(gameObject);
+  protected override onAttached(): void {
+    this.#handles = this.#createAllLines(this.owner);
   }
 
-  onDetach(gameObject: GameObject): void {
+  protected override onDetached(): void {
     for (let handle of this.#handles) {
-      gameObject.render.destroyView(handle);
+      this.owner.render.destroyView(handle);
     }
 
     this.#handles = [];

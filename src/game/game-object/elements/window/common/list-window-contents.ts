@@ -1,6 +1,6 @@
-import { GroupGameObject } from "../../../core/group-game-object";
-import { WindowCursor } from "../..";
-import { Position } from "@shared";
+import { GroupGameObject } from "../../../../core/group-game-object";
+import { WindowCursor } from "./window-cursor";
+import { Position, Size } from "@shared";
 import { GamePorts } from "@game/core";
 
 /**
@@ -9,9 +9,19 @@ import { GamePorts } from "@game/core";
  */
 export abstract class ListWindowContents extends GroupGameObject {
   #cursor!: WindowCursor;
+  #windowSize: Size;
 
-  constructor(ports: GamePorts) {
+  constructor(ports: GamePorts, windowSize: Size) {
     super(ports);
+    this.#windowSize = windowSize;
+  }
+
+  get windowWidth(): number {
+    return this.#windowSize.width;
+  }
+
+  get windowHeight(): number {
+    return this.#windowSize.height;
   }
 
   setCursorVisible(isEnable: boolean): void {
