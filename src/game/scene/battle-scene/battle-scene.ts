@@ -1,7 +1,7 @@
 import { Scene } from "../../scene/core/scene";
 import { BattleSceneContext, BattleSceneState } from "./states/battle-scene-state";
 import { BattleSceneStateSelectCharacterCommand } from "./states/character-command-state";
-import { Background, BattleBackground, CommandSelectWindowBuilder, Enemy, EnemySelectWindowBuilder, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object";
+import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object";
 import { ActorId, findActor } from "@game/repository";
 import { SceneContext, SceneId } from "@game/scene";
 import { StateStack } from "@game/shared";
@@ -44,13 +44,26 @@ export class BattleScene implements Scene {
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 7));
     context.gameObjectAccess.spawnGameObject(new Smile(context.ports, width, height));
 
-    // コマンド選択ウィンドウ
-    const commandSelectWindowBuilder = new CommandSelectWindowBuilder(context.gameObjectAccess, context.ports);
-    const commandSelectWindow = commandSelectWindowBuilder.build();
+    const commands = [
+      BattleCommand.Attack,
+      BattleCommand.Spell,
+      BattleCommand.Defence,
+      BattleCommand.Item,
+    ];
+    const commandSelectWindow = context.gameObjectAccess
+      .spawnGameObject(new CommandSelectWindow(context.ports, commands)) as CommandSelectWindow;
 
     // 敵選択ウィンドウ
-    const enemySelectWindowBuilder = new EnemySelectWindowBuilder(context.gameObjectAccess, context.ports);
-    const enemySelectWindow = enemySelectWindowBuilder.build();
+    const enemies = [
+      { name: "グレイトドラゴン", count:1 },
+      { name: "グリズリー", count: 3 },
+      { name: "さまようよろい", count: 4 },
+      { name: "ドラキー", count: 7 },
+      { name: "スライム", count: 8 },
+    ];
+
+    const enemySelectWindow = context.gameObjectAccess
+      .spawnGameObject(new EnemySelectWindow(context.ports, enemies)) as EnemySelectWindow;
 
     // レイアウトコーディネイター
     context.gameObjectAccess.spawnGameObject(
@@ -85,7 +98,7 @@ export class BattleScene implements Scene {
       const actor = findActor(c.actorId);
       console.log(`${actor!.name} が ${c.target!} に ${c.command}`);
       // コマンド選択ウィンドウと敵選択ウィンドウの共通クラスを作る
-      // コマンド選択ウィンドウのあたまにキャラクタ名をひょうじできるようにする
+      // コマンド選択ウィンドウのあたまにキャラクタ名を表示できるようにする
 
       // コマンドを記録
       this.#context.commandChoices.push(c);

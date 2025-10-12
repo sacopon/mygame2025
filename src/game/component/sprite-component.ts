@@ -9,7 +9,7 @@ export class SpriteComponent implements GameComponent<typeof SpriteComponent.typ
   #spec: SpriteSpec;
   #visible: boolean;
 
-  public constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
+  constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
     this.#spec = { ...spec };
     this.#visible = this.#spec.visible ?? true;
   }

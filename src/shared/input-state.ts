@@ -7,7 +7,7 @@ export class InputState
   #touchState: number = 0;
   #previousComposedState: number = 0;
 
-  public constructor() {
+  constructor() {
   }
 
   /**
@@ -16,7 +16,7 @@ export class InputState
    * @param bit ビット番号
    * @param down 押下状態の場合は true、離した場合は false
    */
-  public setKey(bit: number, down: boolean) {
+  setKey(bit: number, down: boolean) {
     this.#keyState = down ? (this.#keyState | (1 << bit)) : (this.#keyState & ~(1 << bit));
   }
 
@@ -26,14 +26,14 @@ export class InputState
    * @param bit ビット番号
    * @param down 押下状態の場合は true、離した場合は false
    */
-  public setTouch(bit: number, down: boolean) {
+  setTouch(bit: number, down: boolean) {
     this.#touchState = down ? (this.#touchState | (1 << bit)) : (this.#touchState & ~(1 << bit));
   }
 
   /**
    * タッチによる入力状態をクリアする
    */
-  public clearTouchDir() {
+  clearTouchDir() {
     this.#touchState &= ~0b1111;
   }
 
@@ -42,7 +42,7 @@ export class InputState
    *
    * @returns 入力情報(ビットの定義は PAD_BIT を使用する)
    */
-  public composed() {
+  composed() {
     return this.#keyState | this.#touchState;
   }
 
@@ -51,14 +51,14 @@ export class InputState
    *
    * @returns 1フレーム前の入力情報(ビットの定義は PAD_BIT を使用する)
    */
-  public previousComposed() {
+  previousComposed() {
     return this.#previousComposedState;
   }
 
   /**
    * 前フレームの情報を退避して次のフレームへの準備を行う
    */
-  public next() {
+  next() {
     this.#previousComposedState = this.composed();
   }
 };

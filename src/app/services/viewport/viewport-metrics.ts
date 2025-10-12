@@ -63,7 +63,7 @@ function compareViewMetricsState(a: ViewportMetricsState, b: ViewportMetricsStat
 export class ViewportMetrics extends EventTarget {
   #current: ViewportMetricsState | null = null;
 
-  public get current(): ViewportMetricsState {
+  get current(): ViewportMetricsState {
     if (!this.#current) {
       throw new Error("ViewportMetrics not initialized.");
     }
@@ -71,7 +71,7 @@ export class ViewportMetrics extends EventTarget {
     return this.#current;
   }
 
-  public update(next: ViewportMetricsState) {
+  update(next: ViewportMetricsState) {
     const prev = this.#current;
     const changed = !prev || !compareViewMetricsState(prev, next);
     this.#current = next;

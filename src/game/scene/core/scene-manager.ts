@@ -13,12 +13,12 @@ export class SceneManager {
   #nextSceneId: SceneId | null = null;
   #context: SceneContext;
 
-  public constructor(initialSceneId: SceneId, context: SceneContext) {
+  constructor(initialSceneId: SceneId, context: SceneContext) {
     this.#context = context;
     this.#nextSceneId = initialSceneId;
   }
 
-  public update(deltaTime: number): void {
+  update(deltaTime: number): void {
     if (this.#nextSceneId) {
       this.#currentScene?.onExit?.();
       this.#currentScene = SceneFactory.createScene(this.#nextSceneId);

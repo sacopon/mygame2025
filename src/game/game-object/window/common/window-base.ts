@@ -1,13 +1,12 @@
 import { GameObject } from "../../../core/game-object";
-import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
 import { GamePorts } from "@game/core";
 
 /**
- * 敵選択ウィンドウの枠 + 背景表示
+ * コマンド選択ウィンドウの枠 + 背景表示
  */
-export class EnemySelectWindowBase extends GameObject {
-  constructor(ports: GamePorts, width: number, height: number) {
+export class WindowBase extends GameObject {
+  constructor(ports: GamePorts, width: number, height: number, alpha: number) {
     super(ports);
 
     this.setPosition(0, 0); // 位置は EnemySelectWindowLayout が決める
@@ -19,7 +18,7 @@ export class EnemySelectWindowBase extends GameObject {
         height,
       },
       color: 0x000000,
-      alpha: ENEMY_SELECT_WINDOW_SETTINGS.baseAlpha,
+      alpha,
     }));
 
     // ウィンドウ枠

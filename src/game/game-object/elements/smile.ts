@@ -24,7 +24,7 @@ export class Smile extends GameObject implements ScreenSizeAware {
     }));
   }
 
-  public update(deltaTime: number): void {
+  override update(deltaTime: number): void {
     super.update(deltaTime);
 
     this.#rot += 0.03;

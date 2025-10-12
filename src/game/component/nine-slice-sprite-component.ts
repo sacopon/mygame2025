@@ -9,11 +9,11 @@ export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceS
   #handle: ViewHandle | null = null;
   #spec: NineSliceSpriteSpec;
 
-  public constructor(spec: Partial<NineSliceSpriteSpec> & Required<Pick<NineSliceSpriteSpec, "imageId" | "border" | "size">>) {
+  constructor(spec: Partial<NineSliceSpriteSpec> & Required<Pick<NineSliceSpriteSpec, "imageId" | "border" | "size">>) {
     this.#spec = { ...spec };
   }
 
-  public update(gameObject: GameObject, _deltaTime: number): void {
+  update(gameObject: GameObject, _deltaTime: number): void {
     if (!this.#handle) {
       return;
     }
@@ -21,12 +21,12 @@ export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceS
     gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
   }
 
-  public onAttach(gameObject: GameObject): void {
+  onAttach(gameObject: GameObject): void {
     this.#owner = gameObject;
     this.#handle = gameObject.render.createNineSliceSprite(this.#spec);
   }
 
-  public onDetach(gameObject: GameObject): void {
+  onDetach(gameObject: GameObject): void {
     if (!this.#handle) {
       return;
     }
@@ -35,7 +35,7 @@ export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceS
     this.#handle = null;
   }
 
-  public setSize(width: number, height: number): void {
+  setSize(width: number, height: number): void {
     this.#owner!.render.setNineSpriteSize(this.#handle!, { width, height });
   }
 }

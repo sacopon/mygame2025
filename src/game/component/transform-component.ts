@@ -7,14 +7,14 @@ export class TransformComponent implements GameComponent<typeof TransformCompone
 
   #transform: Transform2D = { ...identityTransform };
 
-  public constructor() {
+  constructor() {
   }
 
-  public get transform(): Readonly<Transform2D> {
+  get transform(): Readonly<Transform2D> {
     return this.#transform;
   }
 
-  public patch(t: Partial<Transform2D>) {
+  patch(t: Partial<Transform2D>) {
     this.#transform = {...this.#transform, ...t};
   }
 

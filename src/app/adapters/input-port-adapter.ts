@@ -44,23 +44,23 @@ function toBit(button: GameButton): number {
 export class InputPortAdapter implements InputPort {
   #state: InputState;
 
-  public constructor(state: InputState) {
+  constructor(state: InputState) {
     this.#state = state;
   }
 
-  public snapshot(): number {
+  snapshot(): number {
     return this.#state.composed();
   }
 
-  public snapshotPrev(): number {
+  snapshotPrev(): number {
     return this.#state.previousComposed();
   }
 
-  public isDown(btn: GameButton): boolean {
+  isDown(btn: GameButton): boolean {
     return (this.snapshot() & toBit(btn)) !== 0;
   }
 
-  public pressed(button: GameButton): boolean {
+  pressed(button: GameButton): boolean {
     const current = this.snapshot();
     const prev = this.snapshotPrev();
     const bit = toBit(button);
@@ -68,7 +68,7 @@ export class InputPortAdapter implements InputPort {
     return (current & bit) !== 0 && (prev & bit) === 0;
   }
 
-  public released(button: GameButton): boolean {
+  released(button: GameButton): boolean {
     const current = this.snapshot();
     const prev = this.snapshotPrev();
     const bit = toBit(button);

@@ -23,28 +23,28 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     this.#onDecide = onDecide;
   }
 
-  onEnter(context: BattleSceneContext): void {
+  override onEnter(context: BattleSceneContext): void {
     super.onEnter(context);
     this.#locked = false;
     this.#activate();
   }
 
-  onLeave(_context: BattleSceneContext): void {
+  override onLeave(_context: BattleSceneContext): void {
     this.#locked = false;
     this.#inactivate();
   }
 
-  onSuspend(): void {
+  override onSuspend(): void {
     this.#locked = false;
     this.#inactivate();
   }
 
-  onResume(): void {
+  override onResume(): void {
     this.#locked = false;
     this.#activate();
   }
 
-  update(_deltaTime: number): void {
+  override update(_deltaTime: number): void {
     if (this.#locked) {
       return;
     }
@@ -79,18 +79,6 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
       // 即確定
       case BattleCommandDecider.FlowType.Immediate:
         this.#onConfirmCommand(command, mark);
-        // // 各種選択ウィンドウのカーソル位置をリセットしておく
-        // this.#resetSelectionWindows();
-        // // このステートの上に乗せられたものは全て解除(この場合はないはずだが処理の統一性のためやっておく)
-        // this.#scene.requestRewindTo(mark);
-        // // このステート自身を取り除く
-        // this.#scene.requestPopState();
-
-        // // 確定処理
-        // this.#onDecide({
-        //   actorId: this.#actorId,
-        //   command,
-        // });
         break;
 
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
@@ -99,23 +87,11 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
           {
             // 敵選択決定時
             onConfirm: target => {
-              this.#onConfirmCommand(command, mark, target);
               // 妥当性チェック(選択できない相手を選んでいないか)
               // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
 
-              // // 各種選択ウィンドウのカーソル位置をリセットしておく
-              // this.#resetSelectionWindows();
-              // // このステートの上に乗せられたものは全て解除
-              // this.#scene.requestRewindTo(mark);
-              // // このステート自身を取り除く
-              // this.#scene.requestPopState();
-
-              // // 確定処理
-              // this.#onDecide({
-              //   actorId: this.#actorId,
-              //   command,
-              //   target,
-              // });
+              // 確定処理
+              this.#onConfirmCommand(command, mark, target);
             },
             // キャンセル時
             onCancel: () => {

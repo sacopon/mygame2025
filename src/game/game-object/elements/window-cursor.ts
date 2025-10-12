@@ -28,7 +28,7 @@ export class WindowCursor extends GameObject {
     }))!;
   }
 
-  update(deltaTime: number) {
+  override update(deltaTime: number) {
     super.update(deltaTime);
 
     // 無効時は消して終了する

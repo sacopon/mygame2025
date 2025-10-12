@@ -20,7 +20,7 @@ export class PixiRenderAdapter implements RenderPort {
   #views = new Map<ViewHandle, Sprite | NineSliceSprite | Text | BitmapText | Graphics>();
   #idCounter = 0;
 
-  public constructor(rootContainer: Container) {
+  constructor(rootContainer: Container) {
     this.#rootContainer = rootContainer;
   }
   createSprite(spec: SpriteSpec): ViewHandle {

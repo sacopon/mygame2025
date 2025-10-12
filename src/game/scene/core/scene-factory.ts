@@ -2,7 +2,7 @@ import { Scene, SceneId } from ".";
 import { BattleScene } from "..";
 
 export class SceneFactory {
-  public static createScene(id: SceneId): Scene {
+  static createScene(id: SceneId): Scene {
     let scene: Scene | null = null;
 
     switch (id) {

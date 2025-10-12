@@ -18,7 +18,7 @@ export class GameComponents {
   #components: GameComponent[] = [];
   #componentById = new Map<ComponentTypeId, GameComponent>();
 
-  public update(deltaTime: number, gameObject: GameObject) {
+  update(deltaTime: number, gameObject: GameObject) {
     const list = this.#components.slice();
 
     for (const c of list) {
@@ -26,7 +26,7 @@ export class GameComponents {
     }
   }
 
-  public addComponent<I extends ComponentTypeId, T extends GameComponent<I>>(component: T): T | null {
+  addComponent<I extends ComponentTypeId, T extends GameComponent<I>>(component: T): T | null {
     const id: ComponentTypeId = component.typeId;
 
     if (this.#componentById.has(id)) {
@@ -39,7 +39,7 @@ export class GameComponents {
     return component;
   }
 
-  public getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
+  getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
     return (this.#componentById.get(id) as ComponentById<T> | undefined) ?? null;
   }
 }

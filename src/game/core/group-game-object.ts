@@ -30,4 +30,21 @@ export class GroupGameObject extends GameObject {
       c.update(deltaTime);
     }
   }
+
+  override setPosition(x: number, y: number): void {
+    const prevX = this.transform.x;
+    const prevY = this.transform.y;
+    super.setPosition(x, y);
+
+    const dx = this.transform.x - prevX;
+    const dy = this.transform.y - prevY;
+
+    if (dx === 0 && dy === 0) {
+      return;
+    }
+
+    for (const c of this.#children) {
+      c.setPosition(c.transform.x + dx, c.transform.y + dy);
+    }
+  }
 }

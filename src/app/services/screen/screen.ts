@@ -11,7 +11,7 @@ export class GameScreenSpec extends EventTarget
 {
   #current: GameScreen;
 
-  public constructor(initial = DefaultScreen) {
+  constructor(initial = DefaultScreen) {
     super();
     this.#current = initial;
   }

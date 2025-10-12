@@ -11,7 +11,7 @@ export class GameRoot implements GameObjectAccess {
   #objects: GameObject[] = [];
   #unsubscribeScreen?: () => void;
 
-  public constructor(ports: GamePorts) {
+  constructor(ports: GamePorts) {
     const { screen } = ports;
     const { width, height } = screen.getGameSize();
 
@@ -25,12 +25,12 @@ export class GameRoot implements GameObjectAccess {
     this.onScreenSizeChanged(width, height);
   }
 
-  public spawnGameObject<T extends GameObject>(gameObject: T): T {
+  spawnGameObject<T extends GameObject>(gameObject: T): T {
     this.#objects.push(gameObject);
     return gameObject;
   }
 
-  public update(deltaTime: number) {
+  update(deltaTime: number) {
     this.#sceneManager.update(deltaTime);
 
     const list = this.#objects.slice();
@@ -40,7 +40,7 @@ export class GameRoot implements GameObjectAccess {
     }
   }
 
-  public dispose() {
+  dispose() {
     this.#unsubscribeScreen?.();
     this.#unsubscribeScreen = undefined;
   }
@@ -51,7 +51,7 @@ export class GameRoot implements GameObjectAccess {
    * @param width  新しい幅
    * @param height 新しい高さ
    */
-  public onScreenSizeChanged(width: number, height: number) {
+  onScreenSizeChanged(width: number, height: number) {
     for (const go of this.#objects) {
       if (!isScreenSizeAware(go)) {
         continue;

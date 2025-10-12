@@ -18,7 +18,7 @@ export class VirtualPadUI {
   /**
    * AppContext の上に「バーチャルUI枠」を作って返す
    */
-  public static attach(app: AppContext, skin: Skin, inputState: InputState): VirtualPadUI {
+  static attach(app: AppContext, skin: Skin, inputState: InputState): VirtualPadUI {
     const ui = new VirtualPadUI(app, skin, inputState);
 
     const { frameLayer, overlayLayer } = app;
@@ -61,7 +61,7 @@ export class VirtualPadUI {
     return ui;
   }
 
-  public detach() {
+  detach() {
     const { frameLayer, overlayLayer } = this.#app;
 
     frameLayer.eventMode = "none";
@@ -70,7 +70,7 @@ export class VirtualPadUI {
     overlayLayer.visible = false;
   }
 
-  public reattach() {
+  reattach() {
     this.show();
   }
 
@@ -82,7 +82,7 @@ export class VirtualPadUI {
   * @param directionPad 方向キーのスプライト
   * @param buttons ボタン類のスプライト
   */
-  public updateButtonImages() {
+  updateButtonImages() {
     const skin = this.#skin;
     const state = this.#inputState;
     const { dpad, buttons } = this.#slots;
@@ -123,7 +123,7 @@ export class VirtualPadUI {
   /**
    * Skin に依存する貼り替えを “だけ” 担当
    */
-  public applySkin(skin: Skin) {
+  applySkin(skin: Skin) {
     this.#skin = skin;
     const { body, dpad, buttons } = this.#slots;
 

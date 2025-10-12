@@ -21,24 +21,24 @@ export class BattleSceneStateSelectEnemy extends BaseBattleSceneState {
     this.#callbacks = callbacks;
   }
 
-  onEnter(context: BattleSceneContext) {
+  override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
     context.enemySelectWindow.setActive(true);
   }
 
-  onLeave(_context: BattleSceneContext): void {
+  override onLeave(_context: BattleSceneContext): void {
     this.#inactivate();
   }
 
-  onSuspend(): void {
+  override onSuspend(): void {
     this.#inactivate();
   }
 
-  onResume(): void {
+  override onResume(): void {
     this.#activate();
   }
 
-  update(_deltaTime: number): void {
+  override update(_deltaTime: number): void {
     const inp = this.context.ports.input;
     const cancel = inp.pressed(GameButton.B);
     const ok = inp.pressed(GameButton.A);

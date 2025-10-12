@@ -4,16 +4,16 @@ import { ScreenPort, GameSize } from "@game/ports";
 export class ScreenPortAdapter implements ScreenPort {
   #spec: GameScreenSpec;
 
-  public constructor(spec: GameScreenSpec) {
+  constructor(spec: GameScreenSpec) {
     this.#spec = spec;
   }
 
-  public getGameSize(): GameSize {
+  getGameSize(): GameSize {
     const c = this.#spec.current;
     return { width: c.width, height: c.height };
   }
 
-  public onGameSizeChanged(handler: (size: GameSize) => void): () => void {
+  onGameSizeChanged(handler: (size: GameSize) => void): () => void {
     const listener = (ev: Event) => {
       const { width, height } = (ev as CustomEvent<GameSize>).detail;
       handler({ width, height });

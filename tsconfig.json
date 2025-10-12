@@ -15,6 +15,7 @@
     "esModuleInterop": true,
     "useDefineForClassFields": true,
     "skipLibCheck": true,
+    "noImplicitOverride": true
   },
   "include": ["src", "tests"]
 }

@@ -7,15 +7,15 @@ const ORIENT_THRESHOLD = 1.05;
 export class SkinResolver {
   #currentId: SkinId;
 
-  public constructor(initial: SkinId = "portrait") {
+  constructor(initial: SkinId = "portrait") {
     this.#currentId = initial;
   }
 
-  public get current(): Skin {
+  get current(): Skin {
     return SkinRegistry[this.#currentId];
   }
 
-  public get currentId(): SkinId {
+  get currentId(): SkinId {
     return this.#currentId;
   }
 
@@ -26,7 +26,7 @@ export class SkinResolver {
    * @param h 画面サイズ高さ
    * @returns 適用すべき SkinId
    */
-  public decide(w: number, h: number): SkinId {
+  decide(w: number, h: number): SkinId {
     const ratio = w / h;
     const want: SkinId =
       ratio > ORIENT_THRESHOLD ? "landscape" :
@@ -36,7 +36,7 @@ export class SkinResolver {
     return want;
   }
 
-  public set(skinId: SkinId) {
+  set(skinId: SkinId) {
     if (skinId === this.#currentId) {
       return false;
     }
@@ -45,7 +45,7 @@ export class SkinResolver {
     return true;
   }
 
-  public update(w: number, h: number) {
+  update(w: number, h: number) {
     return this.set(this.decide(w, h));
   }
 }
