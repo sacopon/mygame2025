@@ -138,9 +138,4 @@ export interface RenderPort {
   createText(spec: TextSpec): ViewHandle;
   setTextContent(handle: ViewHandle, text: string): void;
   setTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void;
-
-  // ビットマップフォント描画
-  createBitmapText(spec: TextSpec): ViewHandle;
-  setBitmapTextContent(handle: ViewHandle, text: string): void;
-  setBitmapTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void;
 }

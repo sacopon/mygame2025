@@ -28,7 +28,7 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
       ports,
       { width: CommandSelectWindow.#windowSpec.width, height: CommandSelectWindow.#windowSpec.height },
       CommandSelectWindow.#windowSpec.baseAlpha,
-      (ports: GamePorts) => new CommandSelectWindowContents(ports, commands));
+      (ports: GamePorts) => new CommandSelectWindowContents(ports, "あああああ", commands));
 
     this.#commands = commands;
     this.reset();

@@ -2,7 +2,8 @@ import { ListWindowContents } from "../common/list-window-contents";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { WindowTextsVertical } from "../common";
 import { Position } from "@shared";
-import { GamePorts } from "@game/core";
+import { TextComponent } from "@game/component";
+import { GameObject, GamePorts } from "@game/core";
 import { BattleCommand } from "@game/scene";
 
 /**
@@ -11,8 +12,17 @@ import { BattleCommand } from "@game/scene";
 export class CommandSelectWindowContents extends ListWindowContents {
   #commandTextsObject: WindowTextsVertical;
 
-  constructor(ports: GamePorts, commands: BattleCommand[]) {
+  constructor(ports: GamePorts, actorName: string, commands: BattleCommand[]) {
     super(ports);
+
+    const header = new GameObject(ports);
+    header.addComponent(new TextComponent(
+      actorName,
+      {
+        fontFamily: COMMAND_SELECT_WINDOW_SETTINGS.fontFamily,
+        fontSize: COMMAND_SELECT_WINDOW_SETTINGS.fontSize,
+      }));
+    this.addChild(header);
 
     this.#commandTextsObject = this.addChild(new WindowTextsVertical(
       ports,

@@ -1,4 +1,4 @@
-import { BitmapText, Container, Graphics, NineSliceSprite, Sprite, Text, Texture, TextStyle as PixiTextStyle } from "pixi.js";
+import { Container, Graphics, NineSliceSprite, Sprite, Text, Texture, TextStyle as PixiTextStyle } from "pixi.js";
 import { identityTransform, NineSliceSpriteSpec, RenderPort, ViewHandle, SpriteSpec, TextSpec, Transform2D, RectSpec, TextStyle } from "@game/ports";
 
 const defaultFontSetting = Object.freeze({
@@ -17,7 +17,11 @@ const textInternalScaleRatio = 4;
  */
 export class PixiRenderAdapter implements RenderPort {
   #rootContainer: Container;
-  #views = new Map<ViewHandle, Sprite | NineSliceSprite | Text | BitmapText | Graphics>();
+  // 全オブジェクト
+  // Text だけは文字の解像感を高めるため、Text だけはラッパーのコンテナが登録されており、transform はこちらに設定する
+  #views = new Map<ViewHandle, Container>();
+  // テキストの実体(文字列やスタイルはこちらに設定する)
+  #textNodes = new Map<ViewHandle, Text>();
   #idCounter = 0;
 
   constructor(rootContainer: Container) {
@@ -94,80 +98,42 @@ export class PixiRenderAdapter implements RenderPort {
       style.wordWrapWidth = spec.style.wordWrapWidth;
     }
 
+    const wrapper = new Container();
     const t = new Text({ text: spec.text, style });
 
-    // transform を反映（anchor があるので 0.5/0.5 で中央基準も可）
+    // wrapper にユーザーの transform を反映（anchor があるので 0.5/0.5 で中央基準も可）
     const tr = { ...identityTransform, ...spec.transform };
-    this.#applyTransform(t, tr);
+    this.#applyTransform(wrapper, tr);
 
+    // 可視、表示優先順も wrapper 側に設定
+    wrapper.zIndex = spec.layer ?? 0;
+    wrapper.visible = spec.visible ?? true;
+
+    // 解像感を高めるため内部スケーリングを適用
     t.scale.set(1 / textInternalScaleRatio);
     t.resolution = 2;
-    t.zIndex = spec.layer ?? 0;
-    t.visible = spec.visible ?? true;
-    this.#rootContainer.addChild(t);
+
+    wrapper.addChild(t);
+    this.#rootContainer.addChild(wrapper);
 
     const handle = `text-${this.#idCounter++}`;
-    this.#views.set(handle, t);
+    this.#views.set(handle, wrapper);
+    this.#textNodes.set(handle, t);
     return handle;
   }
 
   setTextContent(handle: ViewHandle, text: string): void {
-    const n = this.#views.get(handle);
+    const n = this.#textNodes.get(handle);
     if (n && n instanceof Text) {
       n.text = text;
     }
   }
 
   setTextStyle(handle: ViewHandle, style: Partial<TextStyle>): void {
-    const n = this.#views.get(handle);
+    const n = this.#textNodes.get(handle);
 
     if (!(n && n instanceof Text)) return;
     if (style.fontFamily !== undefined) n.style.fontFamily = style.fontFamily;
-    if (style.fontSize   !== undefined) n.style.fontSize   = style.fontSize;
-    if (style.color      !== undefined) n.style.fill       = style.color;
-    if (style.align      !== undefined) n.style.align      = style.align;
-    if (style.wordWrap   !== undefined) n.style.wordWrap   = style.wordWrap;
-    if (style.wordWrapWidth !== undefined) n.style.wordWrapWidth = style.wordWrapWidth;
-  }
-
-  createBitmapText(spec: TextSpec): ViewHandle {
-    const style = {
-      fontFamily:    spec.style?.fontFamily    ?? defaultFontSetting.fontFamily,
-      fontSize:      (spec.style?.fontSize     ?? defaultFontSetting.fontSize) * textInternalScaleRatio,
-      fill:          spec.style?.color         ?? defaultFontSetting.color,
-      align:         spec.style?.align         ?? defaultFontSetting.align,
-      wordWrap:      spec.style?.wordWrap      ?? defaultFontSetting.wordWrap,
-      wordWrapWidth: spec.style?.wordWrapWidth ?? defaultFontSetting.wordWrapWidth,
-    };
-    const t = new BitmapText({ text: spec.text, style });
-
-    // transform を反映（anchor があるので 0.5/0.5 で中央基準も可）
-    const tr = { ...identityTransform, ...spec.transform };
-    this.#applyTransform(t, tr);
-
-    t.zIndex = spec.layer ?? 0;
-    t.visible = spec.visible ?? true;
-    this.#rootContainer.addChild(t);
-
-
-    const handle = `bitmaptext-${this.#idCounter++}`;
-    this.#views.set(handle, t);
-
-    return handle;
-  }
-
-  setBitmapTextContent(handle: ViewHandle, text: string): void {
-    const n = this.#views.get(handle);
-    if (n && n instanceof BitmapText) {
-      n.text = text;
-    }
-  }
-
-  setBitmapTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void {
-    const n = this.#views.get(handle);
-
-    if (!(n && n instanceof BitmapText)) return;
-    // BitmapText の場合、あとから fontFamily を変えることはできない(必要であれば作り直す)
     if (style.fontSize   !== undefined) n.style.fontSize   = style.fontSize;
     if (style.color      !== undefined) n.style.fill       = style.color;
     if (style.align      !== undefined) n.style.align      = style.align;
@@ -215,23 +181,23 @@ export class PixiRenderAdapter implements RenderPort {
   }
 
   setSpriteTransform(handle: ViewHandle, transform: Partial<Transform2D>): void {
-    const sprite = this.#views.get(handle);
+    const container = this.#views.get(handle);
 
-    if (!sprite) {
+    if (!container) {
       return;
     }
 
-    this.#applyTransform(sprite, transform);
+    this.#applyTransform(container, transform);
   }
 
   setSpriteVisible(handle: ViewHandle, visible: boolean): void {
-    const sprite = this.#views.get(handle);
+    const container = this.#views.get(handle);
 
-    if (!sprite) {
+    if (!container) {
       return;
     }
 
-    sprite.visible = visible;
+    container.visible = visible;
   }
 
   setSpriteLayer?(_view: ViewHandle, _layer: number): void {
@@ -242,10 +208,10 @@ export class PixiRenderAdapter implements RenderPort {
     throw new Error("Method not implemented.");
   }
 
-  #applyTransform(sprite: Sprite | NineSliceSprite | Text | BitmapText | Graphics, transform: Partial<Transform2D>) {
-    sprite.x = transform.x ?? sprite.x;
-    sprite.y = transform.y ?? sprite.y;
-    sprite.rotation = transform.rotation ?? sprite.rotation;
-    sprite.scale.set(transform.scaleX ?? sprite.scale.x, transform.scaleY ?? sprite.scale.y);
+  #applyTransform(container: Container, transform: Partial<Transform2D>) {
+    container.x = transform.x ?? container.x;
+    container.y = transform.y ?? container.y;
+    container.rotation = transform.rotation ?? container.rotation;
+    container.scale.set(transform.scaleX ?? container.scale.x, transform.scaleY ?? container.scale.y);
   }
 }
