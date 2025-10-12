@@ -14,8 +14,12 @@ export class WindowBase extends GameObject {
     // ウィンドウ背景
     this.addComponent(new RectComponent({
       size: {
-        width,
-        height,
+        width:  width  - 8, // 左右それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
+        height: height - 8, // 上下それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
+      },
+      offset: {
+        x: 4, // 左右それぞれ枠の半分の大きさ分だけずらす
+        y: 4, // 上下それぞれ枠の半分の大きさ分だけずらす
       },
       color: 0x000000,
       alpha,

@@ -96,6 +96,11 @@ export interface RectSpec {
   layer?: number;
   /** 表示/非表示フラグ */
   visible?: boolean;
+  /** 表示オフセット */
+  offset?: {
+    x?: number,
+    y?: number,
+  };
 }
 
 export interface RenderPort {
