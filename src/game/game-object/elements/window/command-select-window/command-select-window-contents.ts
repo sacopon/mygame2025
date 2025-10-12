@@ -1,6 +1,6 @@
 import { ListWindowContents } from "../common/list-window-contents";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
-import { WindowTextsVertical } from "../..";
+import { WindowTextsVertical } from "../common";
 import { Position } from "@shared";
 import { GamePorts } from "@game/core";
 import { BattleCommand } from "@game/scene";

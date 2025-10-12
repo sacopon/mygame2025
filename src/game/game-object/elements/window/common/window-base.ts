@@ -1,4 +1,4 @@
-import { GameObject } from "../../../core/game-object";
+import { GameObject } from "../../../../core/game-object";
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
 import { GamePorts } from "@game/core";
 

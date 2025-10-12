@@ -1,7 +1,7 @@
+import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, UILayoutCoordinator } from "@game/game-object";
 import { Scene } from "../../scene/core/scene";
 import { BattleSceneContext, BattleSceneState } from "./states/battle-scene-state";
 import { BattleSceneStateSelectCharacterCommand } from "./states/character-command-state";
-import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, Smile, UILayoutCoordinator } from "@game/game-object";
 import { ActorId, findActor } from "@game/repository";
 import { SceneContext, SceneId } from "@game/scene";
 import { StateStack } from "@game/shared";
@@ -42,7 +42,6 @@ export class BattleScene implements Scene {
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 5));
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 6));
     context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 7));
-    context.gameObjectAccess.spawnGameObject(new Smile(context.ports, width, height));
 
     const commands = [
       BattleCommand.Attack,

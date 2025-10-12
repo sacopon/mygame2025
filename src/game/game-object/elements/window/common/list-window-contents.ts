@@ -1,5 +1,5 @@
-import { GroupGameObject } from "../../../core/group-game-object";
-import { WindowCursor } from "../..";
+import { GroupGameObject } from "../../../../core/group-game-object";
+import { WindowCursor } from "./window-cursor";
 import { Position } from "@shared";
 import { GamePorts } from "@game/core";
 
