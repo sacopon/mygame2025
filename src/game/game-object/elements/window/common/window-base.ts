@@ -9,17 +9,15 @@ export class WindowBase extends GameObject {
   constructor(ports: GamePorts, width: number, height: number, alpha: number) {
     super(ports);
 
-    this.setPosition(0, 0); // 位置は EnemySelectWindowLayout が決める
-
     // ウィンドウ背景
     this.addComponent(new RectComponent({
       size: {
-        width:  width  - 8, // 左右それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
-        height: height - 8, // 上下それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
+        width:  width  - 4, // 左右それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
+        height: height - 4, // 上下それぞれ枠の半分の大きさ分だけ小さくする(枠の角に至らないようにする)
       },
       offset: {
-        x: 4, // 左右それぞれ枠の半分の大きさ分だけずらす
-        y: 4, // 上下それぞれ枠の半分の大きさ分だけずらす
+        x: 2, // 左右それぞれ枠の半分の大きさ分だけずらす
+        y: 2, // 上下それぞれ枠の半分の大きさ分だけずらす
       },
       color: 0x000000,
       alpha,
