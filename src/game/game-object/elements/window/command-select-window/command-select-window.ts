@@ -15,11 +15,7 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
       COMMAND_SELECT_WINDOW_SETTINGS.borderWidth + COMMAND_SELECT_WINDOW_SETTINGS.marginLeft
       + COMMAND_SELECT_WINDOW_SETTINGS.fontSize * COMMAND_SELECT_WINDOW_SETTINGS.maxCharCount
       + COMMAND_SELECT_WINDOW_SETTINGS.marginRight + COMMAND_SELECT_WINDOW_SETTINGS.borderWidth,
-    height:
-      COMMAND_SELECT_WINDOW_SETTINGS.borderHeight + COMMAND_SELECT_WINDOW_SETTINGS.marginTop
-      + COMMAND_SELECT_WINDOW_SETTINGS.lineHeight * COMMAND_SELECT_WINDOW_SETTINGS.maxLines
-      - COMMAND_SELECT_WINDOW_SETTINGS.lineMargin
-      + COMMAND_SELECT_WINDOW_SETTINGS.marginBottom + COMMAND_SELECT_WINDOW_SETTINGS.borderHeight,
+    height: 90,
     baseAlpha: COMMAND_SELECT_WINDOW_SETTINGS.baseAlpha,
   } as const;
 

@@ -26,7 +26,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   #place(width: number, _height: number) {
     const windowWidth = this.#commandWindow.width + this.#enemySelectWindow.width;
     const x = Math.floor((width - windowWidth) / 2);
-    const y = 140;  // TODO: とりあえず適当な値
+    const y = 120;
 
     this.#commandWindow.setPosition(x, y);
     this.#enemySelectWindow.setPosition(x + this.#commandWindow.width, y);
