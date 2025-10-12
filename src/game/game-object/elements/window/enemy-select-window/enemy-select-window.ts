@@ -26,7 +26,7 @@ export class EnemySelectWindow extends ListSelectWindow<string> {
       ports,
       { width: EnemySelectWindow.#windowSpec.width, height: EnemySelectWindow.#windowSpec.height },
       EnemySelectWindow.#windowSpec.baseAlpha,
-      (ports: GamePorts) => new EnemySelectWindowContents(ports, enemies));
+      (ports: GamePorts) => new EnemySelectWindowContents(ports, EnemySelectWindow.#windowSpec, enemies));
 
     this.#enemyNames = enemies.map(e => e.name);
     this.reset();

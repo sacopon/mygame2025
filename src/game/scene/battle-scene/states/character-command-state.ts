@@ -17,7 +17,6 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
 
   constructor(scene: BattleScene, actorId: ActorId, onDecide: (c: CommandChoice) => void) {
     super();
-    console.log(`${findActor(actorId).name}のコマンドを選択`);
     this.#scene = scene;
     this.#actorId = actorId;
     this.#onDecide = onDecide;
@@ -27,6 +26,9 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
     super.onEnter(context);
     this.#locked = false;
     this.#activate();
+
+    // ウィンドウにキャラクター名を反映
+    context.commandSelectWindow.setActorName(findActor(this.#actorId).name);
   }
 
   override onLeave(_context: BattleSceneContext): void {

@@ -10,7 +10,7 @@ export interface SpriteSpec {
   transform?: Partial<Transform2D>;
   /** 描画優先度 */
   layer?: number;
-  /** 原点 */
+  /** 原点(0.0=左/上, 1.0=右/下 */
   anchor?: {
     x?: number,
     y?: number,
@@ -51,7 +51,7 @@ export interface TextStyle {
   fontFamily?: string
   fontSize?: number;     // px
   color?: number;         // 0xffffff 動的Text の fill、ビットマップText の tint を吸収する共通名
-  align?: "left" | "center" | "right";
+  align?: "left" | "center" | "right";  // 複数行に wordWrap が働いた場合の、そのボックス内での行揃え位置
   wordWrap?: boolean;    // デフォルト true にしてもOK
   wordWrapWidth?: number;
 }
@@ -59,18 +59,23 @@ export interface TextStyle {
 /**
  * テキスト表示用の指定
  */
-export interface TextSpec {
+export type TextSpec = Readonly<{
   /** 表示する文字列 */
   text: string;
   /** 位置情報 */
-  transform?: Partial<Transform2D>;
+  transform?: Readonly<Partial<Transform2D>>;
   /** 描画優先度 */
   layer?: number;
   /** 表示/非表示フラグ */
   visible?: boolean;
   /** 文字スタイル情報 */
-  style?: TextStyle;
-}
+  style?: Readonly<TextStyle>;
+  /** 原点(0.0=左/上, 1.0=右/下 */
+  anchor?: Readonly<{
+    x?: number,
+    y?: number,
+  }>,
+}>;
 
 /**
  * 矩形情報
@@ -114,7 +119,7 @@ export interface RenderPort {
    * 矩形を生成し、その矩形へアクセスするためのハンドルを返す
    *
    * @param spec 矩形の仕様
-   * @resturns 生成したオブジェクトのハンドル
+   * @returns 生成したオブジェクトのハンドル
    */
   createRect(spec: RectSpec): ViewHandle;
 

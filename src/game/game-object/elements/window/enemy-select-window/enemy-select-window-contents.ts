@@ -1,7 +1,7 @@
 import { ListWindowContents } from "../common/list-window-contents";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { WindowTextsVertical } from "../..";
-import { Position } from "@shared";
+import { Position, Size } from "@shared";
 import { GamePorts } from "@game/core";
 
 function toZenkaku(value: number): string {
@@ -15,8 +15,8 @@ function toZenkaku(value: number): string {
 export class EnemySelectWindowContents extends ListWindowContents {
   #enemyNamesObject: WindowTextsVertical;
 
-  constructor(ports: GamePorts, enemies: { name: string, count: number }[]) {
-    super(ports);
+  constructor(ports: GamePorts, windowSize: Size, enemies: { name: string, count: number }[]) {
+    super(ports, windowSize);
 
     this.#enemyNamesObject = this.addChild(new WindowTextsVertical(
       ports,

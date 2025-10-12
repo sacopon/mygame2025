@@ -28,10 +28,14 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
       ports,
       { width: CommandSelectWindow.#windowSpec.width, height: CommandSelectWindow.#windowSpec.height },
       CommandSelectWindow.#windowSpec.baseAlpha,
-      (ports: GamePorts) => new CommandSelectWindowContents(ports, "あああああ", commands));
+      (ports: GamePorts) => new CommandSelectWindowContents(ports, CommandSelectWindow.#windowSpec, "あああああ", commands));
 
     this.#commands = commands;
     this.reset();
+  }
+
+  setActorName(actorName: string): void {
+    (this.contents as CommandSelectWindowContents).setActorName(actorName);
   }
 
   getCurrent(): BattleCommand {

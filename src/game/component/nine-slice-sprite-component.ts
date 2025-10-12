@@ -1,15 +1,16 @@
-import { GameComponent, GameObject } from "@game/core";
+import { BaseGameComponent } from "../core/game-component";
+import { GameObject } from "@game/core";
 import { NineSliceSpriteSpec, ViewHandle } from "@game/ports";
 
-export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceSpriteComponent.typeId> {
+export class NineSliceSpriteComponent extends BaseGameComponent<typeof NineSliceSpriteComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("NineSliceSpriteComponent");
   readonly typeId: typeof NineSliceSpriteComponent.typeId = NineSliceSpriteComponent.typeId;
 
-  #owner: GameObject | null = null;
   #handle: ViewHandle | null = null;
   #spec: NineSliceSpriteSpec;
 
   constructor(spec: Partial<NineSliceSpriteSpec> & Required<Pick<NineSliceSpriteSpec, "imageId" | "border" | "size">>) {
+    super();
     this.#spec = { ...spec };
   }
 
@@ -21,22 +22,21 @@ export class NineSliceSpriteComponent implements GameComponent<typeof NineSliceS
     gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
   }
 
-  onAttach(gameObject: GameObject): void {
-    this.#owner = gameObject;
-    this.#handle = gameObject.render.createNineSliceSprite(this.#spec);
+  protected override onAttached(): void {
+    this.#handle = this.owner.render.createNineSliceSprite(this.#spec);
   }
 
-  onDetach(gameObject: GameObject): void {
+  protected override onDetached(): void {
     if (!this.#handle) {
       return;
     }
 
-    gameObject.render.destroyView(this.#handle);
+    this.owner.render.destroyView(this.#handle);
     this.#handle = null;
   }
 
   setSize(width: number, height: number): void {
-    this.#owner!.render.setNineSpriteSize(this.#handle!, { width, height });
+    this.owner!.render.setNineSpriteSize(this.#handle!, { width, height });
   }
 }
 

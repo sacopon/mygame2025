@@ -63,6 +63,10 @@ export abstract class ListSelectWindow<T> extends GroupGameObject {
     return this.#selectedIndex;
   }
 
+  get contents(): ListWindowContents {
+    return this.#contents;
+  }
+
   abstract getCurrent(): T;
   abstract get width(): number;
   abstract get height(): number;

@@ -105,13 +105,15 @@ export class PixiRenderAdapter implements RenderPort {
     const tr = { ...identityTransform, ...spec.transform };
     this.#applyTransform(wrapper, tr);
 
-    // 可視、表示優先順も wrapper 側に設定
+    // 可視、表示優先順、基点位置も wrapper 側に設定
     wrapper.zIndex = spec.layer ?? 0;
     wrapper.visible = spec.visible ?? true;
 
     // 解像感を高めるため内部スケーリングを適用
     t.scale.set(1 / textInternalScaleRatio);
     t.resolution = 2;
+    // アンカーは実テキストの方へ設定
+    t.anchor.set(spec.anchor?.x ?? 0, spec.anchor?.y ?? 0);
 
     wrapper.addChild(t);
     this.#rootContainer.addChild(wrapper);
@@ -204,8 +206,18 @@ export class PixiRenderAdapter implements RenderPort {
     throw new Error("Method not implemented.");
   }
 
-  destroyView(_view: ViewHandle): void {
-    throw new Error("Method not implemented.");
+  destroyView(handle: ViewHandle): void {
+    const v = this.#views.get(handle);
+    if (!v) {
+      return;
+    }
+
+    if (v.parent) {
+      v.parent.removeChild(v);
+    }
+
+    v.destroy?.({ children: true, texture: false });
+    this.#views.delete(handle);
   }
 
   #applyTransform(container: Container, transform: Partial<Transform2D>) {
