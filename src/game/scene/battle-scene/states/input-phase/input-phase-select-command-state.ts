@@ -1,6 +1,6 @@
-import { BaseBattleSceneState, BattleSceneContext } from "./battle-scene-state";
-import { BattleSceneStateSelectEnemy } from "./select-enemy-state";
-import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "..";
+import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
+import { InputPhaseSelectEnemyTargetState } from "./input-phase-select-enemy-target-state";
+import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "../..";
 import { assertNever } from "@shared";
 import { GameButton } from "@game/ports";
 import { ActorId, findActor } from "@game/repository";
@@ -8,7 +8,7 @@ import { ActorId, findActor } from "@game/repository";
 /**
  * バトルシーン状態: キャラクターの行動選択
  */
-export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState {
+export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   #scene: BattleScene;
   #callbacks: {
     onDecide: (c: CommandChoice) => void,
@@ -120,7 +120,7 @@ export class BattleSceneStateSelectCharacterCommand extends BaseBattleSceneState
         break;
 
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
-        this.#scene.requestPushState(new BattleSceneStateSelectEnemy(
+        this.#scene.requestPushState(new InputPhaseSelectEnemyTargetState(
           this.#scene,
           {
             // 敵選択決定時

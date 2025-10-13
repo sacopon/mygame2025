@@ -1,7 +1,6 @@
-import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, UILayoutCoordinator } from "@game/game-object";
 import { Scene } from "../../scene/core/scene";
-import { BattleSceneContext, BattleSceneState } from "./states/battle-scene-state";
-import { BattleSceneStateSelectCharacterCommand } from "./states/character-command-state";
+import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
+import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, UILayoutCoordinator } from "@game/game-object";
 import { ActorId, findActor } from "@game/repository";
 import { SceneContext, SceneId } from "@game/scene";
 import { StateStack } from "@game/shared";
@@ -24,6 +23,10 @@ export type CommandChoice = {
   target?: string;        // 対象(対象が必要なコマンドの場合)
 };
 
+/**
+ * バトルシーンクラス
+ * バトルシーンのステート遷移を管理
+ */
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #stateStack!: StateStack<BattleSceneContext>;
@@ -96,7 +99,7 @@ export class BattleScene implements Scene {
       return;
     }
 
-    const state = new BattleSceneStateSelectCharacterCommand(
+    const state = new InputPhaseSelectCommandState(
       this,
       this.currentActorId,
       {

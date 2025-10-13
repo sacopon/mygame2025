@@ -13,6 +13,9 @@ export type BattleSceneContext = Readonly<{
   commandChoices: CommandChoice[];
 }>;
 
+/**
+ * バトルシーンのステートのインターフェース
+ */
 export interface BattleSceneState extends StackState<BattleSceneContext> {
   onEnter(context: BattleSceneContext): void;
   onLeave(context: BattleSceneContext): void;
@@ -21,6 +24,9 @@ export interface BattleSceneState extends StackState<BattleSceneContext> {
   update(deltaTime: number): void;
 }
 
+/**
+ * バトルシーンのステートの共通基底クラス
+ */
 export class BaseBattleSceneState implements BattleSceneState {
   #context!: BattleSceneContext;
 

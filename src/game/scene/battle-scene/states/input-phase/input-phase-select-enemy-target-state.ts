@@ -1,5 +1,5 @@
-import { BaseBattleSceneState, BattleSceneContext } from "./battle-scene-state";
-import { BattleScene } from "..";
+import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
+import { BattleScene } from "../..";
 import { GameButton } from "@game/ports";
 
 export type EnemySelectEvents = {
@@ -8,9 +8,9 @@ export type EnemySelectEvents = {
 }
 
 /**
- * バトルシーン状態: 攻撃対象選択
+ * バトルシーン状態: 対象(敵)選択
  */
-export class BattleSceneStateSelectEnemy extends BaseBattleSceneState {
+export class InputPhaseSelectEnemyTargetState extends BaseBattleSceneState {
   #scene: BattleScene;
   #selectedEnemy: string | null = null;
   #callbacks;
