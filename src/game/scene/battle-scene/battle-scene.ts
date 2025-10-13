@@ -1,5 +1,6 @@
 import { Actor, ActorId, ActorType, Ally, AllyActor, AllyId, EnemyActor, EnemyGroupId, EnemyId } from "@game/domain";
 import { Scene } from "../../scene/core/scene";
+import { BattleCommand } from "../";
 import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
 import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, UILayoutCoordinator } from "@game/game-object";
 import { findAlly, findEnemy } from "@game/repository";
@@ -24,42 +25,6 @@ function createActors(): Actor[] {
     { actorId: ActorId(10), actorType: ActorType.Enemy, originId: EnemyId(3), enemyGroupId: EnemyGroupId(4) },
   ];
 }
-
-/**
- * 戦闘でのキャラクターの行動コマンド
- */
-export const BattleCommand = {
-  Attack: "こうげき",  // 攻撃
-  Spell: "じゅもん",   // 呪文
-  Item: "どうぐ",      // 道具
-  Defence: "ぼうぎょ", // 防御
-} as const;
-export type BattleCommand = typeof BattleCommand[keyof typeof BattleCommand];
-
-type AllyTarget       = { kind: "ally";       actorId: ActorId };
-type EnemyGroupTarget = { kind: "enemyGroup"; groupId: EnemyGroupId };
-type CommandTarget    = EnemyGroupTarget | AllyTarget;
-
-// 各キャラクターのコマンド選択結果
-export type CommandChoice =
-  | {
-      // 攻撃時の型
-      actorId: ActorId;                      // 誰が
-      command: typeof BattleCommand.Attack;  // どのコマンド(攻撃固定)
-      target: EnemyGroupTarget;              // 対象(敵グループ)
-    }
-  | {
-      // 防御時の型
-      actorId: ActorId;                      // 誰が
-      command: typeof BattleCommand.Defence; // どのコマンド(防御固定)
-      target?: never;
-    }
-  | {
-      // 呪文時/アイテム時の型
-      actorId: ActorId;                                                // 誰が
-      command: typeof BattleCommand.Spell | typeof BattleCommand.Item; // どのコマンド(呪文 or 道具)
-      target?: CommandTarget;                                          // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
-    };
 
 const isAllyActor = (actor: Actor): actor is AllyActor => actor.actorType === ActorType.Ally;
 const isEnemyActor = (actor: Actor): actor is EnemyActor => actor.actorType === ActorType.Enemy;
