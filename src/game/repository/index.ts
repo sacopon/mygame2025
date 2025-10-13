@@ -1,1 +1,2 @@
-export * from "./actor";
+export * from "./ally";
+export * from "./enemy";

@@ -5,7 +5,7 @@ export class WindowTextsVertical extends GameObject {
   #textList: TextListComponent;
   #lineHeight: number;
 
-  constructor(ports: GamePorts, texts: string[], style: { fontFamily: string, fontSize: number, lineHeight: number }) {
+  constructor(ports: GamePorts, texts: ReadonlyArray<string>, style: { fontFamily: string, fontSize: number, lineHeight: number }) {
     super(ports);
     this.#lineHeight = style.lineHeight;
 

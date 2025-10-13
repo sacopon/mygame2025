@@ -14,7 +14,7 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
   #style: TextStyle;
   #layout = { offsetX: 0, offsetY: 0, lineHeight: 14 };
 
-  constructor(lines: string[], style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
+  constructor(lines: ReadonlyArray<string>, style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
     super();
     this.#lines = lines.slice();
     this.#style = {

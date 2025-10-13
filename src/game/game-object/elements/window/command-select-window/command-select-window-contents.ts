@@ -4,7 +4,6 @@ import { DEFAULT_WINDOW_SETTINGS, WindowTextsVertical } from "..";
 import { Position, Size } from "@shared";
 import { NineSliceSpriteComponent, TextComponent } from "@game/component";
 import { GameObject, GamePorts } from "@game/core";
-import { BattleCommand } from "@game/scene";
 
 /**
  * コマンド選択ウィンドウの中身部分
@@ -13,7 +12,7 @@ export class CommandSelectWindowContents extends ListWindowContents {
   #commandTextsObject: WindowTextsVertical;
   #actorNameComponent: TextComponent;
 
-  constructor(ports: GamePorts, windowSize: Size, actorName: string, commands: BattleCommand[]) {
+  constructor(ports: GamePorts, windowSize: Size, actorName: string, commandTexts: ReadonlyArray<string>) {
     super(ports, windowSize);
 
     // コマンドを入力中のアクターの名前
@@ -39,7 +38,7 @@ export class CommandSelectWindowContents extends ListWindowContents {
     // コマンド選択肢
     this.#commandTextsObject = this.addChild(new WindowTextsVertical(
       ports,
-      commands,
+      commandTexts,
       {
         fontFamily: COMMAND_SELECT_WINDOW_SETTINGS.fontFamily,
         fontSize: COMMAND_SELECT_WINDOW_SETTINGS.fontSize,

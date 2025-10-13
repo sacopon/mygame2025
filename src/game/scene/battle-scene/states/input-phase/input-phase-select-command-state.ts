@@ -1,38 +1,36 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
-import { InputPhaseSelectEnemyTargetState } from "./input-phase-select-enemy-target-state";
+import { InputPhaseSelectTargetEnemyState } from "./input-phase-select-target-enemy-state";
 import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "../..";
 import { assertNever } from "@shared";
+import { AllyActor } from "@game/domain";
 import { GameButton } from "@game/ports";
-import { ActorId, findActor } from "@game/repository";
+import { findAlly } from "@game/repository";
+
+export type InputPhaseCallbacks = {
+  onDecide: (c: CommandChoice) => void,
+  canDecide: (c: CommandChoice) => boolean,
+  onCancel: (actor: AllyActor) => void,
+  canCancel: (actor: AllyActor) => boolean,
+}
 
 /**
  * バトルシーン状態: キャラクターの行動選択
  */
 export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   #scene: BattleScene;
-  #callbacks: {
-    onDecide: (c: CommandChoice) => void,
-    canDecide: (c: CommandChoice) => boolean,
-    onCancel: (actorId: ActorId) => void,
-    canCancel: (actorId: ActorId) => boolean,
-  };
-  #actorId: ActorId;
+  #callbacks: InputPhaseCallbacks;
+  #actor: AllyActor;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
 
   constructor(
     scene: BattleScene,
-    actorId: ActorId,
-    callbacks: {
-      onDecide: (c: CommandChoice) => void,
-      canDecide: (c: CommandChoice) => boolean,
-      onCancel: (actorId: ActorId) => void,
-      canCancel: (actorId: ActorId) => boolean,
-    }
+    actor: AllyActor,
+    callbacks: InputPhaseCallbacks
   ) {
     super();
     this.#scene = scene;
-    this.#actorId = actorId;
+    this.#actor = actor;
     this.#callbacks = callbacks;
   }
 
@@ -42,7 +40,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     this.#activate();
 
     // ウィンドウにキャラクター名を反映
-    context.commandSelectWindow.setActorName(findActor(this.#actorId).name);
+    context.commandSelectWindow.setActorName(findAlly(this.#actor.originId).name);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -75,13 +73,13 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     if (ok) {
       this.#locked = true;
       const command = this.context.commandSelectWindow.getCurrent();
-      this.#runFlow(command, BattleCommandDecider.next(this.#actorId, command));
+      this.#runFlow(command, BattleCommandDecider.next(this.#actor.actorId, command));
     }
     // キャンセル
     else if (cancel) {
       this.#locked = true;
 
-      if (!this.#callbacks.canCancel(this.#actorId)) {
+      if (!this.#callbacks.canCancel(this.#actor)) {
         this.#locked = false;
         return;
       }
@@ -91,7 +89,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
       // このステート自身を取り除く
       this.#scene.requestPopState();
       // キャンセル処理
-      this.#callbacks.onCancel(this.#actorId);
+      this.#callbacks.onCancel(this.#actor);
     }
     else if (up) {
       // カーソル上移動
@@ -111,33 +109,40 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     switch (nextFlow.kind) {
       // 即確定
       case BattleCommandDecider.FlowType.Immediate:
-        this.#onConfirmCommand(
-          {
-            actorId: this.#actorId,
-            command,
-          },
-          mark);
+        if (command === BattleCommand.Defence) {
+          this.#onConfirmCommand(
+            {
+              actorId: this.#actor.actorId,
+              command,
+            },
+            mark);
+        }
         break;
 
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
-        this.#scene.requestPushState(new InputPhaseSelectEnemyTargetState(
+        this.#scene.requestPushState(new InputPhaseSelectTargetEnemyState(
           this.#scene,
           {
             // 敵選択決定時
-            onConfirm: target => {
-              const choice: CommandChoice = {
-                actorId: this.#actorId,
-                command,
-                target,
-              };
+            onConfirm: targetGroupId => {
+              if (command === BattleCommand.Attack) {
+                const choice: Extract<CommandChoice, { command: typeof BattleCommand.Attack }> = {
+                  actorId: this.#actor.actorId,
+                  command,
+                  target: {
+                    kind: "enemyGroup",
+                    groupId: targetGroupId,
+                  },
+                };
 
-              // 妥当性チェック(選択できない相手を選んでいないか)
-              if (!this.#callbacks.canDecide(choice)) {
-                // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+                // 妥当性チェック(選択できない相手を選んでいないか)
+                if (!this.#callbacks.canDecide(choice)) {
+                  // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+                }
+
+                // 確定処理
+                this.#onConfirmCommand(choice, mark);
               }
-
-              // 確定処理
-              this.#onConfirmCommand(choice, mark);
             },
             // 敵選択キャンセル時
             onCancel: () => {

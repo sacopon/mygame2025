@@ -8,7 +8,7 @@ import { BattleCommand } from "@game/scene";
  * コマンド選択ウィンドウ
  */
 export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
-  #commands: BattleCommand[];
+  #commands: ReadonlyArray<BattleCommand>;
 
   static readonly #windowSpec = {
     width:
@@ -19,7 +19,7 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
     baseAlpha: COMMAND_SELECT_WINDOW_SETTINGS.baseAlpha,
   } as const;
 
-  constructor(ports: GamePorts, commands: BattleCommand[]) {
+  constructor(ports: GamePorts, commands: ReadonlyArray<BattleCommand>) {
     super(
       ports,
       { width: CommandSelectWindow.#windowSpec.width, height: CommandSelectWindow.#windowSpec.height },

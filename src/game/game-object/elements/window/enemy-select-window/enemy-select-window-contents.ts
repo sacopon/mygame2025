@@ -15,12 +15,12 @@ function toZenkaku(value: number): string {
 export class EnemySelectWindowContents extends ListWindowContents {
   #enemyNamesObject: WindowTextsVertical;
 
-  constructor(ports: GamePorts, windowSize: Size, enemies: { name: string, count: number }[]) {
+  constructor(ports: GamePorts, windowSize: Size, nameAndCounts: ReadonlyArray<{ name: string, count: number }>) {
     super(ports, windowSize);
 
     this.#enemyNamesObject = this.addChild(new WindowTextsVertical(
       ports,
-      enemies.map(e => e.name),
+      nameAndCounts.map(e => e.name),
       {
         fontFamily: ENEMY_SELECT_WINDOW_SETTINGS.fontFamily,
         fontSize: ENEMY_SELECT_WINDOW_SETTINGS.fontSize,
@@ -35,7 +35,7 @@ export class EnemySelectWindowContents extends ListWindowContents {
 
     const enemyCountObject = this.addChild(new WindowTextsVertical(
       ports,
-      enemies.map(e => `ー ${toZenkaku(e.count)}匹`),
+      nameAndCounts.map(e => `ー ${toZenkaku(e.count)}匹`),
       {
         fontFamily: ENEMY_SELECT_WINDOW_SETTINGS.fontFamily,
         fontSize: ENEMY_SELECT_WINDOW_SETTINGS.fontSize,

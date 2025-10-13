@@ -1,16 +1,17 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
 import { BattleScene } from "../..";
 import { GameButton } from "@game/ports";
+import { EnemyGroupId } from "@game/domain";
 
 export type EnemySelectEvents = {
-  onConfirm: (target: string) => void;
+  onConfirm: (target: EnemyGroupId) => void;
   onCancel: () => void;
 }
 
 /**
  * バトルシーン状態: 対象(敵)選択
  */
-export class InputPhaseSelectEnemyTargetState extends BaseBattleSceneState {
+export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
   #scene: BattleScene;
   #selectedEnemy: string | null = null;
   #callbacks;
@@ -52,8 +53,8 @@ export class InputPhaseSelectEnemyTargetState extends BaseBattleSceneState {
     }
     else if (ok) {
       // 決定
-      const target = this.context.enemySelectWindow.getCurrent();
-      this.#callbacks.onConfirm(target);
+      const targetGroupId = this.context.enemySelectWindow.getCurrent();
+      this.#callbacks.onConfirm(targetGroupId);
     }
     else if (up) {
       // カーソル上移動

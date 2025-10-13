@@ -1,9 +1,29 @@
+import { Actor, ActorId, ActorType, Ally, AllyActor, AllyId, EnemyActor, EnemyGroupId, EnemyId } from "@game/domain";
 import { Scene } from "../../scene/core/scene";
 import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
 import { Background, BattleBackground, CommandSelectWindow, Enemy, EnemySelectWindow, MainWindow, UILayoutCoordinator } from "@game/game-object";
-import { ActorId, findActor } from "@game/repository";
+import { findAlly, findEnemy } from "@game/repository";
 import { SceneContext, SceneId } from "@game/scene";
 import { StateStack } from "@game/shared";
+
+function createActors(): Actor[] {
+  return [
+    // 味方
+    { actorId: ActorId(1), actorType: ActorType.Ally, originId: AllyId(1) },
+    { actorId: ActorId(2), actorType: ActorType.Ally, originId: AllyId(2) },
+    { actorId: ActorId(3), actorType: ActorType.Ally, originId: AllyId(3) },
+    { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
+
+    // 敵
+    // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい
+    { actorId: ActorId(5),  actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(1) },
+    { actorId: ActorId(6),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(2) },
+    { actorId: ActorId(7),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(2) },
+    { actorId: ActorId(8),  actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(1) },
+    { actorId: ActorId(9),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(3) },
+    { actorId: ActorId(10), actorType: ActorType.Enemy, originId: EnemyId(3), enemyGroupId: EnemyGroupId(4) },
+  ];
+}
 
 /**
  * 戦闘でのキャラクターの行動コマンド
@@ -16,12 +36,33 @@ export const BattleCommand = {
 } as const;
 export type BattleCommand = typeof BattleCommand[keyof typeof BattleCommand];
 
+type AllyTarget       = { kind: "ally";       actorId: ActorId };
+type EnemyGroupTarget = { kind: "enemyGroup"; groupId: EnemyGroupId };
+type CommandTarget    = EnemyGroupTarget | AllyTarget;
+
 // 各キャラクターのコマンド選択結果
-export type CommandChoice = {
-  actorId: ActorId;       // 誰が
-  command: BattleCommand; // どのコマンド
-  target?: string;        // 対象(対象が必要なコマンドの場合)
-};
+export type CommandChoice =
+  | {
+      // 攻撃時の型
+      actorId: ActorId;                      // 誰が
+      command: typeof BattleCommand.Attack;  // どのコマンド(攻撃固定)
+      target: EnemyGroupTarget;              // 対象(敵グループ)
+    }
+  | {
+      // 防御時の型
+      actorId: ActorId;                      // 誰が
+      command: typeof BattleCommand.Defence; // どのコマンド(防御固定)
+      target?: never;
+    }
+  | {
+      // 呪文時/アイテム時の型
+      actorId: ActorId;                                                // 誰が
+      command: typeof BattleCommand.Spell | typeof BattleCommand.Item; // どのコマンド(呪文 or 道具)
+      target?: CommandTarget;                                          // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
+    };
+
+const isAllyActor = (actor: Actor): actor is AllyActor => actor.actorType === ActorType.Ally;
+const isEnemyActor = (actor: Actor): actor is EnemyActor => actor.actorType === ActorType.Enemy;
 
 /**
  * バトルシーンクラス
@@ -30,45 +71,57 @@ export type CommandChoice = {
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #stateStack!: StateStack<BattleSceneContext>;
-  #partyActorIds: ReadonlyArray<number> = [];
+  #allActors!: ReadonlyArray<Actor>;
+  #partyAllyCharacters: ReadonlyArray<Ally> = [];
+  #actorById!: Map<ActorId, Actor>;
+  #allyActorByAllyId!: Map<AllyId, AllyActor>;
+  #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
 
   onEnter(context: SceneContext) {
-    const { width, height } = context.ports.screen.getGameSize();
-
-    context.gameObjectAccess.spawnGameObject(new Background(context.ports, width, height));
-    context.gameObjectAccess.spawnGameObject(new BattleBackground(context.ports, width, height));
-    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ports, width, height));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 0));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 1));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 2));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 3));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 4));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 5));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 6));
-    context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, 7));
+    this.#allActors = Object.freeze(createActors());
 
     // パーティ編成
-    this.#partyActorIds = [1, 2, 3, 4];
+    this.#partyAllyCharacters = this.#allActors
+      .filter(isAllyActor)
+      .map(actor => findAlly(actor.originId));
 
+    // アクセス簡易化のためのマップ生成
+    this.#setupDictionary();
+
+    // コマンド(本当はキャラクターごとにコマンドは異なるが仮で共通)
     const commands = [
       BattleCommand.Attack,
       BattleCommand.Spell,
       BattleCommand.Defence,
       BattleCommand.Item,
-    ];
+    ] as const satisfies readonly BattleCommand[];
+
+    // 敵データ作成
+
+    // 敵画像
+    const { width, height } = context.ports.screen.getGameSize();
+    context.gameObjectAccess.spawnGameObject(new Background(context.ports, width, height));
+    context.gameObjectAccess.spawnGameObject(new BattleBackground(context.ports, width, height));
+    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ports, width, height));
+
+    // 一旦全て同じ敵の画像
+    // 中央揃えにしたいところだが、ここも仮
+    // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
+    for (let i = 0; i < this.#allActors.filter(isEnemyActor).length; ++i) {
+      context.gameObjectAccess.spawnGameObject(new Enemy(context.ports, width, height, i));
+    }
+
     const commandSelectWindow = context.gameObjectAccess
       .spawnGameObject(new CommandSelectWindow(context.ports, commands)) as CommandSelectWindow;
 
     // 敵選択ウィンドウ
-    const enemies = [
-      { name: "グレイトドラゴン", count:1 },
-      { name: "スライム", count: 8 },
-      { name: "さまようよろい", count: 4 },
-      { name: "ドラキー", count: 7 },
-    ];
-
+    const enemyGroups = [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => ({
+      enemyGroupId: groupId,
+      name: this.#getEnemyNameByGroupId(groupId),
+      count: list.length,
+    }));
     const enemySelectWindow = context.gameObjectAccess
-      .spawnGameObject(new EnemySelectWindow(context.ports, enemies)) as EnemySelectWindow;
+      .spawnGameObject(new EnemySelectWindow(context.ports, enemyGroups)) as EnemySelectWindow;
 
     // レイアウトコーディネイター
     context.gameObjectAccess.spawnGameObject(
@@ -101,14 +154,21 @@ export class BattleScene implements Scene {
 
     const state = new InputPhaseSelectCommandState(
       this,
-      this.currentActorId,
+      this.currentActor,
       {
         // 決定可能か
         canDecide: _c => true,
         // 決定(確定)時処理
         onDecide: (c) => {
-          const actor = findActor(c.actorId);
-          console.log(`${actor!.name} が ${c.target!} に ${c.command}`);
+          const name = this.#getAllyNameByActorId(c.actorId);
+
+          if (c.command === BattleCommand.Attack) {
+            console.log(`${name} が ${this.#getEnemyNameByGroupId(c.target.groupId)} に ${c.command}`);
+          }
+          else if (c.command === BattleCommand.Defence) {
+            console.log(`${name} が ${c.command}`);
+          }
+
           // コマンド選択ウィンドウと敵選択ウィンドウの共通クラスを作る
           // コマンド選択ウィンドウのあたまにキャラクタ名を表示できるようにする
 
@@ -119,11 +179,11 @@ export class BattleScene implements Scene {
           this.#startOrNextActor();
         },
         // キャンセル可能か
-        canCancel: (_actorId: ActorId) => {
+        canCancel: (_: AllyActor) => {
           return 0 < this.progressIndex;
         },
         // キャンセル時処理
-        onCancel: (_actorId: ActorId) => {
+        onCancel: (_: AllyActor) => {
           if (this.#context.commandChoices.length === 0) {
             throw new Error("先頭のキャラの行動はキャンセル不可");
           }
@@ -161,15 +221,26 @@ export class BattleScene implements Scene {
   }
 
   get isAllConfirmed(): boolean {
-    return this.#partyActorIds.length <= this.progressIndex;
+    return this.#partyAllyCharacters.length <= this.progressIndex;
   }
 
   get progressIndex(): number {
     return this.#context.commandChoices.length;
   }
 
-  get currentActorId(): number {
-    return this.#partyActorIds[this.progressIndex];
+  get currentActor(): AllyActor {
+    if (this.isAllConfirmed) {
+      throw new Error("currentActor: no actor (all confirmed)");
+    }
+
+    const allyId = this.#partyAllyCharacters[this.progressIndex].allyId;
+    const ally = this.#getAllyActorByAllyId(allyId);
+
+    if (!ally) {
+      throw new Error(`currentActor: no actor (not found: ${allyId})`);
+    }
+
+    return ally;
   }
 
   requestPushState(state: BattleSceneState): void {
@@ -198,6 +269,58 @@ export class BattleScene implements Scene {
     }
     else {
       this.#stateStack.push(state);
+    }
+  }
+
+  #getAllyActorByAllyId(allyId: AllyId): AllyActor {
+    const actor = this.#allyActorByAllyId.get(allyId);
+
+    if (!actor) {
+      throw new Error(`Actor is not found(allyId:${allyId})`);
+    }
+
+    return actor;
+  }
+
+  #getAllyNameByActorId(id: ActorId): string {
+    const actor = this.#actorById.get(id) as AllyActor | undefined;
+
+    if (!actor || actor.actorType !== ActorType.Ally) {
+      throw new Error(`Ally not found for actorId=${id}`);
+    }
+
+    return findAlly(actor.originId).name;
+  }
+
+  #getEnemyNameByGroupId(groupId: EnemyGroupId): string {
+    const list = this.#enemyActorsByGroupId.get(groupId);
+
+    if (!list || list.length === 0) {
+      throw new Error(`Enemy group not found or empty: ${groupId}`);
+    }
+
+    return findEnemy(list[0].originId).name;
+  }
+
+  #setupDictionary() {
+    // 全アクター
+    this.#actorById = new Map<ActorId, Actor>(this.#allActors.map(actor => [actor.actorId, actor]));
+
+    // 味方
+    this.#allyActorByAllyId = new Map<AllyId, AllyActor>((this.#allActors
+      .filter(actor => actor.actorType === ActorType.Ally) as AllyActor[])
+      .map(actor => [actor.originId, actor]));
+
+    // 敵
+    this.#enemyActorsByGroupId = new Map<EnemyGroupId, EnemyActor[]>();
+    for (const actor of this.#allActors.filter(isEnemyActor)) {
+      const list = this.#enemyActorsByGroupId.get(actor.enemyGroupId);
+      if (!list) {
+        this.#enemyActorsByGroupId.set(actor.enemyGroupId, [actor]);
+      }
+      else {
+        list.push(actor);
+      }
     }
   }
 }
