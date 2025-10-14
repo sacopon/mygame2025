@@ -1,7 +1,7 @@
-import { ScreenSizeAware } from "../../core/game-component";
-import { GameObject } from "../../core/game-object";
+import { GameObject } from "../../presentation/core/game-object";
+import { ScreenSizeAware } from "../../presentation/core/game-component";
 import { SpriteComponent } from "@game/component";
-import { GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 
 export class BattleBackground extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, vw: number, vh: number) {

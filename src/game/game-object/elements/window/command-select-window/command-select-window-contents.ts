@@ -3,7 +3,7 @@ import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constant
 import { DEFAULT_WINDOW_SETTINGS, WindowTextsVertical } from "..";
 import { Position, Size } from "@shared";
 import { NineSliceSpriteComponent, TextComponent } from "@game/component";
-import { GameObject, GamePorts } from "@game/core";
+import { GameObject, GamePorts } from "@game/presentation";
 
 /**
  * コマンド選択ウィンドウの中身部分

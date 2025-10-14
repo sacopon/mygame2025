@@ -1,5 +1,5 @@
+import { GameObject } from "./game-object";
 import { ComponentById, ComponentTypeId } from "@game/component";
-import { GameObject } from "@game/core";
 
 /**
  * GameComponent の共通インターフェース

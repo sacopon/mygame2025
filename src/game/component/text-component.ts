@@ -1,6 +1,6 @@
-import { BaseGameComponent } from "../core/game-component";
-import { GameObject } from "@game/core";
+import { BaseGameComponent } from "@game/presentation/core/game-component";
 import { TextSpec, TextStyle, ViewHandle } from "@game/ports";
+import { GameObject } from "@game/presentation";
 
 export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TextComponent");

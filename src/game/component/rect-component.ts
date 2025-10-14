@@ -1,5 +1,5 @@
-import { GameComponent, GameObject } from "@game/core";
 import { RectSpec, ViewHandle } from "@game/ports";
+import { GameComponent, GameObject } from "@game/presentation";
 
 export class RectComponent implements GameComponent<typeof RectComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("RectComponent");

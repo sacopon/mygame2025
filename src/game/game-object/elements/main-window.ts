@@ -1,9 +1,9 @@
-import { GAME_SCREEN } from "@app/config";
-import { ScreenSizeAware } from "../../core/game-component";
-import { GameObject } from "../../core/game-object";
-import { NineSliceSpriteComponent } from "@game/component";
-import { GamePorts } from "@game/core";
+import { GameObject } from "../../presentation/core/game-object";
+import { ScreenSizeAware } from "../../presentation/core/game-component";
 import { DEFAULT_WINDOW_SETTINGS } from "./window";
+import { NineSliceSpriteComponent } from "@game/component";
+import { GAME_SCREEN } from "@app/config";
+import { GamePorts } from "@game/presentation";
 
 export class MainWindow extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, vw: number, vh: number) {

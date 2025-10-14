@@ -1,5 +1,6 @@
-import { GameComponent, GameObject } from "@game/core";
+import { GameComponent } from "@game/presentation/core/game-component";
 import { identityTransform, Transform2D } from "@game/ports";
+import { GameObject } from "@game/presentation";
 
 export class TransformComponent implements GameComponent<typeof TransformComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TransformComponent");

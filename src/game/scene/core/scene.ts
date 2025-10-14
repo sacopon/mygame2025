@@ -1,4 +1,4 @@
-import { GameObject, GamePorts } from "@game/core";
+import { GameObject, GamePorts } from "@game/presentation";
 
 export interface GameObjectAccess {
   spawnGameObject(gameObject: GameObject): GameObject;

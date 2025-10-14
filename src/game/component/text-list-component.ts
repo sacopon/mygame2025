@@ -1,6 +1,6 @@
-import { BaseGameComponent } from "../core/game-component";
-import { GameObject } from "@game/core";
+import { BaseGameComponent } from "@game/presentation/core/game-component";
 import { TextStyle, ViewHandle } from "@game/ports";
+import { GameObject } from "@game/presentation";
 
 /**
  * 複数行のテキストから成るコンポーネント

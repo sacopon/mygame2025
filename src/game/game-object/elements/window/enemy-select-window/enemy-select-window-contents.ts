@@ -2,7 +2,7 @@ import { ListWindowContents } from "../common/list-window-contents";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { WindowTextsVertical } from "../..";
 import { Position, Size } from "@shared";
-import { GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 
 function toZenkaku(value: number): string {
   // UTF-8

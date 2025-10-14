@@ -1,7 +1,7 @@
 import { ListSelectWindow } from "../common/list-select-window";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { CommandSelectWindowContents } from "./command-select-window-contents";
-import { GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 import { BattleCommand } from "@game/scene";
 
 /**

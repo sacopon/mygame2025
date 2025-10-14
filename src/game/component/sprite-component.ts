@@ -1,6 +1,5 @@
-import { BaseGameComponent } from "../core/game-component";
-import { GameObject } from "@game/core";
 import { SpriteSpec, ViewHandle } from "@game/ports";
+import { BaseGameComponent, GameObject } from "@game/presentation";
 
 export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("SpriteComponent");

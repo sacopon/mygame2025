@@ -1,5 +1,6 @@
+import { GameObject } from "../../../../presentation/core/game-object";
 import { TextListComponent } from "@game/component";
-import { GameObject, GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 
 export class WindowTextsVertical extends GameObject {
   #textList: TextListComponent;

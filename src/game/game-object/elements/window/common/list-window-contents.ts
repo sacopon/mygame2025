@@ -1,7 +1,7 @@
-import { GroupGameObject } from "../../../../core/group-game-object";
+import { GroupGameObject } from "../../../../presentation/core/group-game-object";
 import { WindowCursor } from "./window-cursor";
 import { Position, Size } from "@shared";
-import { GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 
 /**
  * 選択系ウィンドウの中身

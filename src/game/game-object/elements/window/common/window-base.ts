@@ -1,6 +1,6 @@
-import { GameObject } from "../../../../core/game-object";
+import { GameObject } from "../../../../presentation/core/game-object";
 import { NineSliceSpriteComponent, RectComponent } from "@game/component";
-import { GamePorts } from "@game/core";
+import { GamePorts } from "@game/presentation";
 
 /**
  * コマンド選択ウィンドウの枠 + 背景表示

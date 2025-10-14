@@ -1,8 +1,8 @@
-import { GroupGameObject } from "../../../../core/group-game-object";
+import { GroupGameObject } from "@game/presentation/core/group-game-object";
 import { ListWindowContents } from "./list-window-contents";
 import { WindowBase } from "./window-base";
-import { GamePorts } from "@game/core";
 import { wrapIndex } from "@shared/utils";
+import { GamePorts } from "@game/presentation";
 
 /**
  * 選択系ウィンドウ共通部分

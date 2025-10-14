@@ -1,8 +1,8 @@
-import { EnemyGroupId } from "@game/domain";
 import { ListSelectWindow } from "../common/list-select-window";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { EnemySelectWindowContents } from "./enemy-select-window-contents";
-import { GamePorts } from "@game/core";
+import { EnemyGroupId } from "../../../../domain/actor";
+import { GamePorts } from "@game/presentation";
 
 /**
  * 敵選択ウィンドウの挙動や配置を司るクラス
