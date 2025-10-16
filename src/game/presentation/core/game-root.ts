@@ -3,7 +3,7 @@ import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
 import { Ally, AllyId, DomainPorts, Enemy, EnemyId } from "@game/domain";
-import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/repository";
+import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/inrfastructure";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
