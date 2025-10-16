@@ -1,5 +1,5 @@
 import { Container, Graphics, NineSliceSprite, Sprite, Text, Texture, TextStyle as PixiTextStyle } from "pixi.js";
-import { identityTransform, NineSliceSpriteSpec, RenderPort, ViewHandle, SpriteSpec, TextSpec, Transform2D, RectSpec, TextStyle } from "@game/ports";
+import { identityTransform, NineSliceSpriteSpec, RenderPort, ViewHandle, SpriteSpec, TextSpec, Transform2D, RectSpec, TextStyle } from "@game/presentation/ports";
 
 const defaultFontSetting = Object.freeze({
   fontFamily: "BestTen",

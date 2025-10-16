@@ -12,9 +12,9 @@ import { ViewportMetrics } from "@app/services/viewport";
 import { AppContext } from "@app/config";
 import { GameScreenSpec } from "@app/services/screen";
 import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
-import { GameRoot } from "@game/core";
 import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
 import { InputPortAdapter } from "@app/adapters/input-port-adapter";
+import { GameRoot } from "@game/presentation";
 
 /**
  * リソース読み込み用URLを作成する

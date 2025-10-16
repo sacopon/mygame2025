@@ -1,5 +1,5 @@
 import { GameScreenSpec, VIRTUAL_SCREEN_CHANGE } from "@app/services";
-import { ScreenPort, GameSize } from "@game/ports";
+import { ScreenPort, GameSize } from "@game/presentation/ports";
 
 export class ScreenPortAdapter implements ScreenPort {
   #spec: GameScreenSpec;
