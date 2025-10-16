@@ -1,7 +1,30 @@
+import { GameObjectAccess, UiPorts } from "../scene/core/scene";
 import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
-import { GamePorts } from "./game-ports";
-import { GameObjectAccess, SceneManager } from "@game/scene";
+import { SceneManager } from "../scene/core";
+import { Ally, AllyId, DomainPorts, Enemy, EnemyId } from "@game/domain";
+import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/repository";
+
+const createDomainPorts = function(): DomainPorts {
+  const allAllyCharacters: Ally[] = [
+    { allyId: AllyId(1), name: "ゆうしゃ" },  // 勇者
+    { allyId: AllyId(2), name: "もりそば" },  // 武闘家
+    { allyId: AllyId(3), name: "うおのめ" },  // 賢者
+    { allyId: AllyId(4), name: "かおる"   },  // 戦士
+  ] as const;
+
+const allEnemies: Enemy[] = [
+  { enemyId: EnemyId(1), name: "スライム" },
+  { enemyId: EnemyId(2), name: "スライムベス" },
+  { enemyId: EnemyId(3), name: "ドラキー" },
+  { enemyId: EnemyId(4), name: "まほうつかい" },
+] as const;
+
+  return {
+    allyRepository: new AllyRepositoryInMemory(allAllyCharacters),
+    enemyRepository: new EnemyRepositoryInMemory(allEnemies),
+  };
+};
 
 /**
  * シーンとゲームオブジェクトを管理するルートとなるクラス
@@ -11,7 +34,7 @@ export class GameRoot implements GameObjectAccess {
   #objects: GameObject[] = [];
   #unsubscribeScreen?: () => void;
 
-  constructor(ports: GamePorts) {
+  constructor(ports: UiPorts) {
     const { screen } = ports;
     const { width, height } = screen.getGameSize();
 
@@ -20,8 +43,15 @@ export class GameRoot implements GameObjectAccess {
       this.onScreenSizeChanged(size.width, size.height);
     });
 
+    // シーンコンテキスト作成
+    const sceneContext = {
+      ui: ports,
+      domain: createDomainPorts(),
+      gameObjectAccess: this,
+    };
+
     // シーンマネージャ作成
-    this.#sceneManager = new SceneManager("Battle", { ports, gameObjectAccess: this });
+    this.#sceneManager = new SceneManager("Battle", sceneContext);
     this.onScreenSizeChanged(width, height);
   }
 

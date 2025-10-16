@@ -1,4 +1,4 @@
-import { InputPort, RenderPort, ScreenPort } from "@game/ports";
+import { InputPort, RenderPort, ScreenPort } from "@game/presentation/ports";
 
 export type GamePorts = {
   render: RenderPort;

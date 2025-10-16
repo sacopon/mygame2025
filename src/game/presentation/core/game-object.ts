@@ -1,7 +1,13 @@
 import { GameComponent, GameComponents } from "./game-component";
 import { GamePorts } from "./game-ports";
-import { ComponentById, ComponentTypeId, TransformComponent } from "@game/component";
-import { InputPort, RenderPort, Transform2D } from "@game/ports";
+import {
+  ComponentById,
+  ComponentTypeId,
+  InputPort,
+  RenderPort,
+  Transform2D,
+  TransformComponent
+} from "..";
 
 export class GameObject {
   #ports: GamePorts;

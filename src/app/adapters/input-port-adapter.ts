@@ -1,4 +1,4 @@
-import { InputPort, GameButton } from "@game/ports/input-port";
+import { InputPort, GameButton } from "@game/presentation/ports/input-port";
 import { PAD_BIT, InputState } from "@shared";
 
 function toBit(button: GameButton): number {
