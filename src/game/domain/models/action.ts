@@ -33,11 +33,26 @@ type GroupTarget = {
 
 export type ActionTarget = SingleTarget | GroupTarget;
 
+/**
+ * ターゲットの陣営の方向
+ */
+export const TargetSide = {
+  // 自陣営
+  Us: "Us",
+  // 相手陣営
+  Them: "Them",
+  // なし(無関係)/双方
+  Neutral: "Neutral",
+};
+export type TargetSide = typeof TargetSide[keyof typeof TargetSide];
+
 export type Action = {
   /** 誰が */
   actorId: ActorId;
   /** 何をした */
   actionType: ActionType;
+  /** 対象陣営 */
+  side: TargetSide;
   /** 誰に/どのグループに */
   target: ActionTarget | null;
 };
