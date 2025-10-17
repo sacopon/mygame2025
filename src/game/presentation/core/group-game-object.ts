@@ -1,3 +1,4 @@
+import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { GamePorts } from "./game-ports";
 
@@ -9,6 +10,14 @@ export class GroupGameObject extends GameObject {
   }
 
   addChild<T extends GameObject>(child: T): T {
+    if (Object.is(child, this)) {
+      throw new Error("Group cannot add itself as a child");
+    }
+
+    if (!child.isAlive) {
+      throw new Error("Cannot add destroyed child");
+    }
+
     if (this.#children.includes(child)) {
       return child;
     }
@@ -33,9 +42,13 @@ export class GroupGameObject extends GameObject {
   }
 
   destroyChild<T extends GameObject>(child: T): boolean {
+    if (!child.isAlive) {
+      return false;
+    }
+
     const ok = this.removeChild(child);
 
-    if (ok && child.isAlive) {
+    if (ok) {
       child.destroy();
     }
 
@@ -104,13 +117,15 @@ export class GroupGameObject extends GameObject {
     this.destroyAllChildren();
 
     // 実際に破棄する
-    for (let i = this.#children.length - 1; i >= 0; --i) {
+    const children = this.#children.slice();
+
+    for (let i = children.length - 1; i >= 0; --i) {
       try {
-        this.#children[i].onDispose();
+        children[i].onDispose();
       }
       catch (e) {
         // エラーが発生しても他のオブジェクトの破棄を最後まで実行するためキャッチする
-        console.warn("GroupGameObject#onDispose(): onDispose failed for child", this.#children[i], e);
+        console.warn("GroupGameObject#onDispose(): onDispose failed for child", children[i], e);
       }
     }
 
@@ -118,5 +133,25 @@ export class GroupGameObject extends GameObject {
     this.removeAllChildren();
 
     super.onDispose();
+  }
+
+  /**
+   * ゲーム画面のサイズ変化時
+   *
+   * @param width  新しい幅
+   * @param height 新しい高さ
+   */
+  onScreenSizeChanged(width: number, height: number) {
+    for (const go of this.#children) {
+      if (!go.isAlive) {
+        continue;
+      }
+
+      if (!isScreenSizeAware(go)) {
+        continue;
+      }
+
+      go.onScreenSizeChanged(width, height);
+    }
   }
 }
