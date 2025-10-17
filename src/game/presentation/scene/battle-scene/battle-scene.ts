@@ -1,5 +1,5 @@
-import { Scene } from "../../scene/core/scene";
-import { BattleCommand } from "./core";
+import { GameObjectAccess, Scene } from "../../scene/core/scene";
+import { BattleCommand, CommandChoice } from "./core";
 import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
 import {
   Background,
@@ -23,6 +23,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { ExecutePhaseTurnPlanningState } from "./states/execute-phase";
 
 function createActors(): Actor[] {
   return [
@@ -52,6 +53,7 @@ const isEnemyActor = (actor: Actor): actor is EnemyActor => actor.actorType === 
  */
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
+  #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
   #allActors!: ReadonlyArray<Actor>;
   #partyAllyCharacters: ReadonlyArray<Ally> = [];
@@ -116,6 +118,7 @@ export class BattleScene implements Scene {
         })
     );
 
+    this.#gameObjectAccess = context.gameObjectAccess;
     this.#context = {
       ui: context.ui,
       domain: context.domain,
@@ -125,15 +128,14 @@ export class BattleScene implements Scene {
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
 
-    // キャラクターコマンド選択から開始
+    // コマンド入力フェーズから開始
     this.#startOrNextActor();
   }
 
   #startOrNextActor(): void {
-    // TODO: ID と人数は別で管理する
+    // 全員行動確定 -> 実行フェーズへ遷移
     if (this.isAllConfirmed) {
-      console.log("全員確定!");
-      // TODO: 次のステートへ
+      this.#finishInputPhase();
       return;
     }
 
@@ -145,20 +147,8 @@ export class BattleScene implements Scene {
         canDecide: _c => true,
         // 決定(確定)時処理
         onDecide: (c) => {
-          const name = this.#getAllyNameByActorId(c.actorId);
-
-          if (c.command === BattleCommand.Attack) {
-            console.log(`${name} が ${this.#getEnemyNameByGroupId(c.target.groupId)} に ${c.command}`);
-          }
-          else if (c.command === BattleCommand.Defence) {
-            console.log(`${name} が ${c.command}`);
-          }
-
-          // コマンド選択ウィンドウと敵選択ウィンドウの共通クラスを作る
-          // コマンド選択ウィンドウのあたまにキャラクタ名を表示できるようにする
-
           // コマンドを記録
-          this.#context.commandChoices.push(c);
+          this.#addChoice(c);
 
           // 次の人の番へ
           this.#startOrNextActor();
@@ -174,7 +164,7 @@ export class BattleScene implements Scene {
           }
 
           // 決定内容の破棄
-          this.#context.commandChoices.pop();
+          this.#undoChoice();
 
           // 前の人の番へ
           this.#startOrNextActor();
@@ -185,7 +175,7 @@ export class BattleScene implements Scene {
   }
 
   next(): SceneId {
-    throw new Error("Method not implemented.");
+    throw new Error("next: Method not implemented.");
   }
 
   update(deltaTime: number): boolean {
@@ -257,11 +247,52 @@ export class BattleScene implements Scene {
     }
   }
 
+  /**
+   * 入力フェーズ完了時
+   */
+  #finishInputPhase(): void {
+    this.#context.commandSelectWindow.setActive(false);
+    this.#gameObjectAccess.despawnGameObject(this.#context.commandSelectWindow);
+
+    this.#context.enemySelectWindow.setActive(false);
+    this.#gameObjectAccess.despawnGameObject(this.#context.enemySelectWindow);
+
+    this.#moveToExecutePhase();
+  }
+
+  /**
+   * 実行フェーズへの遷移
+   */
+  #moveToExecutePhase(): void {
+    this.#stateStack.requestPush(new ExecutePhaseTurnPlanningState(this));
+  }
+
+  /**
+   * コマンド選択の結果を追加
+   */
+  #addChoice(c: CommandChoice): void {
+    this.#context.commandChoices = [...this.#context.commandChoices, c];
+  }
+
+  /**
+   * コマンド選択の結果を1つ戻す
+   */
+  #undoChoice(): void {
+    this.#context.commandChoices = this.#context.commandChoices.slice(0, -1);
+  }
+
+  /**
+   * コマンド選択の結果をクリア
+   */
+  #resetCommandChoice(): void {
+    this.#context.commandChoices = [];
+  }
+
   #getAllyActorByAllyId(allyId: AllyId): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {
-      throw new Error(`Actor is not found(allyId:${allyId})`);
+      throw new Error(`getAllyActorByAllyId: Actor is not found (allyId:${allyId})`);
     }
 
     return actor;
@@ -271,7 +302,7 @@ export class BattleScene implements Scene {
     const actor = this.#actorById.get(id) as AllyActor | undefined;
 
     if (!actor || actor.actorType !== ActorType.Ally) {
-      throw new Error(`Ally not found for actorId=${id}`);
+      throw new Error(`getAllyNameByActorId: Ally not found (actorId:${id})`);
     }
 
     return this.#context.domain.allyRepository.findAlly(actor.originId).name;
@@ -281,7 +312,7 @@ export class BattleScene implements Scene {
     const list = this.#enemyActorsByGroupId.get(groupId);
 
     if (!list || list.length === 0) {
-      throw new Error(`Enemy group not found or empty: ${groupId}`);
+      throw new Error(`getEnemyNameByGroupId: Enemy group not found or empty (groupId:${groupId})`);
     }
 
     return this.#context.domain.enemyRepository.findEnemy(list[0].originId).name;

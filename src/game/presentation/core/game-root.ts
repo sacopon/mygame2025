@@ -55,9 +55,18 @@ export class GameRoot implements GameObjectAccess {
     this.onScreenSizeChanged(width, height);
   }
 
-  spawnGameObject<T extends GameObject>(gameObject: T): T {
-    this.#objects.push(gameObject);
-    return gameObject;
+  spawnGameObject<T extends GameObject>(o: T): T {
+    this.#objects.push(o);
+    return o;
+  }
+
+  despawnGameObject<T extends GameObject>(o: T): void {
+    if (!o.isAlive) {
+      return;
+    }
+
+    // 破棄予約
+    o.destroy();
   }
 
   update(deltaTime: number) {
@@ -66,8 +75,28 @@ export class GameRoot implements GameObjectAccess {
     const list = this.#objects.slice();
 
     for (const o of list) {
-      o.update(deltaTime);
+      if (o.isAlive) {
+        o.update(deltaTime);
+      }
     }
+
+    const alives = [];
+    for (const o of list) {
+      if (o.isAlive) {
+        alives.push(o);
+      }
+      else {
+        try {
+          o.onDispose();
+        }
+        catch (e) {
+          // あと片付け中はエラーが発生しても続行
+          console.warn("GameRoot#update(): onDispose is failed for", o, e);
+        }
+      }
+    }
+
+    this.#objects = alives;
   }
 
   dispose() {
@@ -83,6 +112,10 @@ export class GameRoot implements GameObjectAccess {
    */
   onScreenSizeChanged(width: number, height: number) {
     for (const go of this.#objects) {
+      if (!go.isAlive) {
+        continue;
+      }
+
       if (!isScreenSizeAware(go)) {
         continue;
       }

@@ -2,17 +2,29 @@ import { StackState } from "../../../../shared/state-stack";
 import { CommandChoice } from "..";
 import { CommandSelectWindow, EnemySelectWindow } from "../../../game-object/elements/window";
 import { UiPorts } from "../../core";
-import { DomainPorts } from "@game/domain";
+import { DomainPorts, Action } from "@game/domain";
 
 /**
  * バトルシーンの共有オブジェクト
  */
-export type BattleSceneContext = Readonly<{
-  ui: UiPorts;
-  domain: DomainPorts;
+export type BattleSceneContext = {
+  ui: Readonly<UiPorts>;
+  domain: Readonly<DomainPorts>;
   commandSelectWindow: CommandSelectWindow;
   enemySelectWindow: EnemySelectWindow;
-  commandChoices: CommandChoice[];
+  // 入力フェーズで設定、実行フェーズで破棄
+  commandChoices: ReadonlyArray<CommandChoice>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnPlan?: Readonly<TurnPlan>;
+};
+
+/**
+ * 1ターンの実行計画
+ */
+type TurnPlan = Readonly<{
+  allyActions: ReadonlyArray<Action>;
+  enemyActions: ReadonlyArray<Action>;
+  allActions: ReadonlyArray<Action>;
 }>;
 
 /**

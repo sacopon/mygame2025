@@ -4,7 +4,7 @@ import { ComponentById, ComponentTypeId } from "@game/presentation/component";
 /**
  * GameComponent の共通インターフェース
  */
-export interface GameComponent<T extends symbol = symbol> {
+export interface GameComponent<T extends ComponentTypeId = ComponentTypeId> {
   readonly typeId: T;
   update?(gameObject: GameObject, deltaTime: number): void;
   onAttach?(gameObject: GameObject): void;
@@ -14,12 +14,12 @@ export interface GameComponent<T extends symbol = symbol> {
 /**
  * GameComponent の共通部分
  */
-export abstract class BaseGameComponent<T extends symbol> implements GameComponent<T> {
+export abstract class BaseGameComponent<T extends ComponentTypeId> implements GameComponent<T> {
   abstract readonly typeId: T;
   #owner: GameObject | null = null;
 
-  protected onAttached?(): void;
-  protected onDetached?(): void;
+  protected onAttached?(gameObject: GameObject): void;
+  protected onDetached?(gameObject: GameObject): void;
 
   protected get isAttached(): boolean {
     return this.#owner !== null;
@@ -40,16 +40,16 @@ export abstract class BaseGameComponent<T extends symbol> implements GameCompone
     }
 
     this.#owner = gameObject;
-    this.onAttached?.();
+    this.onAttached?.(gameObject);
   }
 
-  onDetach(_gameObject: GameObject): void {
+  onDetach(gameObject: GameObject): void {
     if (!this.isAttached) {
-      console.warn(`${this.constructor.name}: アタッチされてないのにでタッチされました`);
+      console.warn(`${this.constructor.name}: アタッチされてないのにデタッチされました`);
       return;
     }
 
-    this.onDetached?.();
+    this.onDetached?.(gameObject);
     this.#owner = null;
   }
 }
@@ -80,6 +80,30 @@ export class GameComponents {
     this.#componentById.set(id, component);
 
     return component;
+  }
+
+  removeAllComponents(owner: GameObject): void {
+    const list = this.#components.slice();
+
+    for (const c of list) {
+      this.#removeComponent(c, owner);
+    }
+  }
+
+  #removeComponent(component: GameComponent, owner: GameObject): void {
+    const id: ComponentTypeId = component.typeId;
+
+    if (!this.#componentById.has(id)) {
+      return;
+    }
+
+    component.onDetach?.(owner);
+    this.#componentById.delete(id);
+    const index = this.#components.indexOf(component);
+
+    if (0 <= index) {
+      this.#components.splice(index, 1);
+    }
   }
 
   getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
