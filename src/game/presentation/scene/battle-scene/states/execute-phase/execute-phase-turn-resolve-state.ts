@@ -1,19 +1,13 @@
 import { BattleScene } from "../../battle-scene";
-import { BaseBattleSceneState, BattleSceneContext } from "..";
-import { Action, DomainEvent } from "@game/domain";
-
-type AtomicEffect = {
-  "kind": "Damage",
-};
-
-type Patch = {
-  event: DomainEvent;
-  effects: AtomicEffect;
-};
+import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
+import { BaseBattleSceneState } from "..";
+import { planTurnOrder, resolveActions } from "@game/application";
+import { BattleSceneContext } from "../battle-scene-state";
 
 /**
  * バトルシーン状態: ターン解決
  * Action を元に、状態に反映可能な DomainEvent を生成する
+ * 完了時に BattleState をターン終わりの状態に更新する
  */
 export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
   #scene: BattleScene;
@@ -25,21 +19,23 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
-    console.log("ExecutePhaseTurnResolveState#onEnter");
 
     if (!context.turnPlan) {
       throw new Error("onEnter: BattleSceneContext.turnPlan is null");
     }
 
-    const resolve = (_: ReadonlyArray<Action>) => { console.log("resolve"); }; // ドメイン層のアクション解決メソッド
-    resolve(context.turnPlan.allActions);
+    // 行動順の確定
+    const orderedActions = planTurnOrder(context.turnPlan.allActions);
 
-    // this.#scene.requestPushState(new ExecutePhasePlayActionState(this.#scene));
-  }
+    // バトル処理
+    const { events, effects } = resolveActions(orderedActions);
 
-  override onLeave() {
-    // ExecutePhasePlayActionState#onLeave() でも良いかもしれない
-    this.context.commandChoices = [];
-    this.context.turnPlan = undefined;
+    this.context.turnResolution = {
+      orderedActions,
+      domainEvents: events,
+      atomicEffects: effects,
+    } satisfies BattleSceneContext["turnResolution"];
+
+    this.#scene.requestPushState(new ExecutePhasePlayActionState(this.#scene));
   }
 }

@@ -2,7 +2,8 @@ import { StackState } from "../../../../shared/state-stack";
 import { CommandChoice } from "..";
 import { CommandSelectWindow, EnemySelectWindow } from "../../../game-object/elements/window";
 import { UiPorts } from "../../core";
-import { DomainPorts, Action, ActorId } from "@game/domain";
+import { AtomicEffect } from "@game/application";
+import { DomainPorts, Action, ActorId, DomainEvent } from "@game/domain";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -23,15 +24,32 @@ export type BattleSceneContext = {
   commandChoices: ReadonlyArray<CommandChoice>;
   // 実行フェーズで設定、実行フェーズで破棄
   turnPlan?: Readonly<TurnPlan>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnResolution?: Readonly<TurnResolution>;
 };
 
 /**
  * 1ターンの実行計画
  */
 type TurnPlan = Readonly<{
+  // 味方陣営キャラクターの行動内容配列
   allyActions: ReadonlyArray<Action>;
+  // 敵陣営キャラクターの行動内容配列
   enemyActions: ReadonlyArray<Action>;
+  // 敵味方全てのキャラクターの行動内容配列
   allActions: ReadonlyArray<Action>;
+}>;
+
+/**
+ * 実行計画を元に処理を行なった結果
+ */
+type TurnResolution = Readonly<{
+  // 行動順解決後の行動内容配列
+  orderedActions: ReadonlyArray<Action>;
+  // 行動内容解決後の、状態を変化させるイベント配列
+  domainEvents: ReadonlyArray<DomainEvent>;
+  // DomainEvent を元に生成されたプレゼンテーション層向けの演出指示
+  atomicEffects: ReadonlyArray<AtomicEffect>;
 }>;
 
 /**
