@@ -1,8 +1,8 @@
 import { ListSelectWindow } from "../common/list-select-window";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { CommandSelectWindowContents } from "./command-select-window-contents";
-import { GamePorts } from "@game/presentation";
-import { BattleCommand } from "../../../../scene/battle-scene/core";
+import { GamePorts } from "../../../..";
+import { BattleCommand, BattleCommandLabels } from "../../../../scene/battle-scene/core/battle-command";
 
 /**
  * コマンド選択ウィンドウ
@@ -24,7 +24,7 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
       ports,
       { width: CommandSelectWindow.#windowSpec.width, height: CommandSelectWindow.#windowSpec.height },
       CommandSelectWindow.#windowSpec.baseAlpha,
-      (ports: GamePorts) => new CommandSelectWindowContents(ports, CommandSelectWindow.#windowSpec, "", commands));
+      (ports: GamePorts) => new CommandSelectWindowContents(ports, CommandSelectWindow.#windowSpec, "", commands.map(c => BattleCommandLabels[c])));
 
     this.#commands = commands;
     this.reset();

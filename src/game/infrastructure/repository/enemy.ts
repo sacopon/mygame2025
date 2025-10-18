@@ -1,5 +1,5 @@
+import { EnemyRepository } from "../../domain/ports/repositories/enemy-repository";
 import { Enemy, EnemyId } from "@game/domain";
-import { EnemyRepository } from "@game/domain/ports/repositories/enemy-repository";
 
 // TODO: EnemyId が被ってないかを検証するメソッドを作成する(verifyEnemies)
 export class EnemyRepositoryInMemory implements EnemyRepository {

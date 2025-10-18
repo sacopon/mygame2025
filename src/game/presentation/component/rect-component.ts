@@ -1,7 +1,7 @@
 import { RectSpec, ViewHandle } from "@game/presentation/ports";
-import { GameComponent, GameObject } from "@game/presentation";
+import { BaseGameComponent, GameObject } from "@game/presentation";
 
-export class RectComponent implements GameComponent<typeof RectComponent.typeId> {
+export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("RectComponent");
   readonly typeId: typeof RectComponent.typeId = RectComponent.typeId;
 
@@ -9,6 +9,7 @@ export class RectComponent implements GameComponent<typeof RectComponent.typeId>
   #spec: RectSpec;
 
   constructor(spec: { size: { width: number, height: number }, color?: number, alpha?: number, offset?: { x?: number, y?: number }}) {
+    super();
     this.#spec = {
       ...spec,
     };
@@ -30,11 +31,11 @@ export class RectComponent implements GameComponent<typeof RectComponent.typeId>
       });
   }
 
-  onAttach(gameObject: GameObject): void {
+  override onAttached(gameObject: GameObject): void {
     this.#handle = gameObject.render.createRect(this.#spec);
   }
 
-  onDetach(gameObject: GameObject): void {
+  override onDetached(gameObject: GameObject): void {
     if (!this.#handle) {
       return;
     }

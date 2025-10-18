@@ -12,8 +12,12 @@ import {
 export class GameObject {
   #ports: GamePorts;
   #components: GameComponents;
+  #alive: boolean;
+  #disposed: boolean;
 
   constructor(ports: GamePorts) {
+    this.#alive = true;
+    this.#disposed = false;
     this.#ports = ports;
     this.#components = new GameComponents();
     this.addComponent(new TransformComponent());
@@ -35,6 +39,10 @@ export class GameObject {
     return this.#components.getComponent(TransformComponent.typeId)!.transform;
   }
 
+  get isAlive(): boolean {
+    return this.#alive;
+  }
+
   setPosition(x: number, y: number) {
     this.#transform.patch({ x, y });
   }
@@ -49,6 +57,20 @@ export class GameObject {
 
   update(deltaTime: number) {
     this.#components.update(deltaTime, this);
+  }
+
+  destroy(): void {
+    this.#alive = false;
+  }
+
+  onDispose(): void {
+    if (this.#disposed) {
+      return;
+    }
+
+    this.#disposed = true;
+    this.#components.removeAllComponents(this);
+    this.onDisposeInternal();
   }
 
   get #transform(): TransformComponent {
@@ -68,4 +90,6 @@ export class GameObject {
   getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
     return this.#components.getComponent(id);
   }
+
+  protected onDisposeInternal(): void {}
 }

@@ -1,5 +1,5 @@
-import { Scene } from "../../scene/core/scene";
-import { BattleCommand } from "./core";
+import { GameObjectAccess, Scene } from "../../scene/core/scene";
+import { BattleCommand, CommandChoice } from "./core";
 import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
 import {
   Background,
@@ -23,6 +23,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { ExecutePhaseTurnPlanningState } from "./states/execute-phase";
 
 function createActors(): Actor[] {
   return [
@@ -52,12 +53,17 @@ const isEnemyActor = (actor: Actor): actor is EnemyActor => actor.actorType === 
  */
 export class BattleScene implements Scene {
   #context!: BattleSceneContext;
+  #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
-  #allActors!: ReadonlyArray<Actor>;
   #partyAllyCharacters: ReadonlyArray<Ally> = [];
+
+  // 辞書データキャッシュ
+  #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
   #allyActorByAllyId!: Map<AllyId, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
+  #allAllyActorIds!: ReadonlyArray<ActorId>;
+  #allEnemyActorIds!: ReadonlyArray<ActorId>;
 
   onEnter(context: SceneContext) {
     this.#allActors = Object.freeze(createActors());
@@ -116,49 +122,42 @@ export class BattleScene implements Scene {
         })
     );
 
+    this.#gameObjectAccess = context.gameObjectAccess;
     this.#context = {
       ui: context.ui,
       domain: context.domain,
-      commandSelectWindow,
-      enemySelectWindow,
+      allyActorIds: this.#allAllyActorIds,
+      enemyActorIds: this.#allEnemyActorIds,
+      inputUi: {
+        commandSelectWindow,
+        enemySelectWindow,
+      },
       commandChoices: [],
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
 
-    // キャラクターコマンド選択から開始
+    // コマンド入力フェーズから開始
     this.#startOrNextActor();
   }
 
   #startOrNextActor(): void {
-    // TODO: ID と人数は別で管理する
+    // 全員行動確定 -> 実行フェーズへ遷移
     if (this.isAllConfirmed) {
-      console.log("全員確定!");
-      // TODO: 次のステートへ
+      this.#finishInputPhase();
       return;
     }
 
     const state = new InputPhaseSelectCommandState(
       this,
+      this.#context.inputUi!.commandSelectWindow,
       this.currentActor,
       {
         // 決定可能か
         canDecide: _c => true,
         // 決定(確定)時処理
         onDecide: (c) => {
-          const name = this.#getAllyNameByActorId(c.actorId);
-
-          if (c.command === BattleCommand.Attack) {
-            console.log(`${name} が ${this.#getEnemyNameByGroupId(c.target.groupId)} に ${c.command}`);
-          }
-          else if (c.command === BattleCommand.Defence) {
-            console.log(`${name} が ${c.command}`);
-          }
-
-          // コマンド選択ウィンドウと敵選択ウィンドウの共通クラスを作る
-          // コマンド選択ウィンドウのあたまにキャラクタ名を表示できるようにする
-
           // コマンドを記録
-          this.#context.commandChoices.push(c);
+          this.#addChoice(c);
 
           // 次の人の番へ
           this.#startOrNextActor();
@@ -174,7 +173,7 @@ export class BattleScene implements Scene {
           }
 
           // 決定内容の破棄
-          this.#context.commandChoices.pop();
+          this.#undoChoice();
 
           // 前の人の番へ
           this.#startOrNextActor();
@@ -185,7 +184,7 @@ export class BattleScene implements Scene {
   }
 
   next(): SceneId {
-    throw new Error("Method not implemented.");
+    throw new Error("next: Method not implemented.");
   }
 
   update(deltaTime: number): boolean {
@@ -257,11 +256,63 @@ export class BattleScene implements Scene {
     }
   }
 
+  /**
+   * 入力フェーズ完了時
+   */
+  #finishInputPhase(): void {
+    console.table(this.#context.commandChoices.map(c => ({ ...c, targetJson: JSON.stringify(c.target) })));
+
+    this.#cleanUpInputContext();
+    this.#moveToExecutePhase();
+  }
+
+  /**
+   * コンテキストに含まれる入力関係のオブジェクトの後始末
+   */
+  #cleanUpInputContext(): void {
+    if (!this.#context.inputUi) {
+      return;
+    }
+
+    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.commandSelectWindow);
+    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.enemySelectWindow);
+    this.#context.inputUi = undefined;
+  }
+
+  /**
+   * 実行フェーズへの遷移
+   */
+  #moveToExecutePhase(): void {
+    this.#stateStack.requestPush(new ExecutePhaseTurnPlanningState(this));
+  }
+
+  /**
+   * コマンド選択の結果を追加
+   */
+  #addChoice(c: CommandChoice): void {
+    this.#context.commandChoices = [...this.#context.commandChoices, c];
+  }
+
+  /**
+   * コマンド選択の結果を1つ戻す
+   */
+  #undoChoice(): void {
+    this.#context.commandChoices = this.#context.commandChoices.slice(0, -1);
+  }
+
+  /**
+   * コマンド選択の結果をクリア
+   * 実行フェーズの完了時に呼び出す
+   */
+  #resetCommandChoice(): void {
+    this.#context.commandChoices = [];
+  }
+
   #getAllyActorByAllyId(allyId: AllyId): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {
-      throw new Error(`Actor is not found(allyId:${allyId})`);
+      throw new Error(`getAllyActorByAllyId: Actor is not found (allyId:${allyId})`);
     }
 
     return actor;
@@ -271,7 +322,7 @@ export class BattleScene implements Scene {
     const actor = this.#actorById.get(id) as AllyActor | undefined;
 
     if (!actor || actor.actorType !== ActorType.Ally) {
-      throw new Error(`Ally not found for actorId=${id}`);
+      throw new Error(`getAllyNameByActorId: Ally not found (actorId:${id})`);
     }
 
     return this.#context.domain.allyRepository.findAlly(actor.originId).name;
@@ -281,7 +332,11 @@ export class BattleScene implements Scene {
     const list = this.#enemyActorsByGroupId.get(groupId);
 
     if (!list || list.length === 0) {
-      throw new Error(`Enemy group not found or empty: ${groupId}`);
+      throw new Error(`getEnemyNameByGroupId: Enemy group not found or empty (groupId:${groupId})`);
+    }
+
+    if (!list.every(e => e.originId === list[0].originId)) {
+      throw new Error(`getEnemyNameByGroupId: Enemy group contains multiple enemy types (groupId:${groupId})`);
     }
 
     return this.#context.domain.enemyRepository.findEnemy(list[0].originId).name;
@@ -292,14 +347,17 @@ export class BattleScene implements Scene {
     this.#actorById = new Map<ActorId, Actor>(this.#allActors.map(actor => [actor.actorId, actor]));
 
     // 味方
-    this.#allyActorByAllyId = new Map<AllyId, AllyActor>((this.#allActors
-      .filter(actor => actor.actorType === ActorType.Ally) as AllyActor[])
-      .map(actor => [actor.originId, actor]));
+    this.#allyActorByAllyId = new Map<AllyId, AllyActor>(
+      this.#allActors
+        .filter(isAllyActor)
+        .map(actor => [actor.originId, actor])
+    );
 
     // 敵
     this.#enemyActorsByGroupId = new Map<EnemyGroupId, EnemyActor[]>();
     for (const actor of this.#allActors.filter(isEnemyActor)) {
       const list = this.#enemyActorsByGroupId.get(actor.enemyGroupId);
+
       if (!list) {
         this.#enemyActorsByGroupId.set(actor.enemyGroupId, [actor]);
       }
@@ -307,5 +365,16 @@ export class BattleScene implements Scene {
         list.push(actor);
       }
     }
+
+    // アクターIDのキャッシュ
+    // 種類別アクターのキャッシュを利用するので、最後に作成すること
+    if (!this.#partyAllyCharacters || this.#partyAllyCharacters.length === 0) {
+      throw new Error("setupDictionary: BattleScene#partyAllyCharacters not set yet");
+    }
+
+    // 味方のアクターID
+    this.#allAllyActorIds = Object.freeze(this.#partyAllyCharacters.map(a => a.allyId).map(aid => this.#getAllyActorByAllyId(aid).actorId));
+    // 敵のアクターID
+    this.#allEnemyActorIds = Object.freeze(Array.from(this.#enemyActorsByGroupId.values()).flat().map(e => e.actorId));
   }
 }

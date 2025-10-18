@@ -2,7 +2,8 @@ import { DomainPorts } from "@game/domain";
 import { GameObject, GamePorts } from "@game/presentation";
 
 export interface GameObjectAccess {
-  spawnGameObject(gameObject: GameObject): GameObject;
+  spawnGameObject(o: GameObject): GameObject;
+  despawnGameObject(o: GameObject): void;
 }
 
 export type UiPorts = GamePorts;
