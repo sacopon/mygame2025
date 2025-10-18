@@ -19,7 +19,6 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
-    console.log("ExecutePhaseTurnPlanningState#onEnter");
 
     const commands = context.commandChoices;
     const allyActions = commands.map(convertCommandChoiceToAction);

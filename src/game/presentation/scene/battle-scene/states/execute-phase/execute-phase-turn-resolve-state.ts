@@ -35,9 +35,11 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     resolve(context.turnPlan.allActions);
 
     // this.#scene.requestPushState(new ExecutePhasePlayActionState(this.#scene));
+  }
 
-    // ExecutePhase 終了時に Action と併せて空にする
-    // context.commandChoices = [];
-    // context.allActorActions = [];
+  override onLeave() {
+    // ExecutePhasePlayActionState#onLeave() でも良いかもしれない
+    this.context.commandChoices = [];
+    this.context.turnPlan = undefined;
   }
 }
