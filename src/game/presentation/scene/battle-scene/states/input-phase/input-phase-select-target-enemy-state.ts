@@ -12,14 +12,12 @@ export type EnemySelectEvents = {
  * バトルシーン状態: 対象(敵)選択
  */
 export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
-  #scene: BattleScene;
   #enemySelectWindow: EnemySelectWindow;
   #selectedEnemy: string | null = null;
   #callbacks;
 
   constructor(scene: BattleScene, window: EnemySelectWindow, callbacks: EnemySelectEvents) {
-    super();
-    this.#scene = scene;
+    super(scene);
     this.#enemySelectWindow = window;
     this.#callbacks = callbacks;
   }

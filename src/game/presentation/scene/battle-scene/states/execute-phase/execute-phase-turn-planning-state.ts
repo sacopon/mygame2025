@@ -10,11 +10,8 @@ import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state
  * 乱数は使わず、行動順の決定は次の ExecutePhaseTurnResolveState で行う
  */
 export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
-  #scene: BattleScene;
-
   constructor(scene: BattleScene) {
-    super();
-    this.#scene = scene;
+    super(scene);
   }
 
   override onEnter(context: BattleSceneContext) {
@@ -32,6 +29,6 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
       allActions: [...allyActions, ...enemyActions],
     };
 
-    this.#scene.requestReplaceTopState(new ExecutePhaseTurnResolveState(this.#scene));
+    this.scene.requestReplaceTopState(new ExecutePhaseTurnResolveState(this.scene));
   }
 }

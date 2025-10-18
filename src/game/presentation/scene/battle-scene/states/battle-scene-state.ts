@@ -1,5 +1,5 @@
 import { StackState } from "../../../../shared/state-stack";
-import { CommandChoice } from "..";
+import { BattleScene, CommandChoice } from "..";
 import { UiPorts } from "../..";
 import { CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
 import { AtomicEffect } from "@game/application";
@@ -68,7 +68,16 @@ export interface BattleSceneState extends StackState<BattleSceneContext> {
  * バトルシーンのステートの共通基底クラス
  */
 export class BaseBattleSceneState implements BattleSceneState {
+  #scene: BattleScene;
   #context!: BattleSceneContext;
+
+  constructor(scene: BattleScene) {
+    this.#scene = scene;
+  }
+
+  protected get scene(): BattleScene {
+    return this.#scene;
+  }
 
   protected get context(): BattleSceneContext {
     return this.#context;

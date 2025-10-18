@@ -27,7 +27,7 @@ export class SceneManager {
     }
 
     if (!this.#currentScene) {
-      return;;
+      return;
     }
 
     const isFinished = this.#currentScene.update(deltaTime);

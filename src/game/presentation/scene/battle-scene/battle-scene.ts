@@ -1,6 +1,6 @@
 import { GameObjectAccess, Scene } from "../../scene/core/scene";
 import { BattleCommand, CommandChoice } from "./core";
-import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
+import { BattleSceneContext, BattleSceneState, InputPhaseFlowState, InputPhaseSelectCommandState } from "./states";
 import {
   Background,
   BattleBackground,
@@ -68,6 +68,10 @@ export class BattleScene implements Scene {
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
 
+  // ラッパー
+  beginInputPhase(): void { this.#beginInputPhase(); }
+  endInputPhase(): void { this.#endInputPhase(); }
+
   onEnter(context: SceneContext) {
     this.#allActors = Object.freeze(createActors());
 
@@ -104,9 +108,8 @@ export class BattleScene implements Scene {
       // inputUi は #beginInputPhase() にて作成
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
-
-    // コマンド入力フェーズから開始
-    this.#beginInputPhase();
+    // 最初は空なのでステートを直push
+    this.#stateStack.push(new InputPhaseFlowState(this));
   }
 
   #startOrNextActor(): void {
@@ -157,16 +160,12 @@ export class BattleScene implements Scene {
   }
 
   update(deltaTime: number): boolean {
-    if (!this.#stateStack.hasAny()) {
-      // TODO: シーン終了
-      return true;
-    }
-
     // スタックオーバーを監視する
-    // リリース時には無効にしたい
-    if (6 < this.#stateStack.size) {
-      console.log(this.#stateStack.dump());
-      throw new Error("update: BattleScen#stateStack size over 6");
+    if (process.env.NODE_ENV !== "production") {
+      if (6 < this.#stateStack.size) {
+        console.log(this.#stateStack.dump());
+        throw new Error("update: BattleScen#stateStack size over 6");
+      }
     }
 
     // ステートの処理を実行
@@ -224,8 +223,9 @@ export class BattleScene implements Scene {
   }
 
   returnToInputPhaseForNextTurn(): void {
-    this.requestPopState(); // このメソッドを呼び出したステートの pop を予約
-    this.#beginInputPhase();
+    // フェーズを入力フェーズに差し替え
+    // InputPhaseFlowState の onEnter にて beginInputPhase が呼ばれる
+    this.requestReplaceTopState(new InputPhaseFlowState(this));
   }
 
   #open(state: BattleSceneState): void {

@@ -7,11 +7,8 @@ import { BattleScene } from "../..";
  * AtomicEffect ごとに演出を実行しつつ、ViewState へ状態の反映を行なっていく
  */
 export class ExecutePhasePlayActionState extends BaseBattleSceneState {
-  #scene: BattleScene;
-
   constructor(scene: BattleScene) {
-    super();
-    this.#scene = scene;
+    super(scene);
   }
 
   override onEnter(context: BattleSceneContext) {
@@ -20,7 +17,6 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     if (!context.turnResolution) {
       throw new Error("onEnter: BattleSceneContext.turnResolution is null");
     }
-
   }
 
   override update() {
@@ -28,7 +24,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     console.log("ExecutePhasePlayActionState#update");
 
     if (this.turnResolution.atomicEffects.length === 0) {
-      this.#scene.returnToInputPhaseForNextTurn();
+      this.scene.returnToInputPhaseForNextTurn();
       return;
     }
   }

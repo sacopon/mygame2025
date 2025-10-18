@@ -169,9 +169,13 @@ export class StateStack<Context> {
    * フレーム更新処理
    */
   update(deltaTime: number): void {
+    this.#flushScheduled();
     this.top()?.update(deltaTime);
+    this.#flushScheduled();
+  }
 
-    // スケジュールされた操作がなくなるまでスタック操作を実行する
+  // スケジュールされた操作がなくなるまでスタック操作を実行する
+  #flushScheduled(): void {
     while (0 < this.#scheduledOperations.length) {
       this.#isFlushing = true;
       const operations = this.#scheduledOperations;

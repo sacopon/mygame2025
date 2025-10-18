@@ -10,11 +10,8 @@ import { BattleSceneContext } from "../battle-scene-state";
  * 完了時に BattleState をターン終わりの状態に更新する
  */
 export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
-  #scene: BattleScene;
-
   constructor(scene: BattleScene) {
-    super();
-    this.#scene = scene;
+    super(scene);
   }
 
   override onEnter(context: BattleSceneContext) {
@@ -36,6 +33,6 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       atomicEffects: effects,
     } satisfies BattleSceneContext["turnResolution"];
 
-    this.#scene.requestReplaceTopState(new ExecutePhasePlayActionState(this.#scene));
+    this.scene.requestReplaceTopState(new ExecutePhasePlayActionState(this.scene));
   }
 }
