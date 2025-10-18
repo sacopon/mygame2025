@@ -11,6 +11,10 @@ const config: Config = {
     '^@game/(.*)$': '<rootDir>/src/game/$1',
     '^@shared/(.*)$': '<rootDir>/src/shared/$1',
   },
+  globals: {
+    __DEV__: true,   // テスト時は true
+    __PROD__: false,
+  },
 };
 
 export default config;

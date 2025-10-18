@@ -18,5 +18,5 @@
     "noImplicitOverride": true,
     "noImplicitAny": true,
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "src/env.d.ts"]
 }

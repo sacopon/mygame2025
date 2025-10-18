@@ -21,7 +21,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
 
   override update() {
     // ここで AtomicEffect の適用と適用後の状態をログ出力する
-    console.log("ExecutePhasePlayActionState#update");
+    if (__DEV__) console.log("ExecutePhasePlayActionState#update");
 
     if (this.turnResolution.atomicEffects.length === 0) {
       this.scene.returnToInputPhaseForNextTurn();
