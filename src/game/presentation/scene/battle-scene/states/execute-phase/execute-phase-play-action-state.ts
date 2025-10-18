@@ -1,4 +1,4 @@
-import { BaseBattleSceneState } from "../battle-scene-state";
+import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleSceneContext } from "..";
 import { BattleScene } from "../..";
 
@@ -21,14 +21,16 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
       throw new Error("onEnter: BattleSceneContext.turnResolution is null");
     }
 
-    if (context.turnResolution.atomicEffects.length === 0) {
-      this.#scene.requestPopState();
-    }
   }
 
   override update() {
     // ここで AtomicEffect の適用と適用後の状態をログ出力する
     console.log("ExecutePhasePlayActionState#update");
+
+    if (this.turnResolution.atomicEffects.length === 0) {
+      this.#scene.returnToInputPhaseForNextTurn();
+      return;
+    }
   }
 
   override onLeave() {
@@ -36,5 +38,9 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     this.context.commandChoices = [];
     this.context.turnPlan = undefined;
     this.context.turnResolution = undefined;
+  }
+
+  get turnResolution(): TurnResolution {
+    return this.context.turnResolution!;
   }
 }

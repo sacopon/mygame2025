@@ -1,7 +1,7 @@
 import { StackState } from "../../../../shared/state-stack";
 import { CommandChoice } from "..";
-import { CommandSelectWindow, EnemySelectWindow } from "../../../game-object/elements/window";
-import { UiPorts } from "../../core";
+import { UiPorts } from "../..";
+import { CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
 import { AtomicEffect } from "@game/application";
 import { DomainPorts, Action, ActorId, DomainEvent } from "@game/domain";
 
@@ -16,6 +16,7 @@ export type BattleSceneContext = {
 
   // 入力フェーズでのみ使用する UI オブジェクト
   inputUi?: {
+    coordinator: UILayoutCoordinator;
     commandSelectWindow: CommandSelectWindow;
     enemySelectWindow: EnemySelectWindow;
   }
@@ -31,7 +32,7 @@ export type BattleSceneContext = {
 /**
  * 1ターンの実行計画
  */
-type TurnPlan = Readonly<{
+export type TurnPlan = Readonly<{
   // 味方陣営キャラクターの行動内容配列
   allyActions: ReadonlyArray<Action>;
   // 敵陣営キャラクターの行動内容配列
@@ -43,7 +44,7 @@ type TurnPlan = Readonly<{
 /**
  * 実行計画を元に処理を行なった結果
  */
-type TurnResolution = Readonly<{
+export type TurnResolution = Readonly<{
   // 行動順解決後の行動内容配列
   orderedActions: ReadonlyArray<Action>;
   // 行動内容解決後の、状態を変化させるイベント配列

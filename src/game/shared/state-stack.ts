@@ -35,6 +35,19 @@ export class StateStack<Context> {
   }
 
   /**
+   * スタックに積まれている数を取得
+   *
+   * @returns スタックに積まれているステートの数(予約分は含まない)
+   */
+  get size(): number {
+    return this.#stack.length;
+  }
+
+  dump(): string[] {
+    return this.#stack.map(s => s.constructor.name);
+  }
+
+  /**
    * 状態をプッシュする(直ちに反映)
    *
    * @param state プッシュする状態

@@ -36,6 +36,6 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       atomicEffects: effects,
     } satisfies BattleSceneContext["turnResolution"];
 
-    this.#scene.requestPushState(new ExecutePhasePlayActionState(this.#scene));
+    this.#scene.requestReplaceTopState(new ExecutePhasePlayActionState(this.#scene));
   }
 }

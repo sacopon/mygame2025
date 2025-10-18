@@ -32,7 +32,6 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
       allActions: [...allyActions, ...enemyActions],
     };
 
-    console.log(context.turnPlan);
-    this.#scene.requestPushState(new ExecutePhaseTurnResolveState(this.#scene));
+    this.#scene.requestReplaceTopState(new ExecutePhaseTurnResolveState(this.#scene));
   }
 }
