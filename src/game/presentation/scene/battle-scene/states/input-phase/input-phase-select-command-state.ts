@@ -4,6 +4,7 @@ import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene
 import { assertNever } from "@shared";
 import { AllyActor } from "@game/domain";
 import { GameButton } from "@game/presentation/ports";
+import { CommandSelectWindow, EnemySelectWindow } from "@game/presentation/game-object";
 
 export type InputPhaseCallbacks = {
   onDecide: (c: CommandChoice) => void,
@@ -19,16 +20,20 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   #scene: BattleScene;
   #callbacks: InputPhaseCallbacks;
   #actor: AllyActor;
+  // コマンド入力ウィンドウ
+  #commandSelectWindow: CommandSelectWindow;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
 
   constructor(
     scene: BattleScene,
+    window: CommandSelectWindow,
     actor: AllyActor,
     callbacks: InputPhaseCallbacks
   ) {
     super();
     this.#scene = scene;
+    this.#commandSelectWindow = window;
     this.#actor = actor;
     this.#callbacks = callbacks;
   }
@@ -39,7 +44,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     this.#activate();
 
     // ウィンドウにキャラクター名を反映
-    context.commandSelectWindow.setActorName(context.domain.allyRepository.findAlly(this.#actor.originId).name);
+    this.#commandSelectWindow.setActorName(context.domain.allyRepository.findAlly(this.#actor.originId).name);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -71,7 +76,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     // 決定
     if (ok) {
       this.#locked = true;
-      const command = this.context.commandSelectWindow.getCurrent();
+      const command = this.#commandSelectWindow.getCurrent();
       this.#runFlow(command, BattleCommandDecider.next(this.#actor.actorId, command));
     }
     // キャンセル
@@ -84,7 +89,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
       }
 
       // 各種選択ウィンドウのカーソル位置をリセットしておく
-      this.context.commandSelectWindow.reset();
+      this.#commandSelectWindow.reset();
       // このステート自身を取り除く
       this.#scene.requestPopState();
       // キャンセル処理
@@ -92,12 +97,16 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     }
     else if (up) {
       // カーソル上移動
-      this.context.commandSelectWindow.selectPrev();
+      this.#commandSelectWindow.selectPrev();
     }
     else if (down) {
       // カーソル下移動
-      this.context.commandSelectWindow.selectNext();
+      this.#commandSelectWindow.selectNext();
     }
+  }
+
+  get #enemySelectWindow(): EnemySelectWindow {
+    return this.context.inputUi!.enemySelectWindow;
   }
 
   #runFlow(command: BattleCommand, nextFlow: BattleCommandNextFlow): void {
@@ -121,6 +130,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
         this.#scene.requestPushState(new InputPhaseSelectTargetEnemyState(
           this.#scene,
+          this.context.inputUi!.enemySelectWindow,
           {
             // 敵選択決定時
             onConfirm: targetGroupId => {
@@ -168,15 +178,15 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   }
 
   #resetSelectionWindows(): void {
-    this.context.commandSelectWindow.reset();
-    this.context.enemySelectWindow.reset();
+    this.#commandSelectWindow.reset();
+    this.#enemySelectWindow.reset();
   }
 
   #activate(): void {
-    this.context.commandSelectWindow.setActive(true);
+    this.#commandSelectWindow.setActive(true);
   }
 
   #inactivate(): void {
-    this.context.commandSelectWindow.setActive(false);
+    this.#commandSelectWindow.setActive(false);
   }
 }

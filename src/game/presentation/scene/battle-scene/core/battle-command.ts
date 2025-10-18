@@ -2,10 +2,17 @@
  * 戦闘でのキャラクターの行動コマンド
  */
 export const BattleCommand = {
-  Attack: "こうげき",  // 攻撃
-  Spell: "じゅもん",   // 呪文
-  Item: "どうぐ",      // 道具
-  Defence: "ぼうぎょ", // 防御
+  Attack: "Attack",  // 攻撃
+  Spell: "Spell",   // 呪文
+  Item: "Item",      // 道具
+  Defence: "Defence", // 防御
 } as const;
 
 export type BattleCommand = typeof BattleCommand[keyof typeof BattleCommand];
+
+export const BattleCommandLabels = {
+  [BattleCommand.Attack]: "こうげき",
+  [BattleCommand.Spell]: "じゅもん",
+  [BattleCommand.Item]: "どうぐ",
+  [BattleCommand.Defence]: "ぼうぎょ",
+} satisfies Record<BattleCommand, string>;

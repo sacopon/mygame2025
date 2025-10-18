@@ -55,11 +55,15 @@ export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
-  #allActors!: ReadonlyArray<Actor>;
   #partyAllyCharacters: ReadonlyArray<Ally> = [];
+
+  // 辞書データキャッシュ
+  #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
   #allyActorByAllyId!: Map<AllyId, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
+  #allAllyActorIds!: ReadonlyArray<ActorId>;
+  #allEnemyActorIds!: ReadonlyArray<ActorId>;
 
   onEnter(context: SceneContext) {
     this.#allActors = Object.freeze(createActors());
@@ -122,8 +126,12 @@ export class BattleScene implements Scene {
     this.#context = {
       ui: context.ui,
       domain: context.domain,
-      commandSelectWindow,
-      enemySelectWindow,
+      allyActorIds: this.#allAllyActorIds,
+      enemyActorIds: this.#allEnemyActorIds,
+      inputUi: {
+        commandSelectWindow,
+        enemySelectWindow,
+      },
       commandChoices: [],
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
@@ -141,6 +149,7 @@ export class BattleScene implements Scene {
 
     const state = new InputPhaseSelectCommandState(
       this,
+      this.#context.inputUi!.commandSelectWindow,
       this.currentActor,
       {
         // 決定可能か
@@ -251,13 +260,23 @@ export class BattleScene implements Scene {
    * 入力フェーズ完了時
    */
   #finishInputPhase(): void {
-    this.#context.commandSelectWindow.setActive(false);
-    this.#gameObjectAccess.despawnGameObject(this.#context.commandSelectWindow);
+    console.table(this.#context.commandChoices.map(c => ({ ...c, targetJson: JSON.stringify(c.target) })));
 
-    this.#context.enemySelectWindow.setActive(false);
-    this.#gameObjectAccess.despawnGameObject(this.#context.enemySelectWindow);
-
+    this.#cleanUpInputContext();
     this.#moveToExecutePhase();
+  }
+
+  /**
+   * コンテキストに含まれる入力関係のオブジェクトの後始末
+   */
+  #cleanUpInputContext(): void {
+    if (!this.#context.inputUi) {
+      return;
+    }
+
+    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.commandSelectWindow);
+    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.enemySelectWindow);
+    this.#context.inputUi = undefined;
   }
 
   /**
@@ -283,6 +302,7 @@ export class BattleScene implements Scene {
 
   /**
    * コマンド選択の結果をクリア
+   * 実行フェーズの完了時に呼び出す
    */
   #resetCommandChoice(): void {
     this.#context.commandChoices = [];
@@ -315,6 +335,10 @@ export class BattleScene implements Scene {
       throw new Error(`getEnemyNameByGroupId: Enemy group not found or empty (groupId:${groupId})`);
     }
 
+    if (!list.every(e => e.originId === list[0].originId)) {
+      throw new Error(`getEnemyNameByGroupId: Enemy group contains multiple enemy types (groupId:${groupId})`);
+    }
+
     return this.#context.domain.enemyRepository.findEnemy(list[0].originId).name;
   }
 
@@ -323,14 +347,17 @@ export class BattleScene implements Scene {
     this.#actorById = new Map<ActorId, Actor>(this.#allActors.map(actor => [actor.actorId, actor]));
 
     // 味方
-    this.#allyActorByAllyId = new Map<AllyId, AllyActor>((this.#allActors
-      .filter(actor => actor.actorType === ActorType.Ally) as AllyActor[])
-      .map(actor => [actor.originId, actor]));
+    this.#allyActorByAllyId = new Map<AllyId, AllyActor>(
+      this.#allActors
+        .filter(isAllyActor)
+        .map(actor => [actor.originId, actor])
+    );
 
     // 敵
     this.#enemyActorsByGroupId = new Map<EnemyGroupId, EnemyActor[]>();
     for (const actor of this.#allActors.filter(isEnemyActor)) {
       const list = this.#enemyActorsByGroupId.get(actor.enemyGroupId);
+
       if (!list) {
         this.#enemyActorsByGroupId.set(actor.enemyGroupId, [actor]);
       }
@@ -338,5 +365,16 @@ export class BattleScene implements Scene {
         list.push(actor);
       }
     }
+
+    // アクターIDのキャッシュ
+    // 種類別アクターのキャッシュを利用するので、最後に作成すること
+    if (!this.#partyAllyCharacters || this.#partyAllyCharacters.length === 0) {
+      throw new Error("setupDictionary: BattleScene#partyAllyCharacters not set yet");
+    }
+
+    // 味方のアクターID
+    this.#allAllyActorIds = Object.freeze(this.#partyAllyCharacters.map(a => a.allyId).map(aid => this.#getAllyActorByAllyId(aid).actorId));
+    // 敵のアクターID
+    this.#allEnemyActorIds = Object.freeze(Array.from(this.#enemyActorsByGroupId.values()).flat().map(e => e.actorId));
   }
 }

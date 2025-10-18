@@ -1,6 +1,6 @@
 import { BattleScene } from "../../battle-scene";
 import { BaseBattleSceneState, BattleSceneContext } from "..";
-import { convertCommandChoiceToAction } from "@game/application/battle/convert-command-choice-to-action";
+import { convertCommandChoiceToAction, createEnemyActions } from "@game/application";
 import { Action } from "@game/domain";
 import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state";
 
@@ -23,13 +23,17 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
 
     const commands = context.commandChoices;
     const allyActions = commands.map(convertCommandChoiceToAction);
-    const enemyActions: Action[] = [];//const enemyActions = createEnemyActions();
+    const enemyActions: Action[] = createEnemyActions({
+      allyActorOrder: context.allyActorIds,
+      enemyActorIds: context.enemyActorIds,
+    });
     context.turnPlan = {
       allyActions,
       enemyActions,
       allActions: [...allyActions, ...enemyActions],
     };
 
+    console.log(context.turnPlan);
     this.#scene.requestPushState(new ExecutePhaseTurnResolveState(this.#scene));
   }
 }

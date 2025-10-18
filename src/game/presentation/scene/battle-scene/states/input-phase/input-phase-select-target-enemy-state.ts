@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
 import { BattleScene } from "../..";
-import { GameButton } from "@game/presentation/ports";
 import { EnemyGroupId } from "@game/domain";
+import { EnemySelectWindow, GameButton } from "../../../..";
 
 export type EnemySelectEvents = {
   onConfirm: (target: EnemyGroupId) => void;
@@ -13,18 +13,20 @@ export type EnemySelectEvents = {
  */
 export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
   #scene: BattleScene;
+  #enemySelectWindow: EnemySelectWindow;
   #selectedEnemy: string | null = null;
   #callbacks;
 
-  constructor(scene: BattleScene, callbacks: EnemySelectEvents) {
+  constructor(scene: BattleScene, window: EnemySelectWindow, callbacks: EnemySelectEvents) {
     super();
     this.#scene = scene;
+    this.#enemySelectWindow = window;
     this.#callbacks = callbacks;
   }
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
-    context.enemySelectWindow.setActive(true);
+    this.#enemySelectWindow.setActive(true);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -48,29 +50,29 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
 
     if (cancel) {
       // キャンセル
-      this.context.enemySelectWindow.reset();
+      this.#enemySelectWindow.reset();
       this.#callbacks.onCancel();
     }
     else if (ok) {
       // 決定
-      const targetGroupId = this.context.enemySelectWindow.getCurrent();
+      const targetGroupId = this.#enemySelectWindow.getCurrent();
       this.#callbacks.onConfirm(targetGroupId);
     }
     else if (up) {
       // カーソル上移動
-      this.context.enemySelectWindow.selectPrev();
+      this.#enemySelectWindow.selectPrev();
     }
     else if (down) {
       // カーソル下移動
-      this.context.enemySelectWindow.selectNext();
+      this.#enemySelectWindow.selectNext();
     }
   }
 
   #activate(): void {
-    this.context.enemySelectWindow.setActive(true);
+    this.#enemySelectWindow.setActive(true);
   }
 
   #inactivate(): void {
-    this.context.enemySelectWindow.setActive(false);
+    this.#enemySelectWindow.setActive(false);
   }
 }

@@ -2,7 +2,7 @@ import { StackState } from "../../../../shared/state-stack";
 import { CommandChoice } from "..";
 import { CommandSelectWindow, EnemySelectWindow } from "../../../game-object/elements/window";
 import { UiPorts } from "../../core";
-import { DomainPorts, Action } from "@game/domain";
+import { DomainPorts, Action, ActorId } from "@game/domain";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -10,8 +10,15 @@ import { DomainPorts, Action } from "@game/domain";
 export type BattleSceneContext = {
   ui: Readonly<UiPorts>;
   domain: Readonly<DomainPorts>;
-  commandSelectWindow: CommandSelectWindow;
-  enemySelectWindow: EnemySelectWindow;
+  allyActorIds: ReadonlyArray<ActorId>;
+  enemyActorIds: ReadonlyArray<ActorId>;
+
+  // 入力フェーズでのみ使用する UI オブジェクト
+  inputUi?: {
+    commandSelectWindow: CommandSelectWindow;
+    enemySelectWindow: EnemySelectWindow;
+  }
+
   // 入力フェーズで設定、実行フェーズで破棄
   commandChoices: ReadonlyArray<CommandChoice>;
   // 実行フェーズで設定、実行フェーズで破棄
