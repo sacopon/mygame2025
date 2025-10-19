@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { AtomicEffect } from "..";
-import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, isAllMode, isAttack, isGroupMode, isNoneMode, isSingleMode, PlannedAction } from "@game/domain";
+import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, PlannedAction } from "@game/domain";
 
 const FIXED_DAMAGE = 12;
 
@@ -9,6 +9,8 @@ const FIXED_DAMAGE = 12;
  */
 export type ResolveDeps = {
   isAlly: (id: ActorId) => boolean;
+  aliveAllAllies: () => ReadonlyArray<ActorId>;
+  aliveAllEnemies: () => ReadonlyArray<ActorId>;
   aliveEnemiesInGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
   aliveAllActors: () => ReadonlyArray<ActorId>;
 };
@@ -64,7 +66,7 @@ function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
       break;
 
     default:
-      assertNever(action.actionType);
+      assertNever(action);
   }
 
   return { events: resultEvents, effects: resultEffects };
@@ -77,28 +79,37 @@ function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
  * @returns 決定された具体的な対象(配列)、1体の場合でも配列で戻す
  */
 function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
-  if (!isAttack(action)) {
-      throw new Error("invalid Action");
-  }
+  switch (action.mode.kind) {
+    case "single":
+      // すでに決まっていたらその内容で確定する
+      if (action.mode.targetId) return [ action.mode.targetId ];
 
-  if (isSingleMode(action.mode)) {
-    // ここでは既に決まっていることになっているが、このタイミングで決める？
-    // その場合型としては targetId はオプショナル？
-    return [ action.mode.targetId ];
-  }
-  else if (isGroupMode(action.mode)) {
-    // ここの時点で kind: "group" が使用されるのは
-    // プレイヤー側のグループ攻撃のみのため、指定されたグループIDの敵を返す
-    return deps.aliveEnemiesInGroup(action.mode.groupId);
-  }
-  else if (isAllMode(action.mode)) {
-    return deps.aliveAllActors();
-  }
-  else if (isNoneMode(action.mode)) {
-    return [];
-  }
+      if (action.selection.kind === "group") {
+        // グループを選択をしている(= 味方の行動であることが型から確定している)
+        // TODO: 現状ではグループ内の先頭に対象を固定
+        const list = deps.aliveEnemiesInGroup(action.selection.groupId);
+        return 0 < list.length ? [list[0]] : [];
+      }
+      else {
+        // 敵の場合
+        const allies = deps.aliveAllAllies();
+        // TODO: 現状では味方の先頭に対象を固定
+        return 0 < allies.length ? [allies[0]] : [];
+      }
 
-  throw new Error(`invalid Action: action.mode[${action.mode}]`);
+    case "group":
+      // グループ攻撃は味方のみ
+      return deps.aliveEnemiesInGroup(action.mode.groupId);
+
+    case "all":
+      return deps.isAlly(action.actorId) ? deps.aliveAllEnemies() : deps.aliveAllAllies();
+
+    case "none":
+      return [];
+
+    default:
+      return assertNever(action.mode);
+  }
 }
 
 /**

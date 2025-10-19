@@ -1,7 +1,7 @@
 import { BattleScene } from "../../battle-scene";
 import { BaseBattleSceneState, BattleSceneContext } from "..";
-import { convertCommandChoiceToAction, createEnemyActions, planActionTargetMode } from "@game/application";
-import { Action, ActorId, ActorType, EnemyGroupId } from "@game/domain";
+import { convertCommandChoiceToAction, createEnemyActions, planAction } from "@game/application";
+import { Action, ActorId, ActorType } from "@game/domain";
 import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state";
 
 /**
@@ -31,13 +31,9 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
     // (行動計画の具体的な対象はまだ決定しない)
     const allActions = [...allyActions, ...enemyActions];
     const plannedAllActions = allActions
-      .map(action => ({
-        ...action,
-        mode: planActionTargetMode(action, {
-          isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
-          aliveAllies: () => this.scene.getAliveAllies(),
-          aliveEnemiesInGroup: (groupId: EnemyGroupId) => { return this.scene.getAliveEnemiesInGroup(groupId); },
-        })}));
+      .map(action => planAction(
+        action,
+        (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally));
 
     context.turnPlan = {
       allyActions,

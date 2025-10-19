@@ -1,7 +1,7 @@
 import { StackState } from "../../../../shared/state-stack";
 import { BattleScene, CommandChoice } from "..";
 import { UiPorts } from "../..";
-import { CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
+import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
 import { AtomicEffect } from "@game/application";
 import { DomainPorts, Action, ActorId, DomainEvent, PlannedAction } from "@game/domain";
 
@@ -19,6 +19,12 @@ export type BattleSceneContext = {
     coordinator: UILayoutCoordinator;
     commandSelectWindow: CommandSelectWindow;
     enemySelectWindow: EnemySelectWindow;
+  };
+
+  // 実行フェーズで使用する UI オブジェクト
+  executeUi?: {
+    coordinator: UILayoutCoordinator;
+    messageWindow: BattleMessageWindow;
   }
 
   // 入力フェーズで設定、実行フェーズで破棄

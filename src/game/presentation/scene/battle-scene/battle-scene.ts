@@ -251,9 +251,25 @@ export class BattleScene implements Scene {
     return actor;
   }
 
+  getActorDisplayNameById(actorId: ActorId): string {
+    const actor = this.getActorById(actorId);
+
+    if (isAllyActor(actor)) {
+      return this.#context.domain.allyRepository.findAlly(actor.originId).name;
+    } else {
+      // TODO: A, B, C... 個体識別子を付与する場合は同一 enemyId 内での actorId 順で割り振る
+      return this.#context.domain.enemyRepository.findEnemy(actor.originId).name;
+    }
+  }
+
   getAliveAllies(): ReadonlyArray<ActorId> {
     // TODO: 生死判定
     return this.#allAllyActorIds;
+  }
+
+  getAliveEnemies(): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    return this.#allEnemyActorIds;
   }
 
   getAliveAllActors(): ReadonlyArray<ActorId> {

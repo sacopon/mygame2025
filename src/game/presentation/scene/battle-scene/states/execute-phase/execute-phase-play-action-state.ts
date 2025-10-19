@@ -3,12 +3,15 @@ import { BattleSceneContext } from "..";
 import { BattleScene } from "../..";
 import { AtomicEffect } from "@game/application";
 import { assertNever } from "@shared/utils";
+import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
+import { ActorId } from "@game/domain";
 
 /**
  * バトルシーン状態: 演出実行
  * AtomicEffect ごとに演出を実行しつつ、ViewState へ状態の反映を行なっていく
  */
 export class ExecutePhasePlayActionState extends BaseBattleSceneState {
+  #messageWindow!: BattleMessageWindow;
   #effectRunner!: EffectRunner;
 
   constructor(scene: BattleScene) {
@@ -23,7 +26,24 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     }
 
     if (__DEV__) console.log(context.turnResolution);
-    this.#effectRunner = new EffectRunner(context.turnResolution.atomicEffects);
+
+    const { ui } = this.context;
+    const { width, height } = ui.screen.getGameSize();
+
+    // メッセージランナー作成
+    this.#effectRunner = new EffectRunner(
+      context.turnResolution.atomicEffects,
+      (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId));
+
+    // メッセージウィンドウを作成
+    const messageWindow = this.scene.spawn(new BattleMessageWindow(this.context.ui));
+    // レイアウトコーディネイター
+    const coordinator = this.scene.spawn(new UILayoutCoordinator(ui, width, height, { messageWindow }));
+
+    this.context.executeUi = {
+      coordinator,
+      messageWindow,
+    };
   }
 
   override update(deltaMs: number) {
@@ -36,6 +56,9 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
   }
 
   override onLeave() {
+    // UI破棄
+    this.#disposeUi();
+
     // 次のターンに備えてクリアする
     this.context.commandChoices = [];
     this.context.turnPlan = undefined;
@@ -44,6 +67,19 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
 
   get turnResolution(): TurnResolution {
     return this.context.turnResolution!;
+  }
+
+  /**
+   * 入力系UIの後始末
+   */
+  #disposeUi(): void {
+    if (!this.context.executeUi) {
+      return;
+    }
+
+    this.scene.despawn(this.context.executeUi.coordinator);
+    this.scene.despawn(this.context.executeUi.messageWindow);
+    this.context.executeUi = undefined;
   }
 }
 
@@ -54,12 +90,14 @@ type Task = {
 }
 
 class EffectRunner {
+  #resolveName: (actorId: ActorId) => string;
   #isRunning: boolean;
   #queue: Task[] = [];
 
-  constructor(effects: ReadonlyArray<AtomicEffect>) {
+  constructor(effects: ReadonlyArray<AtomicEffect>, resolveName: (actorId: ActorId) => string) {
     this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), printed: false}));
     this.#isRunning = 0 < this.#queue.length;
+    this.#resolveName = resolveName;
   }
 
   update(deltaMs: number): void {
@@ -93,8 +131,7 @@ class EffectRunner {
 
     switch (effect.kind) {
       case "AttackStarted":
-        // TODO: actorId => Actor.name に変換する
-        if (__DEV__) console.log(`🗡️ ${effect.actorId}の　こうげき！`);
+        if (__DEV__) console.log(`🗡️ ${this.#resolveName(effect.actorId)}の　こうげき！`);
         break;
 
       case "PlaySe":
@@ -106,8 +143,7 @@ class EffectRunner {
         break;
 
       case "ShowEnemyDamageText":
-        // TODO: actorId => Actor.name に変換する
-        if (__DEV__) console.log(`📝 ${effect.actorId}に　${effect.amount}の　ダメージ！！`);
+        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}に　${effect.amount}の　ダメージ！！`);
         break;
 
       case "PlayerDamageShake":
@@ -115,8 +151,7 @@ class EffectRunner {
         break;
 
       case "ShowPlayerDamageText":
-        // TODO: actorId => Actor.name に変換する
-        if (__DEV__) console.log(`📝 ${effect.actorId}は　${effect.amount}の　ダメージをうけた！`);
+        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}は　${effect.amount}の　ダメージをうけた！`);
         break;
 
       default:

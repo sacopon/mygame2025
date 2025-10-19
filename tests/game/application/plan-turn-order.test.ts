@@ -6,7 +6,7 @@ import type { Action } from "@game/domain/models/action";
 const A = (id: number): Action => ({
   actorId: id as ActorId,
   actionType: "Attack",
-  side: "Them",
+  // side: "Them",
   selection: { kind: "group", groupId: id as any },
 });
 

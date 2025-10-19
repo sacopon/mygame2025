@@ -1,3 +1,4 @@
+export * from "./battle-message-window";
 export * from "./command-select-window";
 export * from "./common";
 export * from "./constants";
