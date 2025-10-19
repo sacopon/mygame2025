@@ -7,7 +7,7 @@ const A = (id: number): Action => ({
   actorId: id as ActorId,
   actionType: "Attack",
   side: "Them",
-  target: { kind: "single", targetActorId: id as any },
+  selection: { kind: "group", groupId: id as any },
 });
 
 describe("planTurnOrder", () => {
