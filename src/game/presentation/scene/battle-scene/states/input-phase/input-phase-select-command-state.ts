@@ -17,7 +17,6 @@ export type InputPhaseCallbacks = {
  * バトルシーン状態: キャラクターの行動選択
  */
 export class InputPhaseSelectCommandState extends BaseBattleSceneState {
-  #scene: BattleScene;
   #callbacks: InputPhaseCallbacks;
   #actor: AllyActor;
   // コマンド入力ウィンドウ
@@ -31,8 +30,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     actor: AllyActor,
     callbacks: InputPhaseCallbacks
   ) {
-    super();
-    this.#scene = scene;
+    super(scene);
     this.#commandSelectWindow = window;
     this.#actor = actor;
     this.#callbacks = callbacks;
@@ -91,7 +89,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
       // 各種選択ウィンドウのカーソル位置をリセットしておく
       this.#commandSelectWindow.reset();
       // このステート自身を取り除く
-      this.#scene.requestPopState();
+      this.scene.requestPopState();
       // キャンセル処理
       this.#callbacks.onCancel(this.#actor);
     }
@@ -112,7 +110,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   #runFlow(command: BattleCommand, nextFlow: BattleCommandNextFlow): void {
     // コマンド確定時の巻き戻し位置
     // 上にどれだけウィンドウが重なるかわからないので自身のところまで戻せるようにする
-    const mark = this.#scene.markState();
+    const mark = this.scene.markState();
 
     switch (nextFlow.kind) {
       // 即確定
@@ -128,8 +126,8 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
         break;
 
       case BattleCommandDecider.FlowType.NeedEnemyTarget:
-        this.#scene.requestPushState(new InputPhaseSelectTargetEnemyState(
-          this.#scene,
+        this.scene.requestPushState(new InputPhaseSelectTargetEnemyState(
+          this.scene,
           this.context.inputUi!.enemySelectWindow,
           {
             // 敵選択決定時
@@ -155,7 +153,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
             },
             // 敵選択キャンセル時
             onCancel: () => {
-              this.#scene.requestPopState();
+              this.scene.requestPopState();
             }
           }));
         break;
@@ -170,9 +168,9 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     // 各種選択ウィンドウのカーソル位置をリセットしておく
     this.#resetSelectionWindows();
     // このステートの上に乗せられたものは全て解除
-    this.#scene.requestRewindTo(rewindMarker);
+    this.scene.requestRewindTo(rewindMarker);
     // このステート自身を取り除く
-    this.#scene.requestPopState();
+    this.scene.requestPopState();
     // 確定処理
     this.#callbacks.onDecide(command);
   }

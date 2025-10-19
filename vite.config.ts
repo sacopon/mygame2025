@@ -20,6 +20,10 @@ export default defineConfig(({ mode }) => {
       },
       dedupe: ['pixi.js'],  // pixi の重複取り込みを防ぐ
     },
+    define: {
+      __DEV__: mode !== 'production',
+      __PROD__: mode === 'production',
+    },
     // 依存最適化で pixi.js をひとつにまとめる
     optimizeDeps: {
       include: ['pixi.js'],

@@ -1,16 +1,22 @@
 import { GameObjectAccess, Scene } from "../../scene/core/scene";
-import { BattleCommand, CommandChoice } from "./core";
-import { BattleSceneContext, BattleSceneState, InputPhaseSelectCommandState } from "./states";
+import { BattleCommand } from "./core";
 import {
+  BattleSceneContext,
+  BattleSceneState,
+  InputPhaseFlowState,
+} from "./states";
+import {
+  GameObject,
   Background,
   BattleBackground,
   CommandSelectWindow,
   Enemy,
   EnemySelectWindow,
   MainWindow,
+  SceneContext,
+  SceneId,
   UILayoutCoordinator
-} from "../../game-object/elements";
-import { SceneContext, SceneId } from "../../scene/core/scene";
+} from "../..";
 import {
   Actor,
   ActorId,
@@ -18,12 +24,12 @@ import {
   Ally,
   AllyActor,
   AllyId,
+  DomainPorts,
   EnemyActor,
   EnemyGroupId,
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
-import { ExecutePhaseTurnPlanningState } from "./states/execute-phase";
 
 function createActors(): Actor[] {
   return [
@@ -56,6 +62,8 @@ export class BattleScene implements Scene {
   #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
   #partyAllyCharacters: ReadonlyArray<Ally> = [];
+  // 実行フェーズ -> 入力フェーズへ戻る際のマーカー
+  #markAtExecutePhase?: number;
 
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
@@ -76,14 +84,6 @@ export class BattleScene implements Scene {
     // アクセス簡易化のためのマップ生成
     this.#setupDictionary();
 
-    // コマンド(本当はキャラクターごとにコマンドは異なるが仮で共通)
-    const commands = [
-      BattleCommand.Attack,
-      BattleCommand.Spell,
-      BattleCommand.Defence,
-      BattleCommand.Item,
-    ] as const satisfies readonly BattleCommand[];
-
     // 敵データ作成
 
     // 敵画像
@@ -99,88 +99,18 @@ export class BattleScene implements Scene {
       context.gameObjectAccess.spawnGameObject(new Enemy(context.ui, width, height, i));
     }
 
-    const commandSelectWindow = context.gameObjectAccess
-      .spawnGameObject(new CommandSelectWindow(context.ui, commands)) as CommandSelectWindow;
-
-    // 敵選択ウィンドウ
-    const enemyGroups = [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => {
-      return {
-        enemyGroupId: groupId,
-        name: context.domain.enemyRepository.findEnemy(list[0].originId).name,
-        count: list.length,
-      };
-    });
-    const enemySelectWindow = context.gameObjectAccess
-      .spawnGameObject(new EnemySelectWindow(context.ui, enemyGroups)) as EnemySelectWindow;
-
-    // レイアウトコーディネイター
-    context.gameObjectAccess.spawnGameObject(
-      new UILayoutCoordinator(
-        context.ui, width, height, {
-          commandSelectWindow,
-          enemySelectWindow,
-        })
-    );
-
     this.#gameObjectAccess = context.gameObjectAccess;
     this.#context = {
       ui: context.ui,
       domain: context.domain,
       allyActorIds: this.#allAllyActorIds,
       enemyActorIds: this.#allEnemyActorIds,
-      inputUi: {
-        commandSelectWindow,
-        enemySelectWindow,
-      },
       commandChoices: [],
+      // inputUi は #beginInputPhase() にて作成
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
-
-    // コマンド入力フェーズから開始
-    this.#startOrNextActor();
-  }
-
-  #startOrNextActor(): void {
-    // 全員行動確定 -> 実行フェーズへ遷移
-    if (this.isAllConfirmed) {
-      this.#finishInputPhase();
-      return;
-    }
-
-    const state = new InputPhaseSelectCommandState(
-      this,
-      this.#context.inputUi!.commandSelectWindow,
-      this.currentActor,
-      {
-        // 決定可能か
-        canDecide: _c => true,
-        // 決定(確定)時処理
-        onDecide: (c) => {
-          // コマンドを記録
-          this.#addChoice(c);
-
-          // 次の人の番へ
-          this.#startOrNextActor();
-        },
-        // キャンセル可能か
-        canCancel: (_: AllyActor) => {
-          return 0 < this.progressIndex;
-        },
-        // キャンセル時処理
-        onCancel: (_: AllyActor) => {
-          if (this.#context.commandChoices.length === 0) {
-            throw new Error("先頭のキャラの行動はキャンセル不可");
-          }
-
-          // 決定内容の破棄
-          this.#undoChoice();
-
-          // 前の人の番へ
-          this.#startOrNextActor();
-        },
-      });
-
-    this.#open(state);
+    // 最初は空なのでステートを直push
+    this.#stateStack.push(new InputPhaseFlowState(this));
   }
 
   next(): SceneId {
@@ -188,9 +118,12 @@ export class BattleScene implements Scene {
   }
 
   update(deltaTime: number): boolean {
-    if (!this.#stateStack.hasAny()) {
-      // TODO: シーン終了
-      return true;
+    // スタックオーバーを監視する
+    if (__DEV__) {
+      if (6 < this.#stateStack.size) {
+        this.#stateStack.dump();
+        throw new Error("update: BattleScen#stateStack size over 6");
+      }
     }
 
     // ステートの処理を実行
@@ -204,20 +137,12 @@ export class BattleScene implements Scene {
     return false;
   }
 
-  get isAllConfirmed(): boolean {
-    return this.#partyAllyCharacters.length <= this.progressIndex;
+  getPartyCharacterCount(): number {
+    return this.#partyAllyCharacters.length;
   }
 
-  get progressIndex(): number {
-    return this.#context.commandChoices.length;
-  }
-
-  get currentActor(): AllyActor {
-    if (this.isAllConfirmed) {
-      throw new Error("currentActor: no actor (all confirmed)");
-    }
-
-    const allyId = this.#partyAllyCharacters[this.progressIndex].allyId;
+  getCurrentActor(index: number): AllyActor {
+    const allyId = this.#partyAllyCharacters[index].allyId;
     const ally = this.#getAllyActorByAllyId(allyId);
 
     if (!ally) {
@@ -247,65 +172,112 @@ export class BattleScene implements Scene {
     return this.#stateStack.mark();
   }
 
-  #open(state: BattleSceneState): void {
-    if (this.#stateStack.hasAny()) {
-      this.#stateStack.requestPush(state);
+  returnToInputPhaseForNextTurn(): void {
+    // フェーズを入力フェーズに差し替え
+    // InputPhaseFlowState の onEnter にて beginInputPhase が呼ばれる
+    this.requestReplaceTopState(new InputPhaseFlowState(this));
+  }
+
+  spawn<T extends GameObject>(o: T): T {
+    return this.#gameObjectAccess.spawnGameObject(o);
+  }
+
+  despawn<T extends GameObject>(o: T) {
+    try {
+      this.#gameObjectAccess.despawnGameObject(o);
     }
-    else {
-      this.#stateStack.push(state);
+    catch (e) {
+      console.warn(e);
     }
   }
 
   /**
-   * 入力フェーズ完了時
+   * データに基づいて入力系UIの作成
    */
-  #finishInputPhase(): void {
-    console.table(this.#context.commandChoices.map(c => ({ ...c, targetJson: JSON.stringify(c.target) })));
+  buildInputUi(): void {
+    const { domain, ui } = this.#context;
+    const { width, height } = ui.screen.getGameSize();
 
-    this.#cleanUpInputContext();
-    this.#moveToExecutePhase();
+    // ロジックエラー
+    if (this.#context.inputUi) {
+      throw new Error("#beginInputPhase: this.#context.inputUi already exists.");
+    }
+
+    // コマンド(本当はキャラクターごとにコマンドは異なるが仮で共通)
+    const commands = [
+      BattleCommand.Attack,
+      BattleCommand.Spell,
+      BattleCommand.Defence,
+      BattleCommand.Item,
+    ] as const satisfies readonly BattleCommand[];
+
+    const commandSelectWindow = this.spawn(new CommandSelectWindow(ui, commands));
+
+    // 敵選択ウィンドウ
+    const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain)));
+
+    // レイアウトコーディネイター
+    const coordinator = this.spawn(new UILayoutCoordinator(
+      ui, width, height, {
+        commandSelectWindow,
+        enemySelectWindow,
+      }));
+
+    // コンテキストに設定
+    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow };
   }
 
   /**
-   * コンテキストに含まれる入力関係のオブジェクトの後始末
+   * 入力系UIの後始末
    */
-  #cleanUpInputContext(): void {
+  disposeInputUi(): void {
     if (!this.#context.inputUi) {
       return;
     }
 
-    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.commandSelectWindow);
-    this.#gameObjectAccess.despawnGameObject(this.#context.inputUi.enemySelectWindow);
+    this.despawn(this.#context.inputUi.coordinator);
+    this.despawn(this.#context.inputUi.commandSelectWindow);
+    this.despawn(this.#context.inputUi.enemySelectWindow);
     this.#context.inputUi = undefined;
   }
 
-  /**
-   * 実行フェーズへの遷移
-   */
-  #moveToExecutePhase(): void {
-    this.#stateStack.requestPush(new ExecutePhaseTurnPlanningState(this));
+  getActorById(actorId: ActorId): Actor {
+    const actor = this.#actorById.get(actorId);
+
+    if (!actor) {
+      throw new Error(`getActorById: actor not found:ActorId[${actorId}]`);
+    }
+
+    return actor;
   }
 
-  /**
-   * コマンド選択の結果を追加
-   */
-  #addChoice(c: CommandChoice): void {
-    this.#context.commandChoices = [...this.#context.commandChoices, c];
+  getAliveAllies(): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    return this.#allAllyActorIds;
   }
 
-  /**
-   * コマンド選択の結果を1つ戻す
-   */
-  #undoChoice(): void {
-    this.#context.commandChoices = this.#context.commandChoices.slice(0, -1);
+  getAliveAllActors(): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
   }
 
-  /**
-   * コマンド選択の結果をクリア
-   * 実行フェーズの完了時に呼び出す
-   */
-  #resetCommandChoice(): void {
-    this.#context.commandChoices = [];
+  getAliveEnemiesInGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    if (!this.#enemyActorsByGroupId.has(groupId)) {
+      return [];
+    }
+
+    return this.#enemyActorsByGroupId.get(groupId)!.map(a => a.actorId);
+  }
+
+  #buildEnemyGroups(domain: Readonly<DomainPorts>) {
+    return [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => {
+      return {
+        enemyGroupId: groupId,
+        name: domain.enemyRepository.findEnemy(list[0].originId).name,
+        count: list.length,
+      };
+    });
   }
 
   #getAllyActorByAllyId(allyId: AllyId): AllyActor {
@@ -316,30 +288,6 @@ export class BattleScene implements Scene {
     }
 
     return actor;
-  }
-
-  #getAllyNameByActorId(id: ActorId): string {
-    const actor = this.#actorById.get(id) as AllyActor | undefined;
-
-    if (!actor || actor.actorType !== ActorType.Ally) {
-      throw new Error(`getAllyNameByActorId: Ally not found (actorId:${id})`);
-    }
-
-    return this.#context.domain.allyRepository.findAlly(actor.originId).name;
-  }
-
-  #getEnemyNameByGroupId(groupId: EnemyGroupId): string {
-    const list = this.#enemyActorsByGroupId.get(groupId);
-
-    if (!list || list.length === 0) {
-      throw new Error(`getEnemyNameByGroupId: Enemy group not found or empty (groupId:${groupId})`);
-    }
-
-    if (!list.every(e => e.originId === list[0].originId)) {
-      throw new Error(`getEnemyNameByGroupId: Enemy group contains multiple enemy types (groupId:${groupId})`);
-    }
-
-    return this.#context.domain.enemyRepository.findEnemy(list[0].originId).name;
   }
 
   #setupDictionary() {

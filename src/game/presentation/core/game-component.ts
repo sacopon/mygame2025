@@ -1,5 +1,5 @@
 import { GameObject } from "./game-object";
-import { ComponentById, ComponentTypeId } from "@game/presentation/component";
+import { ComponentById, ComponentTypeId, TransformComponent } from "@game/presentation/component";
 
 /**
  * GameComponent の共通インターフェース
@@ -86,6 +86,11 @@ export class GameComponents {
     const list = this.#components.slice();
 
     for (const c of list) {
+      // Transform コンポーネントは必須
+      if (c instanceof TransformComponent) {
+        continue;
+      }
+
       this.#removeComponent(c, owner);
     }
   }
@@ -94,6 +99,11 @@ export class GameComponents {
     const id: ComponentTypeId = component.typeId;
 
     if (!this.#componentById.has(id)) {
+      return;
+    }
+
+    // Transform コンポーネントは必須
+    if (component instanceof TransformComponent) {
       return;
     }
 
