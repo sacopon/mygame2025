@@ -3,7 +3,7 @@ import { BattleScene, CommandChoice } from "..";
 import { UiPorts } from "../..";
 import { CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
 import { AtomicEffect } from "@game/application";
-import { DomainPorts, Action, ActorId, DomainEvent } from "@game/domain";
+import { DomainPorts, Action, ActorId, DomainEvent, PlannedAction } from "@game/domain";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -37,8 +37,8 @@ export type TurnPlan = Readonly<{
   allyActions: ReadonlyArray<Action>;
   // 敵陣営キャラクターの行動内容配列
   enemyActions: ReadonlyArray<Action>;
-  // 敵味方全てのキャラクターの行動内容配列
-  allActions: ReadonlyArray<Action>;
+  // 敵味方全てのキャラクターの行動内容配列(mode格納済み)
+  plannedAllActions: ReadonlyArray<PlannedAction>;
 }>;
 
 /**

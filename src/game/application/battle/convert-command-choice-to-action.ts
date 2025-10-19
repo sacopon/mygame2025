@@ -1,4 +1,4 @@
-import { Action, ActionTargets, ActionType, TargetSide } from "@game/domain";
+import { Action, ActionType, TargetSelections, TargetSide } from "@game/domain";
 import { BattleCommand, CommandChoice } from "@game/presentation";
 import { assertNever } from "@shared/utils";
 
@@ -13,7 +13,7 @@ export function convertCommandChoiceToAction(choice: CommandChoice): Action {
         actorId: choice.actorId,
         actionType: ActionType.Attack,
         side: TargetSide.Them,
-        target: ActionTargets.group(choice.target.groupId),
+        selection: TargetSelections.group(choice.target.groupId),
       };
 
     case BattleCommand.Defence:
@@ -21,7 +21,7 @@ export function convertCommandChoiceToAction(choice: CommandChoice): Action {
         actorId: choice.actorId,
         actionType: ActionType.SelfDefence,
         side: TargetSide.Neutral,
-        target: ActionTargets.none(),
+        selection: TargetSelections.none(),
       };
 
     case BattleCommand.Spell:
@@ -31,7 +31,7 @@ export function convertCommandChoiceToAction(choice: CommandChoice): Action {
         actorId: choice.actorId,
         actionType: choice.command === BattleCommand.Spell ? ActionType.Spell : ActionType.Item,
         side: TargetSide.Neutral,
-        target: ActionTargets.none(),
+        selection: TargetSelections.none(),
       };
 
     default:

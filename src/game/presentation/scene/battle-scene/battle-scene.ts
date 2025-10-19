@@ -241,6 +241,35 @@ export class BattleScene implements Scene {
     this.#context.inputUi = undefined;
   }
 
+  getActorById(actorId: ActorId): Actor {
+    const actor = this.#actorById.get(actorId);
+
+    if (!actor) {
+      throw new Error(`getActorById: actor not found:ActorId[${actorId}]`);
+    }
+
+    return actor;
+  }
+
+  getAliveAllies(): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    return this.#allAllyActorIds;
+  }
+
+  getAliveAllActors(): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
+  }
+
+  getAliveEnemiesInGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
+    // TODO: 生死判定
+    if (!this.#enemyActorsByGroupId.has(groupId)) {
+      return [];
+    }
+
+    return this.#enemyActorsByGroupId.get(groupId)!.map(a => a.actorId);
+  }
+
   #buildEnemyGroups(domain: Readonly<DomainPorts>) {
     return [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => {
       return {

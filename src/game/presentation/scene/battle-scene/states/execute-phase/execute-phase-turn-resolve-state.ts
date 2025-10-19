@@ -3,6 +3,7 @@ import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
 import { planTurnOrder, resolveActions } from "@game/application";
 import { BattleSceneContext } from "../battle-scene-state";
+import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
 
 /**
  * バトルシーン状態: ターン解決
@@ -22,10 +23,14 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     }
 
     // 行動順の確定
-    const orderedActions = planTurnOrder(context.turnPlan.allActions);
+    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions);
 
     // バトル処理
-    const { events, effects } = resolveActions(orderedActions);
+    const { events, effects } = resolveActions(orderedActions, {
+      isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
+      aliveEnemiesInGroup: (groupId: EnemyGroupId) => { return this.scene.getAliveEnemiesInGroup(groupId); },
+      aliveAllActors: () => this.scene.getAliveAllActors(),
+    });
 
     this.context.turnResolution = {
       orderedActions,

@@ -13,6 +13,10 @@ export function createEnemyActions(
     actorId: enemyId,
     actionType: ActionType.Attack,
     side: TargetSide.Them,
-    target: { kind: "single", targetActorId: target },
+    selection: { kind: "none" },
+    mode: {
+      kind: "single",
+      targetId: target,
+    }
   }));
 }
