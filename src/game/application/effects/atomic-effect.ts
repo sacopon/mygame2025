@@ -4,6 +4,11 @@ import { ActorId } from "@game/domain";
  * DomainEvent を元に生成されるプレゼンテーション層向けの演出指示
  */
 
+// メッセージウィンドウのクリア
+export type ClearMessage = {
+  kind: "ClearMessage";
+};
+
 // 「${actor.name}の　こうげき！」を表示
 export type AttackStarted = {
   kind: "AttackStarted";
@@ -42,7 +47,8 @@ export type ShowPlayerDamageText = {
   amount: number;
 };
 
-export type AtomicEffect = AttackStarted
+export type AtomicEffect = ClearMessage
+  | AttackStarted
   | PlaySe
   | EnemyDamageBlink
   | ShowEnemyDamageText

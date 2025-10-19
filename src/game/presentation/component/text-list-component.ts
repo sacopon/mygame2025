@@ -59,6 +59,16 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
     return this.#lines.concat();
   }
 
+  setLine(index: number, text: string): void {
+    if (index < 0 || this.#handles.length <= index) {
+      console.warn(`範囲外テキスト:${index}`);
+      return;
+    }
+
+    this.#lines[index] = text;
+    this.owner.ports.render.setTextContent(this.#handles[index], text);
+  }
+
   #createAllLines(gameObject: GameObject) {
     return this.#lines.map(line => gameObject.render.createText({
       text: line,

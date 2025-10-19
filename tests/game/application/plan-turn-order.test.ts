@@ -1,13 +1,12 @@
 import { planTurnOrder } from "@game/application/battle/plan-turn-order";
-import { ActorId } from "@game/domain";
+import { ActorId, EnemyGroupId } from "@game/domain";
 import type { Action } from "@game/domain/models/action";
 
 // 最低限のモック型
 const A = (id: number): Action => ({
   actorId: id as ActorId,
   actionType: "Attack",
-  // side: "Them",
-  selection: { kind: "group", groupId: id as any },
+  selection: { kind: "group", groupId: EnemyGroupId(id) },
 });
 
 describe("planTurnOrder", () => {

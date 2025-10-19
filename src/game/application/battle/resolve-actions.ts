@@ -130,6 +130,8 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
   const isPlayerAction = deps.isAlly(sourceId);
 
   effects.push(
+    // 画面クリア
+    { kind: "ClearMessage" },
     // 「${actorId}の　こうげき！」を表示
     { kind: "AttackStarted", actorId: sourceId },
     // SE再生

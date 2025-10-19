@@ -1,4 +1,4 @@
-import { Action, ActionType, ActorId, TargetSide } from "@game/domain";
+import { Action, ActionType, ActorId } from "@game/domain";
 
 type CreateEnemyActionsParams = {
   enemyActorIds: ReadonlyArray<ActorId>;
@@ -12,7 +12,6 @@ export function createEnemyActions(
   return enemyActorIds.map(enemyId => ({
     actorId: enemyId,
     actionType: ActionType.Attack,
-    side: TargetSide.Them,
     selection: { kind: "none" },
     mode: {
       kind: "single",

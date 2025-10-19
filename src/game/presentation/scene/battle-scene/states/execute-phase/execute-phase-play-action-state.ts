@@ -33,7 +33,11 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     // メッセージランナー作成
     this.#effectRunner = new EffectRunner(
       context.turnResolution.atomicEffects,
-      (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId));
+      (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
+      {
+        clear: () => this.context.executeUi?.messageWindow.clearText(),
+        print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
+      });
 
     // メッセージウィンドウを作成
     const messageWindow = this.scene.spawn(new BattleMessageWindow(this.context.ui));
@@ -89,15 +93,22 @@ type Task = {
   printed: boolean; // TODO: console.log じゃなくなったら削除
 }
 
+type MessageDeps = {
+  clear: () => void,
+  print: (text: string) => void,
+};
+
 class EffectRunner {
   #resolveName: (actorId: ActorId) => string;
+  #message: MessageDeps;
   #isRunning: boolean;
   #queue: Task[] = [];
 
-  constructor(effects: ReadonlyArray<AtomicEffect>, resolveName: (actorId: ActorId) => string) {
+  constructor(effects: ReadonlyArray<AtomicEffect>, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
     this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), printed: false}));
     this.#isRunning = 0 < this.#queue.length;
     this.#resolveName = resolveName;
+    this.#message = messageDeps;
   }
 
   update(deltaMs: number): void {
@@ -130,8 +141,14 @@ class EffectRunner {
     const effect = task.effect;
 
     switch (effect.kind) {
+      case "ClearMessage":
+        if (__DEV__) console.log("メッセージウィンドウ消去");
+        this.#message.clear();
+        break;
+
       case "AttackStarted":
         if (__DEV__) console.log(`🗡️ ${this.#resolveName(effect.actorId)}の　こうげき！`);
+        this.#message.print(`${this.#resolveName(effect.actorId)}の　こうげき！`);
         break;
 
       case "PlaySe":
@@ -144,6 +161,7 @@ class EffectRunner {
 
       case "ShowEnemyDamageText":
         if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}に　${effect.amount}の　ダメージ！！`);
+        this.#message.print(`${this.#resolveName(effect.actorId)}に　${effect.amount}の　ダメージ！！`);
         break;
 
       case "PlayerDamageShake":
@@ -152,6 +170,7 @@ class EffectRunner {
 
       case "ShowPlayerDamageText":
         if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}は　${effect.amount}の　ダメージをうけた！`);
+        this.#message.print(`${this.#resolveName(effect.actorId)}は　${effect.amount}の　ダメージをうけた！`);
         break;
 
       default:
@@ -162,11 +181,12 @@ class EffectRunner {
 
 function durationOf(effect: Readonly<AtomicEffect>): number {
   switch (effect.kind) {
-    case "AttackStarted": return 0;
+    case "ClearMessage": return 0;
+    case "AttackStarted": return 50;
     case "PlaySe": return 0;
-    case "ShowPlayerDamageText": return 0;
+    case "ShowPlayerDamageText": return 50;
     case "PlayerDamageShake": return 0;
-    case "ShowEnemyDamageText": return 0;
+    case "ShowEnemyDamageText": return 50;
     case "EnemyDamageBlink": return 0;
     default: assertNever(effect);
   }

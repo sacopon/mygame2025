@@ -16,19 +16,6 @@ export const ActionType = {
 export type ActionType = typeof ActionType[keyof typeof ActionType];
 
 /**
- * ターゲットの陣営の方向
- */
-export const TargetSide = {
-  // 自陣営
-  Us: "Us",
-  // 相手陣営
-  Them: "Them",
-  // なし(無関係)/双方
-  Neutral: "Neutral",
-} as const;
-export type TargetSide = typeof TargetSide[keyof typeof TargetSide];
-
-/**
  * CommandChoice からマッピングされるターゲット選択
  * この値と Action の内容から実際の攻撃対象(単体/グループ/全体)を設定することになる
  */
@@ -47,8 +34,6 @@ export type Action = {
   actorId: ActorId;
   /** 何をした */
   actionType: ActionType;
-  // /** 対象陣営 */
-  // side: TargetSide;
   /** 選択された対象 */
   selection: TargetSelection;
 };
