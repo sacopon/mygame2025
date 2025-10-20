@@ -30,6 +30,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { makePath } from "@shared";
 
 function createActors(): Actor[] {
   return [
@@ -75,12 +76,12 @@ export class BattleScene implements Scene {
 
   onEnter(context: SceneContext) {
     context.ui.audio.preloadAsync({
-        cursor: "/sounds/se/cursor.mp3",
-        cancel: "/sounds/se/cancel.mp3",
-        player_attack: "/sounds/se/player_attack.mp3",
-        enemy_attack: "/sounds/se/enemy_attack.mp3",
-        player_damage: "/sounds/se/player_damage.mp3",
-        enemy_damage: "/sounds/se/enemy_damage.mp3",
+        cursor: makePath("sounds/se/cursor.mp3"),
+        cancel: makePath("sounds/se/cancel.mp3"),
+        player_attack: makePath("sounds/se/player_attack.mp3"),
+        enemy_attack: makePath("sounds/se/enemy_attack.mp3"),
+        player_damage: makePath("sounds/se/player_damage.mp3"),
+        enemy_damage: makePath("sounds/se/enemy_damage.mp3"),
       });
 
     this.#allActors = Object.freeze(createActors());

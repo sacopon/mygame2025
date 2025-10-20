@@ -1,6 +1,6 @@
 import "./index.css";
 import { Application, Assets, BitmapFont, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
-import { PAD_BIT, InputState } from "@shared";
+import { PAD_BIT, InputState, makePath } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker, setFirstTouchCallback } from "@core/browser";
 import { bindKeyboard } from "@app/input";
 import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
@@ -16,11 +16,6 @@ import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
 import { InputPortAdapter } from "@app/adapters/input-port-adapter";
 import { GameRoot } from "@game/presentation";
 import { WebAudioAdapter } from "@app/adapters/webaudio-adapter";
-
-/**
- * リソース読み込み用URLを作成する
- */
-const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
 
 function loadInitialAssetsAsync() {
   const resources = [
