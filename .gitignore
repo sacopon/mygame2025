@@ -13,3 +13,4 @@ src-tauri/Cargo.lock
 # 自動生成
 public/icons
 public/textures
+public/sounds
