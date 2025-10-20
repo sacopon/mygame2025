@@ -129,14 +129,19 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
   const targets = resolveTargets(action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
 
+  const seEffect: AtomicEffect[] = [];
+  seEffect.push(
+    { kind: "PlaySe", seId: isPlayerAction ? "player_attack" : "enemy_attack" }
+  );
+  // TODO: クリティカルの場合は seEffect に追加でクリティカル音
+
   effects.push(
     // 画面クリア
     { kind: "ClearMessage" },
+    // SE再生
+    ...seEffect,
     // 「${actorId}の　こうげき！」を表示
     { kind: "AttackStarted", actorId: sourceId },
-    // SE再生
-    // TODO: クリティカルの場合はまた別の音(ただし、クリティカルかどうかは DamageApplied を生成しなければわからない)
-    { kind: "PlaySe", seId: isPlayerAction ? "player_attack" : "enemy_attack" },
   );
 
   for (const targetId of targets) {
@@ -167,6 +172,8 @@ function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps)
 
   if (isPlayerAttack) {
     effects.push(
+      // SE再生
+      { kind: "PlaySe", seId: "enemy_damage" },
       // ダメージを受けた敵の点滅
       { kind: "EnemyDamageBlink", actorId: event.targetId },
       // 「${actorId}は　${amount}の　ダメージ！
@@ -176,6 +183,8 @@ function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps)
   }
   else {
     effects.push(
+      // SE再生
+      { kind: "PlaySe", seId: "player_damage" },
       // 画面の揺れ
       { kind: "PlayerDamageShake", actorId: event.targetId },
       // 「${actor.name}は　${amount}の　ダメージを　うけた！」
