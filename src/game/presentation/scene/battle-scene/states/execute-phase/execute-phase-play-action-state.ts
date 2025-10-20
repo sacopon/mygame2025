@@ -7,6 +7,9 @@ import { ActorId } from "@game/domain";
 import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
 import { AudioPort } from "@game/presentation/ports";
 
+// 敵がダメージ時に点滅している時間(ms)
+const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 30;
+
 /**
  * バトルシーン状態: 演出実行
  * AtomicEffect ごとに演出を実行しつつ、ViewState へ状態の反映を行なっていく
@@ -34,6 +37,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     // メッセージランナー作成
     this.#effectRunner = new EffectRunner(
       context.turnResolution.atomicEffects,
+      this.scene,
       context.ui.audio,
       (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
       {
@@ -92,7 +96,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
 type Task = {
   effect: AtomicEffect;
   remainingMs: number;
-  printed: boolean; // TODO: console.log じゃなくなったら削除
+  processed: boolean; // TODO: console.log じゃなくなったら削除
 }
 
 type MessageDeps = {
@@ -101,14 +105,16 @@ type MessageDeps = {
 };
 
 class EffectRunner {
+  #scene: BattleScene;
   #audio: AudioPort;
   #resolveName: (actorId: ActorId) => string;
   #message: MessageDeps;
   #isRunning: boolean;
   #queue: Task[] = [];
 
-  constructor(effects: ReadonlyArray<AtomicEffect>, audioPort: AudioPort, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
-    this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), printed: false}));
+  constructor(effects: ReadonlyArray<AtomicEffect>, scene: BattleScene, audioPort: AudioPort, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
+    this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), processed: false}));
+    this.#scene = scene;
     this.#audio = audioPort;
     this.#isRunning = 0 < this.#queue.length;
     this.#resolveName = resolveName;
@@ -140,8 +146,8 @@ class EffectRunner {
   * AtomicEffect を順次処理していく（今はログ出力のみ）
   */
   processTask(task: Task): void {
-    if (task.printed) return;
-    task.printed = true;
+    if (task.processed) return;
+    task.processed = true;
     const effect = task.effect;
 
     switch (effect.kind) {
@@ -162,6 +168,7 @@ class EffectRunner {
 
       case "EnemyDamageBlink":
         if (__DEV__) console.log(`💥 敵点滅: actor=${effect.actorId}`);
+        this.#scene.getEnemyViewByActorId(effect.actorId).blinkByDamage(ENEMY_BLINK_BY_DAMAGE_DURATION_MS);
         break;
 
       case "ShowEnemyDamageText":
@@ -189,10 +196,10 @@ function durationOf(effect: Readonly<AtomicEffect>): number {
     case "ClearMessage": return 0;
     case "AttackStarted": return 25;
     case "PlaySe": return 0;
-    case "ShowPlayerDamageText": return 40;
-    case "PlayerDamageShake": return 0;
-    case "ShowEnemyDamageText": return 40;
-    case "EnemyDamageBlink": return 0;
+    case "ShowPlayerDamageText": return 0;
+    case "PlayerDamageShake": return 30;
+    case "ShowEnemyDamageText": return 0;
+    case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
     default: assertNever(effect);
   }
 }

@@ -129,6 +129,9 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
   const targets = resolveTargets(action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
 
+  // // TODO: とりあえずダメージ演出確認のため、プレイヤーの攻撃以外はスキップ
+  // if (!isPlayerAction) { return { events: [], effects: [] }; }
+
   const seEffect: AtomicEffect[] = [];
   seEffect.push(
     { kind: "PlaySe", seId: isPlayerAction ? "player_attack" : "enemy_attack" }
@@ -174,10 +177,10 @@ function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps)
     effects.push(
       // SE再生
       { kind: "PlaySe", seId: "enemy_damage" },
-      // ダメージを受けた敵の点滅
-      { kind: "EnemyDamageBlink", actorId: event.targetId },
       // 「${actorId}は　${amount}の　ダメージ！
       { kind: "ShowEnemyDamageText", actorId: event.targetId, amount: event.amount },
+      // ダメージを受けた敵の点滅
+      { kind: "EnemyDamageBlink", actorId: event.targetId },
       // TODO: 死んでいたら(点滅の終了を待って)倒したメッセージが入る
     );
   }
@@ -185,10 +188,10 @@ function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps)
     effects.push(
       // SE再生
       { kind: "PlaySe", seId: "player_damage" },
-      // 画面の揺れ
-      { kind: "PlayerDamageShake", actorId: event.targetId },
       // 「${actor.name}は　${amount}の　ダメージを　うけた！」
       { kind: "ShowPlayerDamageText", actorId: event.targetId, amount: event.amount },
+      // 画面の揺れ
+      { kind: "PlayerDamageShake", actorId: event.targetId },
       // TODO: 死んでいたら(画面揺れの終了を待って)画面を赤くする＆死んだメッセージが入る
     );
   }

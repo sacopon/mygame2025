@@ -10,7 +10,7 @@ import {
   Background,
   BattleBackground,
   CommandSelectWindow,
-  Enemy,
+  EnemyView,
   EnemySelectWindow,
   MainWindow,
   SceneContext,
@@ -72,8 +72,14 @@ export class BattleScene implements Scene {
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
+  #enemyViewByActorId: Map<ActorId, EnemyView>;
+
+  constructor() {
+    this.#enemyViewByActorId = new Map<ActorId, EnemyView>();
+  }
 
   onEnter(context: SceneContext) {
+    this.#enemyViewByActorId.clear();
     this.#allActors = Object.freeze(createActors());
 
     // パーティ編成
@@ -95,8 +101,10 @@ export class BattleScene implements Scene {
     // 一旦全て同じ敵の画像
     // 中央揃えにしたいところだが、ここも仮
     // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
-    for (let i = 0; i < this.#allActors.filter(isEnemyActor).length; ++i) {
-      context.gameObjectAccess.spawnGameObject(new Enemy(context.ui, width, height, i));
+    const enemyActors = this.#allActors.filter(isEnemyActor);
+    for (let i = 0; i < enemyActors.length; ++i) {
+      const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, width, height, i));
+      this.#enemyViewByActorId.set(enemyActors[i].actorId, go);
     }
 
     this.#gameObjectAccess = context.gameObjectAccess;
@@ -284,6 +292,13 @@ export class BattleScene implements Scene {
     }
 
     return this.#enemyActorsByGroupId.get(groupId)!.map(a => a.actorId);
+  }
+
+  getEnemyViewByActorId(actorId: ActorId): EnemyView {
+    if (!this.#enemyViewByActorId.has(actorId)) {
+      throw new Error(`BattleScene: enemy view not found[${actorId}]`);
+    }
+    return this.#enemyViewByActorId.get(actorId)!;
   }
 
   #buildEnemyGroups(domain: Readonly<DomainPorts>) {
