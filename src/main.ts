@@ -1,5 +1,5 @@
 import "./index.css";
-import { Application, Assets, BitmapFont, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
+import { Application, Assets, BitmapFont, Container, extensions, ExtensionType, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
 import { PAD_BIT, InputState, makePath } from "@shared";
 import { disableBrowserGestures, registerPwaServiceWorker, setFirstTouchCallback } from "@core/browser";
 import { bindKeyboard } from "@app/input";
@@ -17,7 +17,7 @@ import { InputPortAdapter } from "@app/adapters/input-port-adapter";
 import { GameRoot } from "@game/presentation";
 import { WebAudioAdapter } from "@app/adapters/webaudio-adapter";
 
-function loadInitialAssetsAsync() {
+function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   const resources = [
     // 全体背景
     { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
@@ -25,6 +25,16 @@ function loadInitialAssetsAsync() {
     { alias: "virtualui.json", src: makePath("textures/virtualui.json") },
     // ゲーム本編系画像(SAMPLE)
     { alias: "game.json", src: makePath("textures/game.json") },
+  ];
+
+  const soundResources = [
+    // SE
+    { alias: "cursor", src: makePath("sounds/se/cursor.mp3") },
+    { alias: "cancel", src: makePath("sounds/se/cancel.mp3") },
+    { alias: "player_attack", src: makePath("sounds/se/player_attack.mp3") },
+    { alias: "enemy_attack", src: makePath("sounds/se/enemy_attack.mp3") },
+    { alias: "player_damage", src: makePath("sounds/se/player_damage.mp3") },
+    { alias: "enemy_damage", src: makePath("sounds/se/enemy_damage.mp3") },
   ];
 
   const nearestSpriteSheets = new Set([
@@ -35,7 +45,7 @@ function loadInitialAssetsAsync() {
   ]);
 
   const promises = Assets
-    .load(resources)
+    .load([...resources, ...soundResources])
     .then(()  => {
       // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
       // スプライトシート
@@ -64,9 +74,29 @@ function loadInitialAssetsAsync() {
         }
       });
     })
-    .then(() => document.fonts.load("20px \"BestTen\""));
+    .then(() => document.fonts.load("20px \"BestTen\""))
+    .then(() => {
+      // サウンドの登録
+      webAudioAdapter.preloadAsync(
+        Object.fromEntries(soundResources.map(item => [item.alias, item.src]))
+      );
+    });
 
   return promises;
+}
+
+function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer>): void {
+  extensions.add({
+    name: "web-audio-loader",
+    extension: ExtensionType.LoadParser,
+    test: (url: string, options: { format?: string }) => {
+      const audioExtensions = ["mp3", "ogg", "wav"];
+      const ext = options.format ?? (url.split("?")[0].split(".").pop() ?? "").toLowerCase();
+      return audioExtensions.includes(ext);
+    },
+    load: loaderFunc,
+    unload: async (_buffer: AudioBuffer) => { /* 特になし */ },
+  });
 }
 
 export function buildAppContext(parent: Container): AppContext {
@@ -149,8 +179,12 @@ export function buildAppContext(parent: Container): AppContext {
   // ブラウザデフォルトのジェスチャ操作を禁止
   disableBrowserGestures(app.canvas);
 
-  // 画像読み込み
-  await loadInitialAssetsAsync();
+  // サウンドポートの作成と pixi のローダーへの登録
+  const audioPort = new WebAudioAdapter();
+  registerWebAudioLoader((url: string) => audioPort.load(url));
+
+  // アセットの読み込み
+  await loadInitialAssetsAsync(audioPort);
 
   // 画面上のUI要素の構築
   const gameScreenSpec = new GameScreenSpec();
@@ -162,7 +196,6 @@ export function buildAppContext(parent: Container): AppContext {
   const renderPort = new PixiRenderAdapter(context.gameLayer);
   const screenPort = new ScreenPortAdapter(gameScreenSpec);
   const inputPort = new InputPortAdapter(inputState);
-  const audioPort = new WebAudioAdapter();
   // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
   setFirstTouchCallback(app.canvas, () => { audioPort.resumeIfSuspendedAsync(); });
   const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort });

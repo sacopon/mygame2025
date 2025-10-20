@@ -7,29 +7,40 @@ import { AudioPort } from "../../game/presentation/ports/audio-port";
 export class WebAudioAdapter implements AudioPort {
   #context: AudioContext;
   #gain: GainNode;
-  #buffers: Map<SeId, AudioBuffer>;
+  #buffers: Map<string, AudioBuffer>;
 
   constructor() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Ctor = window.AudioContext || (window as any).webkitAudioContext;
     this.#context = new Ctor();
     this.#gain = this.#context.createGain();
-    this.#gain.gain.value = 0.25;  // TODO: 音でかいのでとりあえず 0.5 で・・・
+    this.#gain.gain.value = 0.25;  // TODO: 音でかいのでとりあえず 0.25 で・・・
     this.#gain.connect(this.#context.destination);
 
     this.#buffers = new Map<SeId, AudioBuffer>();
   }
 
-  async preloadAsync(source: Record<SeId, string>): Promise<void> {
-    await Promise.all(
-      (Object.entries(source) as [SeId, string][])
-        .map(async ([id, url]) => {
-          const res = await fetch(url);
-          const arr = await res.arrayBuffer();
-          const buff = await this.#context.decodeAudioData(arr);
-          this.#buffers.set(id, buff);
-        })
-    );
+  async load(url: string): Promise<AudioBuffer> {
+    const res = await fetch(url);
+    const arr = await res.arrayBuffer();
+    return await this.#context.decodeAudioData(arr);
+  }
+
+  async preloadAsync(source: Record<string, string | AudioBuffer>): Promise<void> {
+    for (const [id, src] of Object.entries(source) as [SeId, string | AudioBuffer][]) {
+      let buffer: AudioBuffer | null = null;
+
+      if (typeof src === "string") {
+        // URL が渡されたのでロードする(fetch + decode)
+        buffer = await this.load(src);
+      }
+      else {
+        // ロード済み AudioBuffer が渡されたのでそのまま使用する
+        buffer = src;
+      }
+
+      this.#buffers.set(id, buffer);
+    }
   }
 
   play(id: SeId): void {
@@ -52,6 +63,7 @@ export class WebAudioAdapter implements AudioPort {
   }
 
   dispose(): void {
+    this.#buffers.clear();
     try { this.#gain.disconnect(); } catch {}
     try { this.#context.close(); } catch {}
   }
