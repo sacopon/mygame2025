@@ -12,6 +12,7 @@ async function ensureDir(p) { await mkdir(p, { recursive: true }); }
 async function cleanPublicGenerated() {
   await rm(path.join(PUBLIC, 'icons'),     { recursive: true, force: true });
   await rm(path.join(PUBLIC, 'textures'), { recursive: true, force: true });
+  await rm(path.join(PUBLIC, 'sounds'), { recursive: true, force: true });
   // 他にコピー対象があるなら追記
 }
 
