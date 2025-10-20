@@ -5,6 +5,7 @@ import { assertNever, toZenkaku } from "@shared";
 import { AtomicEffect } from "@game/application";
 import { ActorId } from "@game/domain";
 import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
+import { AudioPort } from "@game/presentation/ports";
 
 /**
  * バトルシーン状態: 演出実行
@@ -33,6 +34,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     // メッセージランナー作成
     this.#effectRunner = new EffectRunner(
       context.turnResolution.atomicEffects,
+      context.ui.audio,
       (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
       {
         clear: () => this.context.executeUi?.messageWindow.clearText(),
@@ -99,13 +101,15 @@ type MessageDeps = {
 };
 
 class EffectRunner {
+  #audio: AudioPort;
   #resolveName: (actorId: ActorId) => string;
   #message: MessageDeps;
   #isRunning: boolean;
   #queue: Task[] = [];
 
-  constructor(effects: ReadonlyArray<AtomicEffect>, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
+  constructor(effects: ReadonlyArray<AtomicEffect>, audioPort: AudioPort, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
     this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), printed: false}));
+    this.#audio = audioPort;
     this.#isRunning = 0 < this.#queue.length;
     this.#resolveName = resolveName;
     this.#message = messageDeps;
@@ -153,6 +157,7 @@ class EffectRunner {
 
       case "PlaySe":
         if (__DEV__) console.log(`🎧 SE再生: ${effect.seId}`);
+        this.#audio.play(effect.seId);
         break;
 
       case "EnemyDamageBlink":

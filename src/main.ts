@@ -1,7 +1,7 @@
 import "./index.css";
 import { Application, Assets, BitmapFont, Container, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
-import { PAD_BIT, InputState } from "@shared";
-import { disableBrowserGestures, registerPwaServiceWorker } from "@core/browser";
+import { PAD_BIT, InputState, makePath } from "@shared";
+import { disableBrowserGestures, registerPwaServiceWorker, setFirstTouchCallback } from "@core/browser";
 import { bindKeyboard } from "@app/input";
 import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
 import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
@@ -15,11 +15,7 @@ import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
 import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
 import { InputPortAdapter } from "@app/adapters/input-port-adapter";
 import { GameRoot } from "@game/presentation";
-
-/**
- * リソース読み込み用URLを作成する
- */
-const makePath = (path: string) => `${import.meta.env.BASE_URL}${path}`;
+import { WebAudioAdapter } from "@app/adapters/webaudio-adapter";
 
 function loadInitialAssetsAsync() {
   const resources = [
@@ -166,7 +162,10 @@ export function buildAppContext(parent: Container): AppContext {
   const renderPort = new PixiRenderAdapter(context.gameLayer);
   const screenPort = new ScreenPortAdapter(gameScreenSpec);
   const inputPort = new InputPortAdapter(inputState);
-  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort });
+  const audioPort = new WebAudioAdapter();
+  // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
+  setFirstTouchCallback(app.canvas, () => { audioPort.resumeIfSuspendedAsync(); });
+  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort });
 
   let padUI: VirtualPadUI | null = null;
 

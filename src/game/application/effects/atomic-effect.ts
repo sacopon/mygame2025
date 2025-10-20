@@ -1,4 +1,5 @@
 import { ActorId } from "@game/domain";
+import { SeId } from "@game/presentation";
 
 /**
  * DomainEvent を元に生成されるプレゼンテーション層向けの演出指示
@@ -18,7 +19,7 @@ export type AttackStarted = {
 // 何のSEかの情報はここには必要ない？ 値の作成段階で決まる？
 export type PlaySe = {
   kind: "PlaySe";
-  seId: "player_attack" | "enemy_attack" | "critical";
+  seId: SeId;
 };
 
 // 敵がダメージを受けた時の点滅
