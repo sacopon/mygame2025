@@ -12,10 +12,8 @@ export class WindowCursor extends GameObject {
   #sprite: SpriteComponent;
 
   static readonly Settings = {
-    blinkRate: 40,
-    displayCount: 30,
-    onMS: 30,
-    offMS: 10,
+    onMS: 500,
+    offMS: 200,
   };
 
   constructor(ports: GamePorts) {

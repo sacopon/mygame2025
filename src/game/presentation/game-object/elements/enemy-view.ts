@@ -66,7 +66,7 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, vw: number, vh: number, index: number) {
     super(ports);
 
-    this.#blinkController = new BlinkController(3);
+    this.#blinkController = new BlinkController(50);
     this.#index = index;
     const pos = this.#calcPosition(vw, vh, this.#index);
     this.setPosition(pos.x, pos.y);

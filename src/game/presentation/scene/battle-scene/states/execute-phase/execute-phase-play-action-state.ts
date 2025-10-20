@@ -8,7 +8,7 @@ import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/gam
 import { AudioPort } from "@game/presentation/ports";
 
 // 敵がダメージ時に点滅している時間(ms)
-const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 30;
+const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 500;
 
 /**
  * バトルシーン状態: 演出実行
@@ -194,10 +194,10 @@ class EffectRunner {
 function durationOf(effect: Readonly<AtomicEffect>): number {
   switch (effect.kind) {
     case "ClearMessage": return 0;
-    case "AttackStarted": return 25;
+    case "AttackStarted": return 420;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
-    case "PlayerDamageShake": return 30;
+    case "PlayerDamageShake": return 500;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
     default: assertNever(effect);

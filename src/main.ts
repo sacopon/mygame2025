@@ -262,7 +262,7 @@ export function buildAppContext(parent: Container): AppContext {
     }
 
     // ゲーム側の更新処理
-    gameRoot.update(ticker.deltaTime);
+    gameRoot.update(ticker.deltaMS);
 
     // キー入力を次のフレームに備える
     inputState.next();
