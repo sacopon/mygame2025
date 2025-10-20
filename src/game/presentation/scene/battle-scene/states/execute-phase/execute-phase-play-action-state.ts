@@ -1,10 +1,10 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleSceneContext } from "..";
 import { BattleScene } from "../..";
+import { assertNever, toZenkaku } from "@shared";
 import { AtomicEffect } from "@game/application";
-import { assertNever } from "@shared/utils";
-import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
 import { ActorId } from "@game/domain";
+import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
 
 /**
  * バトルシーン状態: 演出実行
@@ -147,7 +147,7 @@ class EffectRunner {
         break;
 
       case "AttackStarted":
-        if (__DEV__) console.log(`🗡️ ${this.#resolveName(effect.actorId)}の　こうげき！`);
+        if (__DEV__) console.log(`🗡️ ${this.#resolveName(effect.actorId)}の こうげき！`);
         this.#message.print(`${this.#resolveName(effect.actorId)}の　こうげき！`);
         break;
 
@@ -160,8 +160,8 @@ class EffectRunner {
         break;
 
       case "ShowEnemyDamageText":
-        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}に　${effect.amount}の　ダメージ！！`);
-        this.#message.print(`${this.#resolveName(effect.actorId)}に　${effect.amount}の　ダメージ！！`);
+        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}に ${toZenkaku(effect.amount)}の ダメージ！！`);
+        this.#message.print(`${this.#resolveName(effect.actorId)}に　${toZenkaku(effect.amount)}の　ダメージ！！`);
         break;
 
       case "PlayerDamageShake":
@@ -169,8 +169,8 @@ class EffectRunner {
         break;
 
       case "ShowPlayerDamageText":
-        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}は　${effect.amount}の　ダメージをうけた！`);
-        this.#message.print(`${this.#resolveName(effect.actorId)}は　${effect.amount}の　ダメージをうけた！`);
+        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
+        this.#message.print(`${this.#resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
         break;
 
       default:
@@ -182,11 +182,11 @@ class EffectRunner {
 function durationOf(effect: Readonly<AtomicEffect>): number {
   switch (effect.kind) {
     case "ClearMessage": return 0;
-    case "AttackStarted": return 50;
+    case "AttackStarted": return 25;
     case "PlaySe": return 0;
-    case "ShowPlayerDamageText": return 50;
+    case "ShowPlayerDamageText": return 40;
     case "PlayerDamageShake": return 0;
-    case "ShowEnemyDamageText": return 50;
+    case "ShowEnemyDamageText": return 40;
     case "EnemyDamageBlink": return 0;
     default: assertNever(effect);
   }

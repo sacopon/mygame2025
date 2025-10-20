@@ -7,10 +7,10 @@ import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastru
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "ゆうしゃ" },  // 勇者
-    { allyId: AllyId(2), name: "もりそば" },  // 武闘家
-    { allyId: AllyId(3), name: "うおのめ" },  // 賢者
-    { allyId: AllyId(4), name: "かおる"   },  // 戦士
+    { allyId: AllyId(1), name: "ゆうしゃあ" },  // 勇者
+    { allyId: AllyId(2), name: "もりそばあ" },  // 武闘家
+    { allyId: AllyId(3), name: "うおのめあ" },  // 賢者
+    { allyId: AllyId(4), name: "かおるあ"   },  // 戦士
   ] as const;
 
 const allEnemies: Enemy[] = [

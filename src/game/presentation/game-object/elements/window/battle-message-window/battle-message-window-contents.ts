@@ -12,11 +12,11 @@ export class BattleMessageWindowContents extends GameObject {
     super(ports);
 
     this.setPosition(
-      4 + 2 + 4,
+      4 + 2 + 2,
       DEFAULT_WINDOW_SETTINGS.borderHeight + DEFAULT_WINDOW_SETTINGS.marginTop);
 
     this.#textList = this.addComponent(new TextListComponent(
-      ["", "", "", ""],
+      ["", "", ""],
       {
         fontFamily: DEFAULT_WINDOW_SETTINGS.fontFamily,
         fontSize: DEFAULT_WINDOW_SETTINGS.fontSize,

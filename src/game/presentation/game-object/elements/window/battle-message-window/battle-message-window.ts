@@ -9,7 +9,7 @@ import { BattleMessageWindowContents } from "./battle-message-window-contents";
  */
 export class BattleMessageWindow extends GroupGameObject {
   static readonly #windowSpec = {
-    width: 210,
+    width: 228,
     height: 70,
     baseAlpha: DEFAULT_WINDOW_SETTINGS.baseAlpha,
   } as const;

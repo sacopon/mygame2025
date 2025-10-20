@@ -2,7 +2,7 @@ import { assertNever } from "@shared/utils";
 import { AtomicEffect } from "..";
 import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, PlannedAction } from "@game/domain";
 
-const FIXED_DAMAGE = 12;
+const FIXED_DAMAGE = 999;
 
 /**
  * 各種判定ロジックをまとめたもの
