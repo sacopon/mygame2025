@@ -45,7 +45,6 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
       });
 
     if (0 < offsets.size) {
-      console.log("揺れ発生中！");
       const size = this.ports.screen.getGameSize();
       this.#place(size.width, size.height, offsets);
     }

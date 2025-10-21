@@ -48,7 +48,7 @@ export type ShowPlayerDamageText = {
   amount: number;
 };
 
-export type AtomicEffect = ClearMessage
+export type PresentationEffect = ClearMessage
   | AttackStarted
   | PlaySe
   | EnemyDamageBlink

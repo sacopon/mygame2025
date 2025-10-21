@@ -1,5 +1,5 @@
 import { assertNever } from "@shared/utils";
-import { AtomicEffect } from "..";
+import { PresentationEffect } from "..";
 import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, PlannedAction } from "@game/domain";
 
 const FIXED_DAMAGE = 999;
@@ -24,10 +24,10 @@ export type ResolveDeps = {
 export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const resultEvents: DomainEvent[] = [];
-  const resultEffects: AtomicEffect[] = [];
+  const resultEffects: PresentationEffect[] = [];
 
   for (const action of actions) {
     const { events, effects } = resolveAction(action, deps);
@@ -47,10 +47,10 @@ export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: Reso
 function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const resultEvents: DomainEvent[] = [];
-  const resultEffects: AtomicEffect[] = [];
+  const resultEffects: PresentationEffect[] = [];
 
   switch(action.actionType) {
     case ActionType.Attack:
@@ -121,10 +121,10 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
 function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const events: DomainEvent[] = [];
-  const effects: AtomicEffect[] = [];
+  const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
   const targets = resolveTargets(action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
@@ -132,7 +132,7 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
   // // TODO: とりあえずダメージ演出確認のため、プレイヤーの攻撃以外はスキップ
   // if (!isPlayerAction) { return { events: [], effects: [] }; }
 
-  const seEffect: AtomicEffect[] = [];
+  const seEffect: PresentationEffect[] = [];
   seEffect.push(
     { kind: "PlaySe", seId: isPlayerAction ? "player_attack" : "enemy_attack" }
   );
@@ -169,9 +169,9 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
  * @param event DamageApplied イベントの内容
  * @returns AtomicEffect の配列
  */
-function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<AtomicEffect> {
+function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
   const isPlayerAttack = deps.isAlly(event.sourceId);
-  const effects: AtomicEffect[] = [];
+  const effects: PresentationEffect[] = [];
 
   if (isPlayerAttack) {
     effects.push(

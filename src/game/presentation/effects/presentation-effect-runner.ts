@@ -1,0 +1,128 @@
+import { SeId } from "..";
+import { assertNever, toZenkaku } from "@shared";
+import { PresentationEffect } from "@game/application";
+import { ActorId } from "@game/domain";
+
+// 味方のダメージ時にウィンドウが揺れている時間(ms)
+const ALLY_SHAKE_BY_DAMAGE_DURATION_MS = 650;
+// 敵がダメージ時に点滅している時間(ms)
+const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 550;
+
+/**
+ * ランナー側で使用する依存部分
+ */
+type EffectDeps = {
+  clear: () => void,
+  print: (text: string) => void,
+  bilkEnemyByDamage: (id: ActorId, durationMs: number) => void,
+  shake: () => void,
+  playSe: (id: SeId) => void,
+  resolveName: (actorId: ActorId) => string,
+};
+
+/**
+ * 効果ごとの演出時間を取得する
+ */
+function durationOf(effect: Readonly<PresentationEffect>): number {
+  switch (effect.kind) {
+    case "ClearMessage": return 0;
+    case "AttackStarted": return 420;
+    case "PlaySe": return 0;
+    case "ShowPlayerDamageText": return 0;
+    case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
+    case "ShowEnemyDamageText": return 0;
+    case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
+    default: assertNever(effect);
+  }
+}
+
+type Task = {
+  effect: PresentationEffect;
+  remainingMs: number;
+  processed: boolean;
+}
+
+/**
+ * 演出をひとつずつ実行するランナー
+ */
+export class PresentationEffectRunner {
+  #deps: EffectDeps;
+  #isRunning: boolean;
+  #queue: Task[] = [];
+
+  constructor(effects: ReadonlyArray<PresentationEffect>, messageDeps: EffectDeps) {
+    this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), processed: false}));
+    this.#isRunning = 0 < this.#queue.length;
+    this.#deps = messageDeps;
+  }
+
+  update(deltaMs: number): void {
+    if (!this.isRunning) { return; }
+    const top = this.#queue[0];
+    if (!top) { this.#isRunning = false; return; }
+
+    this.processTask(top);
+    top.remainingMs -= deltaMs;
+
+    if (top.remainingMs <= 0) {
+      this.#queue.shift();
+
+      if (this.#queue.length === 0) {
+        this.#isRunning = false;
+      }
+    }
+  }
+
+  get isRunning(): boolean {
+    return this.#isRunning;
+  }
+
+  /**
+  * AtomicEffect を順次処理していく（今はログ出力のみ）
+  */
+  processTask(task: Task): void {
+    if (task.processed) return;
+    task.processed = true;
+    const effect = task.effect;
+
+    switch (effect.kind) {
+      case "ClearMessage":
+        if (__DEV__) console.log("メッセージウィンドウ消去");
+        this.#deps.clear();
+        break;
+
+      case "AttackStarted":
+        if (__DEV__) console.log(`🗡️ ${this.#deps.resolveName(effect.actorId)}の こうげき！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}の　こうげき！`);
+        break;
+
+      case "PlaySe":
+        if (__DEV__) console.log(`🎧 SE再生: ${effect.seId}`);
+        this.#deps.playSe(effect.seId);
+        break;
+
+      case "EnemyDamageBlink":
+        if (__DEV__) console.log(`💥 敵点滅: actor=${effect.actorId}`);
+        this.#deps.bilkEnemyByDamage(effect.actorId, ENEMY_BLINK_BY_DAMAGE_DURATION_MS);
+        break;
+
+      case "ShowEnemyDamageText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}に ${toZenkaku(effect.amount)}の ダメージ！！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}に　${toZenkaku(effect.amount)}の　ダメージ！！`);
+        break;
+
+      case "PlayerDamageShake":
+        if (__DEV__) console.log(`😵 味方ダメージで画面揺れ: actor=${effect.actorId}`);
+        this.#deps.shake();
+        break;
+
+      case "ShowPlayerDamageText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
+        break;
+
+      default:
+        assertNever(effect);
+    }
+  }
+}
