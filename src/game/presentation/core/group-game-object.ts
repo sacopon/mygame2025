@@ -1,8 +1,8 @@
-import { isScreenSizeAware } from "./game-component";
+import { isScreenSizeAware, ScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { GamePorts } from "./game-ports";
 
-export class GroupGameObject extends GameObject {
+export class GroupGameObject extends GameObject implements ScreenSizeAware {
   #children: GameObject[] = [];
 
   constructor(ports: GamePorts) {
@@ -141,7 +141,7 @@ export class GroupGameObject extends GameObject {
    * @param width  新しい幅
    * @param height 新しい高さ
    */
-  onScreenSizeChanged(width: number, height: number) {
+  onScreenSizeChanged() {
     for (const go of this.#children) {
       if (!go.isAlive) {
         continue;
@@ -151,7 +151,7 @@ export class GroupGameObject extends GameObject {
         continue;
       }
 
-      go.onScreenSizeChanged(width, height);
+      go.onScreenSizeChanged();
     }
   }
 }

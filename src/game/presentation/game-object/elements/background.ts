@@ -17,7 +17,8 @@ export class Background extends GameObject implements ScreenSizeAware {
     }));
   }
 
-  onScreenSizeChanged(width: number, height: number) {
+  onScreenSizeChanged() {
+    const { width, height } = this.ports.screen.getGameSize();
     this.setPosition(width / 2, height / 2);
   }
 }

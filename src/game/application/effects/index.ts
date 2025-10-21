@@ -1,1 +1,1 @@
-export * from "./atomic-effect";
+export * from "./presentation-effect";

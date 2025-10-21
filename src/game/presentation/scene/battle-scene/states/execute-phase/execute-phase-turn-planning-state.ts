@@ -1,7 +1,7 @@
 import { BattleScene } from "../../battle-scene";
 import { BaseBattleSceneState, BattleSceneContext } from "..";
 import { convertCommandChoiceToAction, createEnemyActions, planAction } from "@game/application";
-import { Action, ActorId, ActorType } from "@game/domain";
+import { ActorId, ActorType } from "@game/domain";
 import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state";
 
 /**
@@ -22,10 +22,7 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
     const allyActions = commands.map(convertCommandChoiceToAction);
 
     // 敵の分の Action も作成する
-    const enemyActions: Action[] = createEnemyActions({
-      allyActorOrder: context.allyActorIds,
-      enemyActorIds: context.enemyActorIds,
-    });
+    const enemyActions = createEnemyActions(context.enemyActorIds);
 
     // Action の TargetMode を埋める
     // (行動計画の具体的な対象はまだ決定しない)

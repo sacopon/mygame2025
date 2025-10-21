@@ -7,17 +7,17 @@ import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastru
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "ゆうしゃあ" },  // 勇者
-    { allyId: AllyId(2), name: "もりそばあ" },  // 武闘家
-    { allyId: AllyId(3), name: "うおのめあ" },  // 賢者
-    { allyId: AllyId(4), name: "かおるあ"   },  // 戦士
+    { allyId: AllyId(1), name: "ゆうしゃ" },  // 勇者
+    { allyId: AllyId(2), name: "ぶとうか" },  // 武闘家
+    { allyId: AllyId(3), name: "けんじゃ" },  // 賢者
+    { allyId: AllyId(4), name: "せんし"   },  // 戦士
   ] as const;
 
 const allEnemies: Enemy[] = [
   { enemyId: EnemyId(1), name: "スライム" },
-  { enemyId: EnemyId(2), name: "スライムベス" },
-  { enemyId: EnemyId(3), name: "ドラキー" },
-  { enemyId: EnemyId(4), name: "まほうつかい" },
+  { enemyId: EnemyId(2), name: "おおねずみ" },
+  { enemyId: EnemyId(3), name: "ビッグベアー" },
+  { enemyId: EnemyId(4), name: "パンプキン" },
 ] as const;
 
   return {
@@ -36,11 +36,10 @@ export class GameRoot implements GameObjectAccess {
 
   constructor(ports: UiPorts) {
     const { screen } = ports;
-    const { width, height } = screen.getGameSize();
 
     // 画面サイズ変更を購読
-    this.#unsubscribeScreen = screen.onGameSizeChanged(size => {
-      this.onScreenSizeChanged(size.width, size.height);
+    this.#unsubscribeScreen = screen.onGameSizeChanged(_ => {
+      this.onScreenSizeChanged();
     });
 
     // シーンコンテキスト作成
@@ -52,7 +51,7 @@ export class GameRoot implements GameObjectAccess {
 
     // シーンマネージャ作成
     this.#sceneManager = new SceneManager("Battle", sceneContext);
-    this.onScreenSizeChanged(width, height);
+    this.onScreenSizeChanged();
   }
 
   spawnGameObject<T extends GameObject>(o: T): T {
@@ -110,7 +109,7 @@ export class GameRoot implements GameObjectAccess {
    * @param width  新しい幅
    * @param height 新しい高さ
    */
-  onScreenSizeChanged(width: number, height: number) {
+  onScreenSizeChanged() {
     for (const go of this.#objects) {
       if (!go.isAlive) {
         continue;
@@ -120,7 +119,7 @@ export class GameRoot implements GameObjectAccess {
         continue;
       }
 
-      go.onScreenSizeChanged(width, height);
+      go.onScreenSizeChanged();
     }
   }
 }

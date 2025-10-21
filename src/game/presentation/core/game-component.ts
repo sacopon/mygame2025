@@ -122,7 +122,7 @@ export class GameComponents {
 }
 
 export interface ScreenSizeAware {
-  onScreenSizeChanged(width: number, height: number): void;
+  onScreenSizeChanged(): void;
 }
 
 export function isScreenSizeAware(x: unknown): x is ScreenSizeAware {

@@ -5,5 +5,6 @@
  * - App/Game どちらからも使ってよい。
  */
 export * from "./types";
-export * from "./input-state";
+export * from "./input";
+export * from "./random";
 export * from "./utils";

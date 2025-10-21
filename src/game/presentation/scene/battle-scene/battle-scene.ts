@@ -41,12 +41,12 @@ function createActors(): Actor[] {
 
     // 敵
     // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい
-    { actorId: ActorId(5),  actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(1) },
-    { actorId: ActorId(6),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(2) },
-    { actorId: ActorId(7),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(2) },
-    { actorId: ActorId(8),  actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(1) },
-    { actorId: ActorId(9),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(3) },
-    { actorId: ActorId(10), actorType: ActorType.Enemy, originId: EnemyId(3), enemyGroupId: EnemyGroupId(4) },
+    { actorId: ActorId(5),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(1) },
+    { actorId: ActorId(6),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(1) },
+    { actorId: ActorId(7),  actorType: ActorType.Enemy, originId: EnemyId(2), enemyGroupId: EnemyGroupId(2) },
+    { actorId: ActorId(8),  actorType: ActorType.Enemy, originId: EnemyId(2), enemyGroupId: EnemyGroupId(2) },
+    { actorId: ActorId(9),  actorType: ActorType.Enemy, originId: EnemyId(3), enemyGroupId: EnemyGroupId(3) },
+    { actorId: ActorId(10), actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(4) },
   ];
 }
 
@@ -103,8 +103,9 @@ export class BattleScene implements Scene {
     // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
     const enemyActors = this.#allActors.filter(isEnemyActor);
     for (let i = 0; i < enemyActors.length; ++i) {
-      const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, width, height, i));
-      this.#enemyViewByActorId.set(enemyActors[i].actorId, go);
+      const actor = enemyActors[i];
+      const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, actor.originId, width, height, i));
+      this.#enemyViewByActorId.set(actor.actorId, go);
     }
 
     this.#gameObjectAccess = context.gameObjectAccess;

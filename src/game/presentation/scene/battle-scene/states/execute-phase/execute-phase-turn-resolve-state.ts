@@ -23,10 +23,11 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     }
 
     // 行動順の確定
-    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions);
+    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions, context.ui.random);
 
     // バトル処理
     const { events, effects } = resolveActions(orderedActions, {
+      random: this.context.ui.random,
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
       aliveAllEnemies: () => this.scene.getAliveEnemies(),

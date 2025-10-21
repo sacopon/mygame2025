@@ -1,13 +1,13 @@
 import { assertNever } from "@shared/utils";
-import { AtomicEffect } from "..";
+import { PresentationEffect } from "..";
 import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, PlannedAction } from "@game/domain";
-
-const FIXED_DAMAGE = 999;
+import { RandomPort } from "@game/presentation";
 
 /**
  * 各種判定ロジックをまとめたもの
  */
 export type ResolveDeps = {
+  random: RandomPort;
   isAlly: (id: ActorId) => boolean;
   aliveAllAllies: () => ReadonlyArray<ActorId>;
   aliveAllEnemies: () => ReadonlyArray<ActorId>;
@@ -24,10 +24,10 @@ export type ResolveDeps = {
 export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const resultEvents: DomainEvent[] = [];
-  const resultEffects: AtomicEffect[] = [];
+  const resultEffects: PresentationEffect[] = [];
 
   for (const action of actions) {
     const { events, effects } = resolveAction(action, deps);
@@ -47,10 +47,10 @@ export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: Reso
 function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const resultEvents: DomainEvent[] = [];
-  const resultEffects: AtomicEffect[] = [];
+  const resultEffects: PresentationEffect[] = [];
 
   switch(action.actionType) {
     case ActionType.Attack:
@@ -86,15 +86,13 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
 
       if (action.selection.kind === "group") {
         // グループを選択をしている(= 味方の行動であることが型から確定している)
-        // TODO: 現状ではグループ内の先頭に対象を固定
         const list = deps.aliveEnemiesInGroup(action.selection.groupId);
-        return 0 < list.length ? [list[0]] : [];
+        return 0 < list.length ? [deps.random.shuffle(list)[0]] : [];
       }
       else {
         // 敵の場合
         const allies = deps.aliveAllAllies();
-        // TODO: 現状では味方の先頭に対象を固定
-        return 0 < allies.length ? [allies[0]] : [];
+        return 0 < allies.length ? [deps.random.shuffle(allies)[0]] : [];
       }
 
     case "group":
@@ -121,18 +119,14 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
 function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
     events: ReadonlyArray<DomainEvent>,
-    effects: ReadonlyArray<AtomicEffect>,
+    effects: ReadonlyArray<PresentationEffect>,
   } {
   const events: DomainEvent[] = [];
-  const effects: AtomicEffect[] = [];
+  const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
   const targets = resolveTargets(action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
-
-  // // TODO: とりあえずダメージ演出確認のため、プレイヤーの攻撃以外はスキップ
-  // if (!isPlayerAction) { return { events: [], effects: [] }; }
-
-  const seEffect: AtomicEffect[] = [];
+  const seEffect: PresentationEffect[] = [];
   seEffect.push(
     { kind: "PlaySe", seId: isPlayerAction ? "player_attack" : "enemy_attack" }
   );
@@ -152,7 +146,7 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
       type: "DamageApplied",
       sourceId,
       targetId,
-      amount: FIXED_DAMAGE,
+      amount: deps.random.range(10, 30),
       critical: false,
     };
 
@@ -169,9 +163,9 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
  * @param event DamageApplied イベントの内容
  * @returns AtomicEffect の配列
  */
-function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<AtomicEffect> {
+function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
   const isPlayerAttack = deps.isAlly(event.sourceId);
-  const effects: AtomicEffect[] = [];
+  const effects: PresentationEffect[] = [];
 
   if (isPlayerAttack) {
     effects.push(

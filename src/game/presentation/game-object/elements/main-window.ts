@@ -19,8 +19,9 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
     }));
   }
 
-  onScreenSizeChanged(vw: number, vh: number) {
-    const pos = this.#calcPosition(vw, vh);
+  onScreenSizeChanged() {
+    const { width, height } = this.ports.screen.getGameSize();
+    const pos = this.#calcPosition(width, height);
     this.setPosition(pos.x, pos.y);
 
     const size = this.#calcSize();

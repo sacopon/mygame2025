@@ -2,7 +2,7 @@ import { StackState } from "../../../../shared/state-stack";
 import { BattleScene, CommandChoice } from "..";
 import { UiPorts } from "../..";
 import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
-import { AtomicEffect } from "@game/application";
+import { PresentationEffect } from "@game/application";
 import { DomainPorts, Action, ActorId, DomainEvent, PlannedAction } from "@game/domain";
 
 /**
@@ -56,7 +56,7 @@ export type TurnResolution = Readonly<{
   // 行動内容解決後の、状態を変化させるイベント配列
   domainEvents: ReadonlyArray<DomainEvent>;
   // DomainEvent を元に生成されたプレゼンテーション層向けの演出指示
-  atomicEffects: ReadonlyArray<AtomicEffect>;
+  atomicEffects: ReadonlyArray<PresentationEffect>;
 }>;
 
 /**
