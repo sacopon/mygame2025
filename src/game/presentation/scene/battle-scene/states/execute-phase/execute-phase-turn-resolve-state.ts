@@ -27,6 +27,7 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
 
     // バトル処理
     const { events, effects } = resolveActions(orderedActions, {
+      random: this.context.ui.random,
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
       aliveAllEnemies: () => this.scene.getAliveEnemies(),
