@@ -23,7 +23,7 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     }
 
     // 行動順の確定
-    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions);
+    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions, context.ui.random);
 
     // バトル処理
     const { events, effects } = resolveActions(orderedActions, {

@@ -1,4 +1,5 @@
 import { Action } from "@game/domain/models/action";
+import { RandomPort } from "@game/presentation";
 
 /**
  * 行動順を決定する
@@ -7,10 +8,10 @@ import { Action } from "@game/domain/models/action";
  * @param actions 行動内容
  * @returns 行動順に並べられたアクション列
  */
-export function planTurnOrder<T extends Action>(actions: ReadonlyArray<T>): ReadonlyArray<T> {
+export function planTurnOrder<T extends Action>(actions: ReadonlyArray<T>, random: RandomPort): ReadonlyArray<T> {
   // 引数の配列は変更しない
   // テスト的に行動は ActorId の降順とする(ActorId なので重複はない)
-  const sortedActions = actions.slice().sort((a, b) => b.actorId - a.actorId);
+  const sortedActions = random.shuffle(actions);
 
   return sortedActions;
 }

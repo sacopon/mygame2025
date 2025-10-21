@@ -16,6 +16,7 @@ import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
 import { InputPortAdapter } from "@app/adapters/input-port-adapter";
 import { GameRoot } from "@game/presentation";
 import { WebAudioAdapter } from "@app/adapters/webaudio-adapter";
+import { XorShiftRandomAdapter } from "@app/adapters/xor-shift-random-adapter";
 
 function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   const resources = [
@@ -196,9 +197,10 @@ export function buildAppContext(parent: Container): AppContext {
   const renderPort = new PixiRenderAdapter(context.gameLayer);
   const screenPort = new ScreenPortAdapter(gameScreenSpec);
   const inputPort = new InputPortAdapter(inputState);
+  const randomPort = XorShiftRandomAdapter.create();  // TODO: セーブデータがある場合はシードを指定する
   // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
   setFirstTouchCallback(app.canvas, () => { audioPort.resumeIfSuspendedAsync(); });
-  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort });
+  const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort, random: randomPort });
 
   let padUI: VirtualPadUI | null = null;
 
