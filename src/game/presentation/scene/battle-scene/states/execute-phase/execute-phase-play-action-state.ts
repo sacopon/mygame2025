@@ -1,12 +1,13 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleSceneContext } from "..";
 import { BattleScene } from "../..";
+import { AudioPort, BattleMessageWindow, UILayoutCoordinator, SeId } from "../../../../";
 import { assertNever, toZenkaku } from "@shared";
 import { AtomicEffect } from "@game/application";
 import { ActorId } from "@game/domain";
-import { BattleMessageWindow, UILayoutCoordinator } from "@game/presentation/game-object";
-import { AudioPort } from "@game/presentation/ports";
 
+// 味方のダメージ時にウィンドウが揺れている時間(ms)
+const ALLY_SHAKE_BY_DAMAGE_DURATION_MS = 500;
 // 敵がダメージ時に点滅している時間(ms)
 const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 500;
 
@@ -39,10 +40,12 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
       context.turnResolution.atomicEffects,
       this.scene,
       context.ui.audio,
-      (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
       {
         clear: () => this.context.executeUi?.messageWindow.clearText(),
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
+        shake: () => this.context.executeUi?.coordinator.shake(this.context.executeUi.messageWindow),
+        playSe: (id: SeId): void => this.context.ui.audio.play(id),
+        resolveName: (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
       });
 
     // メッセージウィンドウを作成
@@ -99,26 +102,25 @@ type Task = {
   processed: boolean; // TODO: console.log じゃなくなったら削除
 }
 
-type MessageDeps = {
+type EffectDeps = {
   clear: () => void,
   print: (text: string) => void,
+  shake: () => void,
+  playSe: (id: SeId) => void,
+  resolveName: (actorId: ActorId) => string,
 };
 
 class EffectRunner {
   #scene: BattleScene;
-  #audio: AudioPort;
-  #resolveName: (actorId: ActorId) => string;
-  #message: MessageDeps;
+  #deps: EffectDeps;
   #isRunning: boolean;
   #queue: Task[] = [];
 
-  constructor(effects: ReadonlyArray<AtomicEffect>, scene: BattleScene, audioPort: AudioPort, resolveName: (actorId: ActorId) => string, messageDeps: MessageDeps) {
+  constructor(effects: ReadonlyArray<AtomicEffect>, scene: BattleScene, audioPort: AudioPort, messageDeps: EffectDeps) {
     this.#queue = effects.map(e => ({ effect: e, remainingMs: durationOf(e), processed: false}));
     this.#scene = scene;
-    this.#audio = audioPort;
     this.#isRunning = 0 < this.#queue.length;
-    this.#resolveName = resolveName;
-    this.#message = messageDeps;
+    this.#deps = messageDeps;
   }
 
   update(deltaMs: number): void {
@@ -153,17 +155,17 @@ class EffectRunner {
     switch (effect.kind) {
       case "ClearMessage":
         if (__DEV__) console.log("メッセージウィンドウ消去");
-        this.#message.clear();
+        this.#deps.clear();
         break;
 
       case "AttackStarted":
-        if (__DEV__) console.log(`🗡️ ${this.#resolveName(effect.actorId)}の こうげき！`);
-        this.#message.print(`${this.#resolveName(effect.actorId)}の　こうげき！`);
+        if (__DEV__) console.log(`🗡️ ${this.#deps.resolveName(effect.actorId)}の こうげき！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}の　こうげき！`);
         break;
 
       case "PlaySe":
         if (__DEV__) console.log(`🎧 SE再生: ${effect.seId}`);
-        this.#audio.play(effect.seId);
+        this.#deps.playSe(effect.seId);
         break;
 
       case "EnemyDamageBlink":
@@ -172,17 +174,18 @@ class EffectRunner {
         break;
 
       case "ShowEnemyDamageText":
-        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}に ${toZenkaku(effect.amount)}の ダメージ！！`);
-        this.#message.print(`${this.#resolveName(effect.actorId)}に　${toZenkaku(effect.amount)}の　ダメージ！！`);
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}に ${toZenkaku(effect.amount)}の ダメージ！！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}に　${toZenkaku(effect.amount)}の　ダメージ！！`);
         break;
 
       case "PlayerDamageShake":
         if (__DEV__) console.log(`😵 味方ダメージで画面揺れ: actor=${effect.actorId}`);
+        this.#deps.shake();
         break;
 
       case "ShowPlayerDamageText":
-        if (__DEV__) console.log(`📝 ${this.#resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
-        this.#message.print(`${this.#resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
         break;
 
       default:
@@ -197,7 +200,7 @@ function durationOf(effect: Readonly<AtomicEffect>): number {
     case "AttackStarted": return 420;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
-    case "PlayerDamageShake": return 500;
+    case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
     default: assertNever(effect);
