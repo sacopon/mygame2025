@@ -16,7 +16,8 @@ export class BattleBackground extends GameObject implements ScreenSizeAware {
     }));
   }
 
-  onScreenSizeChanged(vw: number, vh: number) {
-    this.setPosition(vw / 2, vh / 2 - 28);
+  onScreenSizeChanged() {
+    const { width, height } = this.ports.screen.getGameSize();
+    this.setPosition(width / 2, height / 2 - 28);
   }
 }

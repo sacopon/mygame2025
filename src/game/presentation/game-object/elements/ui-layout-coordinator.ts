@@ -28,7 +28,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     this.#commandWindow = windows.commandSelectWindow;
     this.#enemySelectWindow = windows.enemySelectWindow;
     this.#messageWindow = windows.messageWindow;
-    this.#place(vw, vh);
+    this.#place();
   }
 
   override update(deltaMs: number): void {
@@ -45,14 +45,12 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
       });
 
     if (0 < offsets.size) {
-      const size = this.ports.screen.getGameSize();
-      this.#place(size.width, size.height, offsets);
+      this.#place(offsets);
     }
   }
 
-  onScreenSizeChanged(width: number, height: number): void {
-    // TODO: this.port.screen.getGameSize() から適用する
-    this.#place(width, height);
+  onScreenSizeChanged(): void {
+    this.#place();
   }
 
   shake(window?: CommandSelectWindow | EnemySelectWindow | BattleMessageWindow): void {
@@ -63,7 +61,8 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     this.#shakeRunners.set(window, runner);
   }
 
-  #place(width: number, height: number, offsets?: OffsetsByWindow) {
+  #place(offsets?: OffsetsByWindow) {
+    const { width, height } = this.ports.screen.getGameSize();
     this.#placeInputWindow(width, height, offsets);
     this.#placeMessageWindow(width, height, offsets);
   }
