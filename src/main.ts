@@ -213,7 +213,7 @@ export function buildAppContext(parent: Container): AppContext {
   const inputPort = new InputPortAdapter(inputState);
   const randomPort = XorShiftRandomAdapter.create();  // TODO: セーブデータがある場合はシードを指定する
   // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
-  setFirstTouchCallback(() => { audioPort.resumeIfSuspended(); });
+  setFirstTouchCallback(() => { audioPort.unlock(); });
   const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort, random: randomPort });
 
   let padUI: VirtualPadUI | null = null;

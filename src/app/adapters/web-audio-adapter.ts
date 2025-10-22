@@ -1,5 +1,9 @@
 import { AudioPort } from "../../game/presentation/ports/audio-port";
 
+const isiOS =
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+
 /**
  * WebAudio によるサウンド再生の実装
  */
@@ -75,34 +79,19 @@ export class WebAudioAdapter implements AudioPort {
   }
 
   playBgm(id: string): void {
-    if (id === this.#currentBgmId && this.#currentBgmSource) {
-      return;
-    }
-
+    if (id === this.#currentBgmId && this.#currentBgmSource) return;
     const buffer = this.#bgmBuffers.get(id);
+    if (!buffer) return;
 
-    if (!buffer) {
+    // ★ AudioContext がまだ “running” になってなければ必ず pending
+    if (this.#context.state !== "running" || !this.#resumed) {
+console.log("BGMはpendingされました");
+      this.#pendingBgmId = id;
       return;
     }
 
-    const executed = this.#startWhenReady(() => {
-      // 既存のBGMを止める
-      try { this.#currentBgmSource?.stop(); } catch {}
-      this.#currentBgmSource = null;
-
-      const source = this.#context.createBufferSource();
-      source.buffer = buffer;
-      source.loop = true;
-      source.connect(this.#bgmGain);
-      try { source.start(this.#context.currentTime); } catch {}
-      this.#currentBgmSource = source;
-      this.#currentBgmId = id;
-    });
-
-    // 再生できなかったらペンディングに積む
-    if (!executed) {
-      this.#pendingBgmId = id;
-    }
+    // ここまで来たら即再生（startWhenReady を使わない）
+    this.#playBgmNow(id);
   }
 
   resumeIfSuspended() {
@@ -110,6 +99,7 @@ export class WebAudioAdapter implements AudioPort {
     // ユーザー操作中でなければ呼ばない（警告回避）
     // https://developer.mozilla.org/docs/Web/API/Navigator/userActivation
     const ua = navigator.userActivation;
+    console.log(ua);
     if (ua && !ua.isActive) return;
 
     const state = this.#context.state;
@@ -139,6 +129,104 @@ export class WebAudioAdapter implements AudioPort {
     this.#context.addEventListener("statechange", onState, { once: true });
   }
 
+  // 追加: ユーザージェスチャ内で呼ぶ専用
+  unlock(): void {
+    console.log("unlock");
+    const onStateChange = () => {
+      console.log(`onStateChange: ${this.#context.state}`);
+      if (this.#context.state === "running") {
+        this.#context.removeEventListener("statechange", onStateChange);
+
+        if (this.#pendingBgmId) { this.#playBgmNow(this.#pendingBgmId); }
+      }
+    };
+    this.#context.addEventListener("statechange", onStateChange);
+
+    const empty = this.#context.createBufferSource();
+    empty.start();
+    empty.stop();
+    this.#context.resume();
+
+    if (this.#pendingBgmId) {
+      setTimeout(() => this.#playBgmNow(this.#pendingBgmId!), 100);
+      // this.#playBgmNow(this.#pendingBgmId);
+    }
+  }
+
+// 追加：走り出すまで確実に待つ（ユーザー操作内で呼ぶ）
+async #waitUntilRunning(): Promise<void> {
+  if (this.#context.state === "running") return;
+
+  const waitStateChange = new Promise<void>(resolve => {
+    const onState = () => {
+      if (this.#context.state === "running") {
+        this.#context.removeEventListener("statechange", onState);
+        resolve();
+      }
+    };
+    this.#context.addEventListener("statechange", onState);
+  });
+
+  // 念のためポーリング保険（iOS で statechange が遅い/来ない事故対策）
+  const poll = new Promise<void>(resolve => {
+    const t0 = performance.now();
+    const tick = () => {
+      // 300ms 以内に running or 経過で打ち切り
+      if (this.#context.state === "running" || performance.now() - t0 > 300) {
+        resolve();
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+  });
+
+  try { await this.#context.resume(); } catch {}
+
+  // どちらか先に満たした方で OK
+  await Promise.race([waitStateChange, poll]);
+}
+
+// クラス内に追加: iOS で初回だけ BGM 経路を確実に“起こす”
+#primeAudioGraph(): void {
+  try {
+    // 1 サンプルの無音バッファ
+    const buf = this.#context.createBuffer(1, 1, this.#context.sampleRate);
+    const src = this.#context.createBufferSource();
+    src.buffer = buf;
+
+    // ★ BGM 経路を確実に流す（SE で起こすだけだと BGM が遅れる端末がある）
+    src.connect(this.#bgmGain);
+
+    // iOS はほんの少し先にスケジュールすると安定することがある
+    const t = this.#context.currentTime + (isiOS ? 0.02 : 0);
+    src.start(t);
+    src.stop(t + 0.01);
+  } catch { /* noop */ }
+}
+
+  // 内部: 即座に BGM を鳴らす（startWhenReady を通らない）
+  #playBgmNow(id: string, startAt?: number): void {
+console.log("#playBgmNow");
+    const buffer = this.#bgmBuffers.get(id);
+    if (!buffer) {
+console.log("#buffer is null");
+      return;
+    }
+
+    try { this.#currentBgmSource?.stop(); } catch(e) { console.log(e); }
+    this.#currentBgmSource = null;
+
+    const src = this.#context.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    src.connect(this.#bgmGain);
+    try { src.start(startAt ?? this.#context.currentTime); } catch(e) { console.log(e); }
+    this.#currentBgmSource = src;
+    this.#currentBgmId = id;
+console.log("#playBgmNow end");
+  }
+
   dispose(): void {
     try { this.#currentBgmSource?.stop(); } catch {}
     this.#currentBgmId = this.#pendingBgmId = this.#currentBgmSource = null;
@@ -164,7 +252,17 @@ export class WebAudioAdapter implements AudioPort {
     if (isActive) {
       // 同一タップ内：先に resume を確実に完了させ、その後 start
       try {
-        void this.#context.resume().then(() => startFn()).catch(() => {});
+        this.#context.resume()
+          .then(() => {
+            // startFn();
+
+            // // ここで pending BGM も同じタップ内に開始
+            // if (this.#pendingBgmId) {
+            //   this.#playBgmNow(this.#pendingBgmId, this.#context.currentTime + 0.01);
+            //   this.#pendingBgmId = null;
+            // }
+          })
+          .catch(() => {});
       } catch {}
 
       return true;
