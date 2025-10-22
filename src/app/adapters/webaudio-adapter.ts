@@ -38,15 +38,46 @@ export class WebAudioAdapter implements AudioPort {
       return;
     }
 
-    this.#runOrQueue(() => {
+    this.#startWhenReady(() => {
       const source = this.#context.createBufferSource();
       source.buffer = buffer;
       source.connect(this.#gain);
-      try { source.start(); } catch {}
+      try { source.start(this.#context.currentTime); } catch {}
     });
   }
 
-  #runOrQueue(startFn: () => void): void {
+  resumeIfSuspended() {
+    if (this.#resumed) { return; }
+    // ユーザー操作中でなければ呼ばない（警告回避）
+    // https://developer.mozilla.org/docs/Web/API/Navigator/userActivation
+    const ua = navigator.userActivation;
+    if (ua && !ua.isActive) return;
+
+    const state = this.#context.state;
+    if (state !== "suspended") {
+      this.#resumed = (state === "running");
+      return;
+    }
+
+    try { this.#context.resume(); } catch {}
+
+    const onState = () => {
+      if ((this.#context.state === "running")) {
+        this.#resumed = true;
+        this.#context.removeEventListener("statechange", onState);
+      }
+    };
+    this.#context.addEventListener("statechange", onState, { once: true });
+  }
+
+  dispose(): void {
+    this.#buffers.clear();
+    try { this.#gain.disconnect(); } catch {}
+    try { this.#context.close(); } catch {}
+  }
+
+  // 再生開始時にまだタッチジェスチャによる解除が行われていなかった場合に対応するためのヘルパー
+  #startWhenReady(startFn: () => void): void {
     if ((this.#context.state as string) === "running") {
       startFn();
       return;
@@ -61,34 +92,7 @@ export class WebAudioAdapter implements AudioPort {
         void this.#context.resume().then(() => startFn()).catch(() => {});
       } catch {}
     } else {
-      // ★ユーザー操作外での再生命令は無視する（警告も出ない）
-      // console.log("[Audio] Ignored SE play because userActivation is not active.");
+      // ユーザー操作外での再生命令は無視する（警告も出ない）
     }
-  }
-
-  resumeIfSuspended() {
-    if (this.#resumed) { return; }
-    // ★ ユーザー操作中でなければ呼ばない（警告回避）
-    //   https://developer.mozilla.org/docs/Web/API/Navigator/userActivation
-    const ua = navigator.userActivation;
-    if (ua && !ua.isActive) return;
-
-    if (this.#context.state === "suspended") {
-      try { this.#context.resume(); } catch {}
-    }
-
-    const onState = () => {
-      if ((this.#context.state as string === "running")) {
-        this.#resumed = true;
-        this.#context.removeEventListener("statechange", onState);
-      }
-    };
-    this.#context.addEventListener("statechange", onState, { once: true });
-  }
-
-  dispose(): void {
-    this.#buffers.clear();
-    try { this.#gain.disconnect(); } catch {}
-    try { this.#context.close(); } catch {}
   }
 }
