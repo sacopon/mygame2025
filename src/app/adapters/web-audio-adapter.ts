@@ -1,4 +1,3 @@
-import { BgmId, SeId } from "@game/presentation";
 import { AudioPort } from "../../game/presentation/ports/audio-port";
 
 /**
@@ -42,8 +41,8 @@ export class WebAudioAdapter implements AudioPort {
     this.#seGain.gain.value = 0.25;  // TODO: 音でかいのでとりあえず 0.25 で・・・
     this.#seGain.connect(this.#context.destination);
 
-    this.#bgmBuffers = new Map<BgmId, AudioBuffer>();
-    this.#seBuffers = new Map<SeId, AudioBuffer>();
+    this.#bgmBuffers = new Map<string, AudioBuffer>();
+    this.#seBuffers = new Map<string, AudioBuffer>();
   }
 
   async load(url: string): Promise<AudioBuffer> {
@@ -60,7 +59,7 @@ export class WebAudioAdapter implements AudioPort {
     this.#bgmBuffers.set(bgmId, buffer);
   }
 
-  playSe(id: SeId): void {
+  playSe(id: string): void {
     const buffer = this.#seBuffers.get(id);
 
     if (!buffer) {
@@ -75,7 +74,7 @@ export class WebAudioAdapter implements AudioPort {
     });
   }
 
-  playBgm(id: BgmId): void {
+  playBgm(id: string): void {
     if (id === this.#currentBgmId && this.#currentBgmSource) {
       return;
     }
@@ -117,7 +116,7 @@ export class WebAudioAdapter implements AudioPort {
     if (state !== "suspended") {
       this.#resumed = (state === "running");
       if (this.#resumed && this.#pendingBgmId) {
-        this.playBgm(this.#pendingBgmId as BgmId);
+        this.playBgm(this.#pendingBgmId);
         this.#pendingBgmId = null;
       }
 
@@ -132,7 +131,7 @@ export class WebAudioAdapter implements AudioPort {
         this.#context.removeEventListener("statechange", onState);
 
         if (this.#pendingBgmId) {
-          this.playBgm(this.#pendingBgmId as BgmId);
+          this.playBgm(this.#pendingBgmId);
           this.#pendingBgmId = null;
         }
       }
