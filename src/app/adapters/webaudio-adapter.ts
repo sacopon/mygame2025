@@ -26,21 +26,8 @@ export class WebAudioAdapter implements AudioPort {
     return await this.#context.decodeAudioData(arr);
   }
 
-  async preloadAsync(source: Record<string, string | AudioBuffer>): Promise<void> {
-    for (const [id, src] of Object.entries(source) as [SeId, string | AudioBuffer][]) {
-      let buffer: AudioBuffer | null = null;
-
-      if (typeof src === "string") {
-        // URL が渡されたのでロードする(fetch + decode)
-        buffer = await this.load(src);
-      }
-      else {
-        // ロード済み AudioBuffer が渡されたのでそのまま使用する
-        buffer = src;
-      }
-
-      this.#buffers.set(id, buffer);
-    }
+  registerBuffer(seId: string, buffer: AudioBuffer): void {
+    this.#buffers.set(seId, buffer);
   }
 
   play(id: SeId): void {
