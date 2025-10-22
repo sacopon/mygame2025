@@ -1,7 +1,8 @@
-import { SeId } from "..";
+import { BgmId, SeId } from "..";
 
 export interface AudioPort {
-  play(id: SeId): void;
+  playBgm(id: BgmId): void;
+  playSe(id: SeId): void;
   resumeIfSuspended(): void;
   dispose(): void;
 }

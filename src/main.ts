@@ -11,11 +11,8 @@ import { createResizeHandler, onResize } from "@app/services/resize";
 import { ViewportMetrics } from "@app/services/viewport";
 import { AppContext } from "@app/config";
 import { GameScreenSpec } from "@app/services/screen";
-import { PixiRenderAdapter } from "@app/adapters/pixi-render-adapter";
-import { ScreenPortAdapter } from "@app/adapters/screen-port-adapter";
-import { InputPortAdapter } from "@app/adapters/input-port-adapter";
+import { InputPortAdapter, PixiRenderAdapter, ScreenPortAdapter, WebAudioAdapter } from "@app/adapters";
 import { GameRoot } from "@game/presentation";
-import { WebAudioAdapter } from "@app/adapters/webaudio-adapter";
 import { XorShiftRandomAdapter } from "@app/adapters/xor-shift-random-adapter";
 
 function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
@@ -28,8 +25,13 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
     { alias: "game.json", src: makePath("textures/game.json") },
   ];
 
-  const soundResources = [
-    // SE
+  // BGM
+  const bgmResources = [
+    { alias: "battle", src: makePath("sounds/bgm/battle.mp3") },
+  ];
+
+  // SE
+  const seResources = [
     { alias: "cursor", src: makePath("sounds/se/cursor.mp3") },
     { alias: "cancel", src: makePath("sounds/se/cancel.mp3") },
     { alias: "player_attack", src: makePath("sounds/se/player_attack.mp3") },
@@ -46,7 +48,7 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   ]);
 
   const promises = Assets
-    .load([...resources, ...soundResources])
+    .load([...resources, ...bgmResources, ...seResources])
     .then(()  => {
       // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
       // スプライトシート
@@ -78,14 +80,19 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
     .then(() => document.fonts.load("20px \"BestTen\""))
     .then(() => {
       // サウンドの登録
-      for (const { alias } of soundResources) {
+      for (const { alias } of bgmResources) {
         const buffer = Assets.get<AudioBuffer>(alias);
 
         if (buffer) {
-          webAudioAdapter.registerBuffer(alias, buffer);
+          webAudioAdapter.registerBgmBuffer(alias, buffer);
         }
-        else {
-          console.log(`登録されず!:${alias}`);
+      }
+
+      for (const { alias } of seResources) {
+        const buffer = Assets.get<AudioBuffer>(alias);
+
+        if (buffer) {
+          webAudioAdapter.registerSeBuffer(alias, buffer);
         }
       }
     });

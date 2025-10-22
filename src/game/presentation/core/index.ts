@@ -1,3 +1,4 @@
+export * from "./bgm-id";
 export * from "./game-component";
 export * from "./game-object";
 export * from "./game-ports";

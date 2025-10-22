@@ -120,6 +120,9 @@ export class BattleScene implements Scene {
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
     // 最初は空なのでステートを直push
     this.#stateStack.push(new InputPhaseFlowState(this));
+
+    // BGM開始
+    context.ui.audio.playBgm("battle");
   }
 
   next(): SceneId {
