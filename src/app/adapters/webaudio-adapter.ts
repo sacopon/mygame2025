@@ -6,6 +6,7 @@ import { AudioPort } from "../../game/presentation/ports/audio-port";
  */
 export class WebAudioAdapter implements AudioPort {
   #context: AudioContext;
+  #resumed: boolean = false;
   #gain: GainNode;
   #buffers: Map<string, AudioBuffer>;
 
@@ -26,21 +27,8 @@ export class WebAudioAdapter implements AudioPort {
     return await this.#context.decodeAudioData(arr);
   }
 
-  async preloadAsync(source: Record<string, string | AudioBuffer>): Promise<void> {
-    for (const [id, src] of Object.entries(source) as [SeId, string | AudioBuffer][]) {
-      let buffer: AudioBuffer | null = null;
-
-      if (typeof src === "string") {
-        // URL が渡されたのでロードする(fetch + decode)
-        buffer = await this.load(src);
-      }
-      else {
-        // ロード済み AudioBuffer が渡されたのでそのまま使用する
-        buffer = src;
-      }
-
-      this.#buffers.set(id, buffer);
-    }
+  registerBuffer(seId: string, buffer: AudioBuffer): void {
+    this.#buffers.set(seId, buffer);
   }
 
   play(id: SeId): void {
@@ -50,21 +38,61 @@ export class WebAudioAdapter implements AudioPort {
       return;
     }
 
-    const source = this.#context.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.#gain);
-    try { source.start(); } catch {}
+    this.#startWhenReady(() => {
+      const source = this.#context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.#gain);
+      try { source.start(this.#context.currentTime); } catch {}
+    });
   }
 
-  async resumeIfSuspendedAsync(): Promise<void> {
-    if (this.#context.state === "suspended") {
-      await this.#context.resume();
+  resumeIfSuspended() {
+    if (this.#resumed) { return; }
+    // ユーザー操作中でなければ呼ばない（警告回避）
+    // https://developer.mozilla.org/docs/Web/API/Navigator/userActivation
+    const ua = navigator.userActivation;
+    if (ua && !ua.isActive) return;
+
+    const state = this.#context.state;
+    if (state !== "suspended") {
+      this.#resumed = (state === "running");
+      return;
     }
+
+    try { this.#context.resume(); } catch {}
+
+    const onState = () => {
+      if ((this.#context.state === "running")) {
+        this.#resumed = true;
+        this.#context.removeEventListener("statechange", onState);
+      }
+    };
+    this.#context.addEventListener("statechange", onState, { once: true });
   }
 
   dispose(): void {
     this.#buffers.clear();
     try { this.#gain.disconnect(); } catch {}
     try { this.#context.close(); } catch {}
+  }
+
+  // 再生開始時にまだタッチジェスチャによる解除が行われていなかった場合に対応するためのヘルパー
+  #startWhenReady(startFn: () => void): void {
+    if ((this.#context.state as string) === "running") {
+      startFn();
+      return;
+    }
+
+    const ua = navigator.userActivation;
+    const isActive = ua?.isActive ?? true;  // userActivation が取れない環境ではOKとみなす=Safari対策
+
+    if (isActive) {
+      // 同一タップ内：先に resume を確実に完了させ、その後 start
+      try {
+        void this.#context.resume().then(() => startFn()).catch(() => {});
+      } catch {}
+    } else {
+      // ユーザー操作外での再生命令は無視する（警告も出ない）
+    }
   }
 }

@@ -78,9 +78,16 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
     .then(() => document.fonts.load("20px \"BestTen\""))
     .then(() => {
       // サウンドの登録
-      webAudioAdapter.preloadAsync(
-        Object.fromEntries(soundResources.map(item => [item.alias, item.src]))
-      );
+      for (const { alias } of soundResources) {
+        const buffer = Assets.get<AudioBuffer>(alias);
+
+        if (buffer) {
+          webAudioAdapter.registerBuffer(alias, buffer);
+        }
+        else {
+          console.log(`登録されず!:${alias}`);
+        }
+      }
     });
 
   return promises;
@@ -199,7 +206,7 @@ export function buildAppContext(parent: Container): AppContext {
   const inputPort = new InputPortAdapter(inputState);
   const randomPort = XorShiftRandomAdapter.create();  // TODO: セーブデータがある場合はシードを指定する
   // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
-  setFirstTouchCallback(app.canvas, () => { audioPort.resumeIfSuspendedAsync(); });
+  setFirstTouchCallback(() => { audioPort.resumeIfSuspended(); });
   const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort, random: randomPort });
 
   let padUI: VirtualPadUI | null = null;
