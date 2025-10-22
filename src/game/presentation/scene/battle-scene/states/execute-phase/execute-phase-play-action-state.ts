@@ -32,7 +32,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
         bilkEnemyByDamage: (id: ActorId, durationMs: number) => this.scene.getEnemyViewByActorId(id).blinkByDamage(durationMs),
         shake: () => this.context.executeUi?.coordinator.shake(this.context.executeUi.messageWindow),
-        playSe: (id: SeId): void => this.context.ui.audio.play(id),
+        playSe: (id: SeId): void => this.context.ui.audio.playSe(id),
         resolveName: (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
       });
 

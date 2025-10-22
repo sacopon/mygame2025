@@ -53,7 +53,7 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
     }
     else if (ok) {
       // 決定
-      this.context.ui.audio.play("cursor");
+      this.context.ui.audio.playSe("cursor");
       const targetGroupId = this.#enemySelectWindow.getCurrent();
       this.#callbacks.onConfirm(targetGroupId);
     }

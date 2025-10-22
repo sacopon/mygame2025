@@ -74,7 +74,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
     // 決定
     if (ok) {
       this.#locked = true;
-      this.context.ui.audio.play("cursor");
+      this.context.ui.audio.playSe("cursor");
       const command = this.#commandSelectWindow.getCurrent();
       this.#runFlow(command, BattleCommandDecider.next(this.#actor.actorId, command));
     }
