@@ -73,6 +73,6 @@ export function registerPwaServiceWorker(serviceWokerPath: string) {
 /**
  * 初回画面タッチ時にコールバックを設定する
  */
-export function setFirstTouchCallback(canvas: HTMLCanvasElement, callback: () => void): void {
-  canvas.addEventListener("pointerdown", callback, { once: true });
+export function setFirstTouchCallback(callback: () => void): void {
+  window.addEventListener("pointerdown", callback, { once: true });
 }

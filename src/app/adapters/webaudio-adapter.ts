@@ -43,9 +43,9 @@ export class WebAudioAdapter implements AudioPort {
     try { source.start(); } catch {}
   }
 
-  async resumeIfSuspendedAsync(): Promise<void> {
+  resumeIfSuspendedAsync() {
     if (this.#context.state === "suspended") {
-      await this.#context.resume();
+      try { this.#context.resume(); } catch {}
     }
   }
 

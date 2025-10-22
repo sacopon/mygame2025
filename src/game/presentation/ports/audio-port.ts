@@ -2,6 +2,6 @@ import { SeId } from "..";
 
 export interface AudioPort {
   play(id: SeId): void;
-  resumeIfSuspendedAsync(): Promise<void>;
+  resumeIfSuspendedAsync(): void;
   dispose(): void;
 }
