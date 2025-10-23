@@ -26,6 +26,8 @@ export class WebAudioAdapter implements AudioPort {
   #currentBgmId: string | null;
   // ペンディング中の BGM の ID（再生しようとして、まだタッチ操作などが行われていなくてできなかった）
   #pendingBgmId: string | null;
+  #analyser: AnalyserNode | null = null;
+  #analyserBuf: Uint8Array<ArrayBuffer> | null = null;
 
   constructor() {
     this.#resumed = false;
@@ -130,80 +132,70 @@ console.log("BGMはpendingされました");
   }
 
   // 追加: ユーザージェスチャ内で呼ぶ専用
-  unlock(): void {
-    console.log("unlock");
-    const onStateChange = () => {
-      console.log(`onStateChange: ${this.#context.state}`);
-      if (this.#context.state === "running") {
-        this.#context.removeEventListener("statechange", onStateChange);
-
-        if (this.#pendingBgmId) { this.#playBgmNow(this.#pendingBgmId); }
-      }
-    };
-    this.#context.addEventListener("statechange", onStateChange);
-
+  async unlock(): Promise<void> {
     const empty = this.#context.createBufferSource();
     empty.start();
     empty.stop();
     this.#context.resume();
 
+    await this.#waitAudibleOnBgmPath(300);
+
     if (this.#pendingBgmId) {
-      setTimeout(() => this.#playBgmNow(this.#pendingBgmId!), 100);
-      // this.#playBgmNow(this.#pendingBgmId);
+      this.#playBgmNow(this.#pendingBgmId!);
     }
   }
 
-// 追加：走り出すまで確実に待つ（ユーザー操作内で呼ぶ）
-async #waitUntilRunning(): Promise<void> {
-  if (this.#context.state === "running") return;
 
-  const waitStateChange = new Promise<void>(resolve => {
-    const onState = () => {
-      if (this.#context.state === "running") {
-        this.#context.removeEventListener("statechange", onState);
-        resolve();
-      }
-    };
-    this.#context.addEventListener("statechange", onState);
-  });
+  // unlock 内で使う：BGM経路を起こして可聴サンプル流通をRAFで検知
+  async #waitAudibleOnBgmPath(maxMs = 300): Promise<boolean> {
+    // Analyser を用意（1回だけ作る）
+    if (!this.#analyser) {
+      this.#analyser = this.#context.createAnalyser();
+      this.#analyser.fftSize = 512; // 小さめでOK
+      this.#bgmGain.connect(this.#analyser);
+      this.#analyserBuf = new Uint8Array(this.#analyser.frequencyBinCount);
+    }
 
-  // 念のためポーリング保険（iOS で statechange が遅い/来ない事故対策）
-  const poll = new Promise<void>(resolve => {
-    const t0 = performance.now();
-    const tick = () => {
-      // 300ms 以内に running or 経過で打ち切り
-      if (this.#context.state === "running" || performance.now() - t0 > 300) {
-        resolve();
-      } else {
+    // 微音オシレータで BGM 経路を“プライム”
+    const osc = this.#context.createOscillator();
+    const g = this.#context.createGain();
+    g.gain.value = 0.001;          // ほぼ無音（0 はダメ）
+    osc.connect(g).connect(this.#bgmGain);
+    const t0 = this.#context.currentTime + 0.01;   // iOS 安定化のため少し先
+    osc.start(t0);
+    osc.stop(t0 + 0.05);           // 50ms だけ
+
+    // RAF で 〜maxMs 監視
+    const started = performance.now();
+    return await new Promise<boolean>(resolve => {
+      const tick = () => {
+        // ノイズとして発生しないようにゲインの接続先を切る(メソッドの先頭だと効かないのでここで毎回行う)
+        try { this.#bgmGain.disconnect(this.#context.destination); } catch {}
+
+        // 周波数ドメインでも時間ドメインでもOK。ここは簡単に波形の「非フラット」を見る
+        this.#analyser!.getByteTimeDomainData!(this.#analyserBuf!);
+        // 中央 128 からの偏差がしきい値越えのサンプル数を数える
+        let count = 0;
+        for (let i = 0; i < this.#analyserBuf!.length; i++) {
+          if (Math.abs(this.#analyserBuf![i] - 128) > 2) count++; // しきい値は小さめで
+        }
+        if (count > 5) {
+          // 何サンプルか動いていればOKとみなす
+          this.#bgmGain.connect(this.#context.destination, 0, 0);
+          resolve(true);
+          return;
+        }
+
+        if (performance.now() - started > maxMs) {
+          this.#bgmGain.connect(this.#context.destination, 0, 0);
+          resolve(false);
+          return;
+        }
         requestAnimationFrame(tick);
-      }
-    };
-    requestAnimationFrame(tick);
-  });
-
-  try { await this.#context.resume(); } catch {}
-
-  // どちらか先に満たした方で OK
-  await Promise.race([waitStateChange, poll]);
-}
-
-// クラス内に追加: iOS で初回だけ BGM 経路を確実に“起こす”
-#primeAudioGraph(): void {
-  try {
-    // 1 サンプルの無音バッファ
-    const buf = this.#context.createBuffer(1, 1, this.#context.sampleRate);
-    const src = this.#context.createBufferSource();
-    src.buffer = buf;
-
-    // ★ BGM 経路を確実に流す（SE で起こすだけだと BGM が遅れる端末がある）
-    src.connect(this.#bgmGain);
-
-    // iOS はほんの少し先にスケジュールすると安定することがある
-    const t = this.#context.currentTime + (isiOS ? 0.02 : 0);
-    src.start(t);
-    src.stop(t + 0.01);
-  } catch { /* noop */ }
-}
+      };
+      requestAnimationFrame(tick);
+    });
+  }
 
   // 内部: 即座に BGM を鳴らす（startWhenReady を通らない）
   #playBgmNow(id: string, startAt?: number): void {
