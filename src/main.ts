@@ -131,7 +131,30 @@ function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer
   });
 }
 
-export function buildAppContext(parent: Container): AppContext {
+function createDebugSoundOnOffButton(parent: Container, callback: () => boolean) {
+  const buttonContainer = new Container();
+  parent.addChild(buttonContainer);
+  const button = new Graphics();
+  button.pivot.set(0.5, 0.5);
+  button.rect(-24, -24, 48, 48);
+  button.fill({ color: 0xFFFFFF });
+  button.tint = 0x666666;
+  button.interactive = true;
+  button.on("pointerdown", () => {
+    button.scale.set(1.2);
+  });
+  button.on("pointerup", () => {
+    const muted = callback();
+    if (muted) { button.tint = 0x666666; }
+    else { button.tint = 0x00FF00; }
+
+    button.scale.set(1.0);
+  });
+  buttonContainer.addChild(button);
+  buttonContainer.position.set(40, 40);
+}
+
+function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);
@@ -144,6 +167,12 @@ export function buildAppContext(parent: Container): AppContext {
   // バーチャルパッドUIとゲーム画面の共通の親
   const deviceLayer = new Container();
   root.addChild(deviceLayer);
+
+  // ゲーム画面外のUI 用
+  const appUiLayer = new Container();
+  root.addChild(appUiLayer);
+  // 暫定的デバッグミュートボタン配置
+  createDebugSoundOnOffButton(appUiLayer, debugCallback);
 
   // 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー
   const frameLayer = new Container();
@@ -222,7 +251,13 @@ export function buildAppContext(parent: Container): AppContext {
   const gameScreenSpec = new GameScreenSpec();
   const inputState = new InputState();
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
-  const context = buildAppContext(app.stage);
+  const context = buildAppContext(app.stage,
+    () => {
+      // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
+      const isMuted = audioPort.isMuted;
+      audioPort.setMuted(!isMuted);
+      return !isMuted;
+    });
 
   // ポート・ゲーム側システムの作成
   const renderPort = new PixiRenderAdapter(context.gameLayer);
