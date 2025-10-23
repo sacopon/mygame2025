@@ -1,3 +1,4 @@
+import { isSafari, waitByRaf } from "@core";
 import { AudioPort } from "../../game/presentation/ports/audio-port";
 
 /**
@@ -7,7 +8,9 @@ export class WebAudioAdapter implements AudioPort {
   // WebAudio のコンテキスト
   #context: AudioContext;
   // 初期化済みフラグ
-  #resumed: boolean;
+  #unlocked: boolean;
+  // ミュート管理用のボリューム調整弁
+  #muteGain: GainNode;
   // BGM 用のボリューム調整弁
   #bgmGain: GainNode;
   // SE 用のボリューム調整弁
@@ -24,7 +27,7 @@ export class WebAudioAdapter implements AudioPort {
   #pendingBgmId: string | null;
 
   constructor() {
-    this.#resumed = false;
+    this.#unlocked = false;
     this.#currentBgmSource = null;
     this.#currentBgmId = null;
     this.#pendingBgmId = null;
@@ -33,22 +36,52 @@ export class WebAudioAdapter implements AudioPort {
     const Ctor = window.AudioContext || (window as any).webkitAudioContext;
     this.#context = new Ctor();
 
+    this.#muteGain = this.#context.createGain();
+    this.#muteGain.gain.value = 0;
+
     this.#bgmGain = this.#context.createGain();
     this.#bgmGain.gain.value = 0.15;  // TODO: 音でかいのでとりあえず 0.15 で・・・(SEより小さめ)
-    this.#bgmGain.connect(this.#context.destination);
+    this.#bgmGain.connect(this.#muteGain);
 
     this.#seGain = this.#context.createGain();
     this.#seGain.gain.value = 0.25;  // TODO: 音でかいのでとりあえず 0.25 で・・・
-    this.#seGain.connect(this.#context.destination);
+    this.#seGain.connect(this.#muteGain);
 
+    this.#muteGain.connect(this.#context.destination);
     this.#bgmBuffers = new Map<string, AudioBuffer>();
     this.#seBuffers = new Map<string, AudioBuffer>();
+  }
+
+  get isRunning() {
+    return this.#context.state === "running" && this.#unlocked;
   }
 
   async load(url: string): Promise<AudioBuffer> {
     const res = await fetch(url);
     const arr = await res.arrayBuffer();
     return await this.#context.decodeAudioData(arr);
+  }
+
+  /**
+   * ユーザージェスチャ時に WebAudio を「解錠」する
+   */
+  async unlock(): Promise<void> {
+    if (this.#unlocked) { return; }
+    this.#unlocked = true;
+
+    if (isSafari) {
+      const empty = this.#context.createBufferSource();
+      empty.start();
+      empty.stop();
+      this.#context.resume();
+    }
+
+    // 300ms ほど待つ
+    await waitByRaf(300);
+
+    if (this.#pendingBgmId) {
+      this.#playBgm(this.#pendingBgmId!);
+    }
   }
 
   registerSeBuffer(seId: string, buffer: AudioBuffer): void {
@@ -59,84 +92,51 @@ export class WebAudioAdapter implements AudioPort {
     this.#bgmBuffers.set(bgmId, buffer);
   }
 
-  playSe(id: string): void {
+  setMuted(muted: boolean): void {
+    const fromVolume = this.#muteGain.gain.value;
+    const toVolume = muted ? 0.0 : 1.0;
+    const now = this.#context.currentTime;
+
+    // ノイズを避けるため 50ms かけてミュート/ミュート解除完了になるように設定
+    this.#muteGain.gain.cancelScheduledValues(now);
+    this.#muteGain.gain.setValueAtTime(fromVolume, now);
+    this.#muteGain.gain.linearRampToValueAtTime(toVolume, now + 0.05);
+  }
+
+  get isMuted(): boolean {
+    return this.#muteGain.gain.value === 0;
+  }
+
+  playSe(id: string) {
+    if (!this.isRunning) { return; }
+
     const buffer = this.#seBuffers.get(id);
 
     if (!buffer) {
       return;
     }
 
-    this.#startWhenReady(() => {
-      const source = this.#context.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.#seGain);
-      try { source.start(this.#context.currentTime); } catch {}
-    });
+    const source = this.#context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.#seGain);
+    try { source.start(this.#context.currentTime); } catch {}
   }
 
   playBgm(id: string): void {
-    if (id === this.#currentBgmId && this.#currentBgmSource) {
+    if (id === this.#currentBgmId && this.#currentBgmSource) { return; }
+
+    // AudioContext がまだ “running” になってなければ必ず pending
+    if (!this.isRunning) {
+      // 連打も考慮して常に上書きで処理
+      this.#pendingBgmId = id;
       return;
     }
 
     const buffer = this.#bgmBuffers.get(id);
+    if (!buffer) { return; }
 
-    if (!buffer) {
-      return;
-    }
-
-    const executed = this.#startWhenReady(() => {
-      // 既存のBGMを止める
-      try { this.#currentBgmSource?.stop(); } catch {}
-      this.#currentBgmSource = null;
-
-      const source = this.#context.createBufferSource();
-      source.buffer = buffer;
-      source.loop = true;
-      source.connect(this.#bgmGain);
-      try { source.start(this.#context.currentTime); } catch {}
-      this.#currentBgmSource = source;
-      this.#currentBgmId = id;
-    });
-
-    // 再生できなかったらペンディングに積む
-    if (!executed) {
-      this.#pendingBgmId = id;
-    }
-  }
-
-  resumeIfSuspended() {
-    if (this.#resumed) { return; }
-    // ユーザー操作中でなければ呼ばない（警告回避）
-    // https://developer.mozilla.org/docs/Web/API/Navigator/userActivation
-    const ua = navigator.userActivation;
-    if (ua && !ua.isActive) return;
-
-    const state = this.#context.state;
-    if (state !== "suspended") {
-      this.#resumed = (state === "running");
-      if (this.#resumed && this.#pendingBgmId) {
-        this.playBgm(this.#pendingBgmId);
-        this.#pendingBgmId = null;
-      }
-
-      return;
-    }
-
-    try { this.#context.resume(); } catch {}
-
-    const onState = () => {
-      if ((this.#context.state === "running")) {
-        this.#resumed = true;
-        this.#context.removeEventListener("statechange", onState);
-
-        if (this.#pendingBgmId) {
-          this.playBgm(this.#pendingBgmId);
-          this.#pendingBgmId = null;
-        }
-      }
-    };
-    this.#context.addEventListener("statechange", onState, { once: true });
+    // ここまで来たら再生
+    this.#playBgm(id);
   }
 
   dispose(): void {
@@ -147,30 +147,23 @@ export class WebAudioAdapter implements AudioPort {
     this.#seBuffers.clear();
     try { this.#bgmGain.disconnect(); } catch {}
     try { this.#seGain.disconnect(); } catch {}
+    try { this.#muteGain.disconnect(); } catch {}
     try { this.#context.close(); } catch {}
   }
 
-  // 再生開始時にまだタッチジェスチャによる解除が行われていなかった場合に対応するためのヘルパー
-  // 再生されなかった(startFn がコールバックされなかった)場合は false
-  #startWhenReady(startFn: () => void): boolean {
-    if ((this.#context.state as string) === "running") {
-      startFn();
-      return true;
-    }
+  #playBgm(id: string, startAt?: number): void {
+    const buffer = this.#bgmBuffers.get(id);
+    if (!buffer) { return; }
 
-    const ua = navigator.userActivation;
-    const isActive = ua?.isActive ?? true;  // userActivation が取れない環境ではOKとみなす=Safari対策
+    try { this.#currentBgmSource?.stop(); } catch(e) { console.log(e); }
+    this.#currentBgmSource = null;
 
-    if (isActive) {
-      // 同一タップ内：先に resume を確実に完了させ、その後 start
-      try {
-        void this.#context.resume().then(() => startFn()).catch(() => {});
-      } catch {}
-
-      return true;
-    }
-
-    // ユーザー操作外での再生命令は無視する（警告も出ない）
-    return false;
+    const src = this.#context.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    src.connect(this.#bgmGain);
+    try { src.start(startAt ?? this.#context.currentTime); } catch(e) { console.log(e); }
+    this.#currentBgmSource = src;
+    this.#currentBgmId = id;
   }
 }

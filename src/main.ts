@@ -1,19 +1,36 @@
 import "./index.css";
 import { Application, Assets, BitmapFont, Container, extensions, ExtensionType, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
-import { PAD_BIT, InputState, makePath } from "@shared";
-import { disableBrowserGestures, registerPwaServiceWorker, setFirstTouchCallback } from "@core/browser";
-import { bindKeyboard } from "@app/input";
-import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
-import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
-import { SkinResolver } from "@app/features/ui/skin";
-import { VirtualPadUI } from "@app/features/ui/virtual-pad";
-import { createResizeHandler, onResize } from "@app/services/resize";
-import { ViewportMetrics } from "@app/services/viewport";
-import { AppContext } from "@app/config";
-import { GameScreenSpec } from "@app/services/screen";
-import { InputPortAdapter, PixiRenderAdapter, ScreenPortAdapter, WebAudioAdapter } from "@app/adapters";
-import { GameRoot } from "@game/presentation";
-import { XorShiftRandomAdapter } from "@app/adapters/xor-shift-random-adapter";
+import { PAD_BIT, InputState } from "@shared";
+
+import {
+  disableBrowserGestures,
+  makePath,
+  registerPwaServiceWorker,
+  setFirstTouchCallback
+} from "@core";
+
+import {
+  AppContext,
+  bindKeyboard,
+  createResizeHandler,
+  GameScreenSpec,
+  InputPortAdapter,
+  isUIMode,
+  onResize,
+  PixiRenderAdapter,
+  relayoutViewport,
+  relayoutViewportBare,
+  ScreenPortAdapter,
+  SkinResolver,
+  UIMode,
+  UIMODE,
+  ViewportMetrics,
+  VirtualPadUI,
+  WebAudioAdapter,
+  XorShiftRandomAdapter
+} from "@app";
+
+import { GameRoot } from "@game";
 
 function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   const resources = [
@@ -49,7 +66,7 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
 
   const promises = Assets
     .load([...resources, ...bgmResources, ...seResources])
-    .then(()  => {
+    .then(() => {
       // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
       // スプライトシート
       nearestSpriteSheets.forEach(alias => {
@@ -114,7 +131,30 @@ function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer
   });
 }
 
-export function buildAppContext(parent: Container): AppContext {
+function createDebugSoundOnOffButton(parent: Container, callback: () => boolean) {
+  const buttonContainer = new Container();
+  parent.addChild(buttonContainer);
+  const button = new Graphics();
+  button.pivot.set(0.5, 0.5);
+  button.rect(-24, -24, 48, 48);
+  button.fill({ color: 0xFFFFFF });
+  button.tint = 0x666666;
+  button.interactive = true;
+  button.on("pointerdown", () => {
+    button.scale.set(1.2);
+  });
+  button.on("pointerup", () => {
+    const muted = callback();
+    if (muted) { button.tint = 0x666666; }
+    else { button.tint = 0x00FF00; }
+
+    button.scale.set(1.0);
+  });
+  buttonContainer.addChild(button);
+  buttonContainer.position.set(40, 40);
+}
+
+function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);
@@ -127,6 +167,12 @@ export function buildAppContext(parent: Container): AppContext {
   // バーチャルパッドUIとゲーム画面の共通の親
   const deviceLayer = new Container();
   root.addChild(deviceLayer);
+
+  // ゲーム画面外のUI 用
+  const appUiLayer = new Container();
+  root.addChild(appUiLayer);
+  // 暫定的デバッグミュートボタン配置
+  createDebugSoundOnOffButton(appUiLayer, debugCallback);
 
   // 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー
   const frameLayer = new Container();
@@ -152,7 +198,7 @@ export function buildAppContext(parent: Container): AppContext {
   deviceLayer.addChild(overlayLayer); // ボタン
 
   // 何も入れないうちはイベントを拾わないようにしておく
-  frameLayer.eventMode   = "none";
+  frameLayer.eventMode = "none";
   overlayLayer.eventMode = "none";
 
   const viewportMetrics = new ViewportMetrics();
@@ -205,7 +251,13 @@ export function buildAppContext(parent: Container): AppContext {
   const gameScreenSpec = new GameScreenSpec();
   const inputState = new InputState();
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
-  const context = buildAppContext(app.stage);
+  const context = buildAppContext(app.stage,
+    () => {
+      // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
+      const isMuted = audioPort.isMuted;
+      audioPort.setMuted(!isMuted);
+      return !isMuted;
+    });
 
   // ポート・ゲーム側システムの作成
   const renderPort = new PixiRenderAdapter(context.gameLayer);
@@ -213,7 +265,7 @@ export function buildAppContext(parent: Container): AppContext {
   const inputPort = new InputPortAdapter(inputState);
   const randomPort = XorShiftRandomAdapter.create();  // TODO: セーブデータがある場合はシードを指定する
   // 初回タッチ時にサウンドのサスペンドを解除する設定(ブラウザの場合、タッチイベント契機でないとこの操作ができない)
-  setFirstTouchCallback(() => { audioPort.resumeIfSuspended(); });
+  setFirstTouchCallback(() => { audioPort.unlock(); });
   const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort, random: randomPort });
 
   let padUI: VirtualPadUI | null = null;

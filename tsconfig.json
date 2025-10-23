@@ -6,8 +6,11 @@
     "baseUrl": "./src",
     "paths": {
       "@app/*": ["app/*"],
+      "@app": ["app/index.ts"],
       "@core/*": ["core/*"],
+      "@core": ["core/index.ts"],
       "@game/*": ["game/*"],
+      "@game": ["game/index.ts"],
       "@shared/*": ["shared/*"],
       "@shared": ["shared/index.ts"]
     },
