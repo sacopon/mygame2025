@@ -16,6 +16,8 @@ export class BattleCommandDecider {
     Immediate: "immediate",
     /** 対象(敵)が必要なコマンド */
     NeedEnemyTarget: "needEnemyTarget",
+    /** 未実装のコマンド */
+    NotImplement: "notImplement",
   } as const;
 
   static next(actorId: ActorId, command: BattleCommand): BattleCommandNextFlow {
@@ -25,6 +27,10 @@ export class BattleCommandDecider {
 
       case BattleCommand.Defence:
         return { kind: BattleCommandDecider.FlowType.Immediate };
+
+      case BattleCommand.Spell:
+      case BattleCommand.Item:
+        return { kind: BattleCommandDecider.FlowType.NotImplement };
 
       default:
         // TODO: 未実装

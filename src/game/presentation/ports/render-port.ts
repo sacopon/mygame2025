@@ -105,6 +105,20 @@ export interface RectSpec {
 
 export interface RenderPort {
   /**
+   * オブジェクトの幅を取得
+   *
+   * @returns オブジェクトの幅
+   */
+  getWidth(handle: ViewHandle): number;
+
+  /**
+   * オブジェクトの高さを取得
+   *
+   * @returns オブジェクトの高さ
+   */
+  getHeight(handle: ViewHandle): number;
+
+  /**
    * スプライトを生成し、そのスプライトへアクセスするためのハンドルを返す
    *
    * @param spec スプライトの仕様

@@ -5,6 +5,7 @@ import { assertNever } from "@shared";
 import { AllyActor } from "@game/domain";
 import { GameButton } from "@game/presentation/ports";
 import { CommandSelectWindow, EnemySelectWindow } from "@game/presentation/game-object";
+import { InputPhaseNoticeMessageState } from "./input-phase-notice-message-state";
 
 export type InputPhaseCallbacks = {
   onDecide: (c: CommandChoice) => void,
@@ -156,6 +157,19 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
             onCancel: () => {
               this.scene.requestPopState();
             }
+          }));
+        break;
+
+      case BattleCommandDecider.FlowType.NotImplement:
+        this.#commandSelectWindow.setToDeactiveColor();
+        this.context.inputUi?.enemySelectWindow.setToDeactiveColor();
+        this.scene.requestPushState(new InputPhaseNoticeMessageState(
+          this.scene,
+          "そのコマンドは　まだ実装されていない！",
+          () => {
+            this.#commandSelectWindow.setToActiveColor();
+            this.context.inputUi?.enemySelectWindow.setToActiveColor();
+            this.scene.requestPopState();
           }));
         break;
 
