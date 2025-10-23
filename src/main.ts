@@ -144,8 +144,8 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
   });
   button.on("pointerup", () => {
     const muted = callback();
-    if (muted) { button.clear().fill({ color: 0x666666 }); }
-    else { button.clear().fill({ color: 0x00FF00 }); }
+    if (muted) { button.clear().rect(-24, -24, 48, 48).fill({ color: 0x666666 }); }
+    else { button.clear().rect(-24, -24, 48, 48).fill({ color: 0x00FF00 }); }
 
     button.scale.set(1.0);
   });
