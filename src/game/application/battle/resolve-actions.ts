@@ -16,7 +16,7 @@ export type ResolveDeps = {
 };
 
 /**
- * Action を(ドメイン処理を用いて)解決し、DomainEvent と AtomicEffect を生成する
+ * Action を(ドメイン処理を用いて)解決し、DomainEvent と PresentationEffect を生成する
  *
  * @param actions 行動内容の配列
  * @returns ドメインイベントとアトミックイベントそれぞれの配列
@@ -39,7 +39,7 @@ export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: Reso
 }
 
 /**
- * 1件の Action を処理し、対応する DomainEvent と AtomicEffect 列を作り出す
+ * 1件の Action を処理し、対応する DomainEvent と PresentationEffect 列を作り出す
  *
  * @param action 行動内容
  * @returns どうかけば良いのか
@@ -53,13 +53,20 @@ function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
   const resultEffects: PresentationEffect[] = [];
 
   switch(action.actionType) {
-    case ActionType.Attack:
-      const { events, effects } = createAttackResolution(action, deps);
-      resultEvents.push(...events);
-      resultEffects.push(...effects);
+    case ActionType.Attack: {
+        const { events, effects } = createAttackResolution(action, deps);
+        resultEvents.push(...events);
+        resultEffects.push(...effects);
+      }
       break;
 
-    case ActionType.SelfDefence:
+    case ActionType.SelfDefence: {
+        const { events, effects } = createSelfDefenceResolution(action);
+        resultEvents.push(...events);
+        resultEffects.push(...effects);
+      }
+      break;
+
     case ActionType.Spell:
     case ActionType.Item:
       // TODO
@@ -111,7 +118,7 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
 }
 
 /**
- * actionType: Attack の行動について、DomainEvent と AtomicEffect に解決する
+ * actionType: Attack の行動について、DomainEvent と PresentationEffect に解決する
  *
  * @param action 行動内容(actionType: Attack)
  * @returns どうかけば良いのか
@@ -134,11 +141,11 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
 
   effects.push(
     // 画面クリア
-    { kind: "ClearMessage" },
+    { kind: "ClearMessageWindowText" },
     // SE再生
     ...seEffect,
     // 「${actorId}の　こうげき！」を表示
-    { kind: "AttackStarted", actorId: sourceId },
+    { kind: "ShowAttackStartedText", actorId: sourceId },
   );
 
   for (const targetId of targets) {
@@ -158,10 +165,43 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
 }
 
 /**
- * ドメインイベント DamageApplied に対応した AtomicEffect を生成する
+ * actionType: SelfDefence の行動について、DomainEvent と PresentationEffect に解決する
+ *
+ * @param action 行動内容(actionType: SelfDefence)
+ * @returns どうかけば良いのか
+ */
+function createSelfDefenceResolution(action: Readonly<PlannedAction>)
+  : {
+    events: ReadonlyArray<DomainEvent>,
+    effects: ReadonlyArray<PresentationEffect>,
+  } {
+  const events: DomainEvent[] = [];
+  const effects: PresentationEffect[] = [];
+  const sourceId = action.actorId;
+
+  effects.push(
+    // 画面クリア
+    { kind: "ClearMessageWindowText" },
+    // 「${actorId}は　みをまもっている！」を表示
+    { kind: "ShowSelfDefenceText", actorId: sourceId },
+  );
+
+  events.push(
+    // 防御効果
+    {
+      type: "SelfDefence",
+      sourceId,
+    },
+  );
+
+  return { events, effects };
+}
+
+/**
+ * ドメインイベント DamageApplied に対応した PresentationEffect を生成する
  *
  * @param event DamageApplied イベントの内容
- * @returns AtomicEffect の配列
+ * @returns PresentationEffect の配列
  */
 function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
   const isPlayerAttack = deps.isAlly(event.sourceId);

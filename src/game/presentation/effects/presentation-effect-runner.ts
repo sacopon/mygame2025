@@ -25,13 +25,14 @@ type EffectDeps = {
  */
 function durationOf(effect: Readonly<PresentationEffect>): number {
   switch (effect.kind) {
-    case "ClearMessage": return 0;
-    case "AttackStarted": return 420;
+    case "ClearMessageWindowText": return 0;
+    case "ShowAttackStartedText": return 420;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
     case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
+    case "ShowSelfDefenceText": return 850;
     default: assertNever(effect);
   }
 }
@@ -86,12 +87,12 @@ export class PresentationEffectRunner {
     const effect = task.effect;
 
     switch (effect.kind) {
-      case "ClearMessage":
+      case "ClearMessageWindowText":
         if (__DEV__) console.log("メッセージウィンドウ消去");
         this.#deps.clear();
         break;
 
-      case "AttackStarted":
+      case "ShowAttackStartedText":
         if (__DEV__) console.log(`🗡️ ${this.#deps.resolveName(effect.actorId)}の こうげき！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}の　こうげき！`);
         break;
@@ -119,6 +120,11 @@ export class PresentationEffectRunner {
       case "ShowPlayerDamageText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
+        break;
+
+      case "ShowSelfDefenceText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は みをまもっている！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　みをまもっている！`);
         break;
 
       default:

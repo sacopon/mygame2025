@@ -8,4 +8,9 @@ export type DamageApplied = {
   critical: boolean;
 };
 
-export type DomainEvent = DamageApplied
+export type SelfDefence = {
+  type: "SelfDefence";
+  sourceId: ActorId;
+};
+
+export type DomainEvent = DamageApplied | SelfDefence;

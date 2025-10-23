@@ -6,13 +6,13 @@ import { SeId } from "@game/presentation";
  */
 
 // メッセージウィンドウのクリア
-export type ClearMessage = {
-  kind: "ClearMessage";
+export type ClearMessageWindowText = {
+  kind: "ClearMessageWindowText";
 };
 
 // 「${actor.name}の　こうげき！」を表示
-export type AttackStarted = {
-  kind: "AttackStarted";
+export type ShowAttackStartedText = {
+  kind: "ShowAttackStartedText";
   actorId: ActorId;
 };
 
@@ -48,10 +48,17 @@ export type ShowPlayerDamageText = {
   amount: number;
 };
 
-export type PresentationEffect = ClearMessage
-  | AttackStarted
+// 「${actor.name}は　みをまもっている！」(敵/味方共通）
+export type ShowSelfDefenceText = {
+  kind: "ShowSelfDefenceText";
+  actorId: ActorId;
+};
+
+export type PresentationEffect = ClearMessageWindowText
+  | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink
   | ShowEnemyDamageText
   | PlayerDamageShake
-  | ShowPlayerDamageText;
+  | ShowPlayerDamageText
+  | ShowSelfDefenceText;
