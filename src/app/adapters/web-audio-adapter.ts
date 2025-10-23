@@ -66,6 +66,7 @@ export class WebAudioAdapter implements AudioPort {
    * ユーザージェスチャ時に WebAudio を「解錠」する
    */
   async unlock(): Promise<void> {
+    if (this.#unlocked) { return; }
     this.#unlocked = true;
 
     if (isSafari) {
@@ -91,8 +92,9 @@ export class WebAudioAdapter implements AudioPort {
     this.#bgmBuffers.set(bgmId, buffer);
   }
 
-  playSe(id: string): void {
+  async playSe(id: string): Promise<void> {
     if (!this.isRunning) { return; }
+
     const buffer = this.#seBuffers.get(id);
 
     if (!buffer) {
@@ -108,14 +110,14 @@ export class WebAudioAdapter implements AudioPort {
   playBgm(id: string): void {
     if (id === this.#currentBgmId && this.#currentBgmSource) { return; }
 
-    const buffer = this.#bgmBuffers.get(id);
-    if (!buffer) { return; }
-
     // AudioContext がまだ “running” になってなければ必ず pending
     if (!this.isRunning) {
       this.#pendingBgmId = id;
       return;
     }
+
+    const buffer = this.#bgmBuffers.get(id);
+    if (!buffer) { return; }
 
     // ここまで来たら再生
     this.#playBgm(id);
