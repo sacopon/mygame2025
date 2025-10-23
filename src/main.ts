@@ -135,8 +135,9 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
   const buttonContainer = new Container();
   parent.addChild(buttonContainer);
   const button = new Graphics();
-  button.pivot.set(0.5, 0.5);
-  button.rect(-24, -24, 48, 48);
+  const buttonSize = 48;
+  button.pivot.set(buttonSize / 2, buttonSize / 2);
+  button.rect(0, 0, buttonSize, buttonSize);
   button.fill({ color: 0x666666 });
   button.interactive = true;
   button.on("pointerdown", () => {
@@ -144,13 +145,13 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
   });
   button.on("pointerup", () => {
     const muted = callback();
-    if (muted) { button.clear().rect(-24, -24, 48, 48).fill({ color: 0x666666 }); }
-    else { button.clear().rect(-24, -24, 48, 48).fill({ color: 0x00FF00 }); }
+    if (muted) { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x666666 }); }
+    else { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x00FF00 }); }
 
     button.scale.set(1.0);
   });
   buttonContainer.addChild(button);
-  buttonContainer.position.set(40, 40);
+  buttonContainer.position.set(34, 34);
 }
 
 function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
