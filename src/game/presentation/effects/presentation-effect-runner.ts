@@ -25,14 +25,14 @@ type EffectDeps = {
  */
 function durationOf(effect: Readonly<PresentationEffect>): number {
   switch (effect.kind) {
-    case "ClearMessageWindowText": return 0;
+    case "ClearMessageWindowText": return 50; // 同じメッセージが連続する場合に消えている状態が少しだけ見えるように
     case "ShowAttackStartedText": return 420;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
     case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
-    case "ShowSelfDefenceText": return 850;
+    case "ShowSelfDefenceText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     default: assertNever(effect);
   }
 }
@@ -123,8 +123,8 @@ export class PresentationEffectRunner {
         break;
 
       case "ShowSelfDefenceText":
-        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は みをまもっている！`);
-        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　みをまもっている！`);
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は みをまもっている。`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　みをまもっている。`);
         break;
 
       default:
