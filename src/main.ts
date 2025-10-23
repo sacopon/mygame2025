@@ -274,7 +274,8 @@ export function buildAppContext(parent: Container): AppContext {
     }
 
     if ((inputState.composed() & ~inputState.previousComposed()) & (1 << PAD_BIT.BUTTON3)) {
-      toggleMode();
+      // toggleMode();
+      audioPort.setMuted(!audioPort.isMuted);
     }
 
     // ゲーム側の更新処理

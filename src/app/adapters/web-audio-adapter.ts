@@ -1,9 +1,5 @@
-import { waitByRAF } from "@shared";
+import { isSafari, waitByRAF } from "@shared";
 import { AudioPort } from "../../game/presentation/ports/audio-port";
-
-
-const isSafari = Object.freeze(/Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent));
-const isiOS = Object.freeze(/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
 /**
  * WebAudio によるサウンド再生の実装
@@ -13,6 +9,8 @@ export class WebAudioAdapter implements AudioPort {
   #context: AudioContext;
   // 初期化済みフラグ
   #unlocked: boolean;
+  // ミュート管理用のボリューム調整弁
+  #muteGain: GainNode;
   // BGM 用のボリューム調整弁
   #bgmGain: GainNode;
   // SE 用のボリューム調整弁
@@ -27,8 +25,6 @@ export class WebAudioAdapter implements AudioPort {
   #currentBgmId: string | null;
   // ペンディング中の BGM の ID（再生しようとして、まだタッチ操作などが行われていなくてできなかった）
   #pendingBgmId: string | null;
-  #analyser: AnalyserNode | null = null;
-  #analyserBuf: Uint8Array<ArrayBuffer> | null = null;
 
   constructor() {
     this.#unlocked = false;
@@ -40,14 +36,18 @@ export class WebAudioAdapter implements AudioPort {
     const Ctor = window.AudioContext || (window as any).webkitAudioContext;
     this.#context = new Ctor();
 
+    this.#muteGain = this.#context.createGain();
+    this.#muteGain.gain.value = 0;
+
     this.#bgmGain = this.#context.createGain();
     this.#bgmGain.gain.value = 0.15;  // TODO: 音でかいのでとりあえず 0.15 で・・・(SEより小さめ)
-    this.#bgmGain.connect(this.#context.destination);
+    this.#bgmGain.connect(this.#muteGain);
 
     this.#seGain = this.#context.createGain();
     this.#seGain.gain.value = 0.25;  // TODO: 音でかいのでとりあえず 0.25 で・・・
-    this.#seGain.connect(this.#context.destination);
+    this.#seGain.connect(this.#muteGain);
 
+    this.#muteGain.connect(this.#context.destination);
     this.#bgmBuffers = new Map<string, AudioBuffer>();
     this.#seBuffers = new Map<string, AudioBuffer>();
   }
@@ -92,7 +92,22 @@ export class WebAudioAdapter implements AudioPort {
     this.#bgmBuffers.set(bgmId, buffer);
   }
 
-  async playSe(id: string): Promise<void> {
+  setMuted(muted: boolean): void {
+    const fromVolume = this.#muteGain.gain.value;
+    const toVolume = muted ? 0.0 : 1.0;
+    const now = this.#context.currentTime;
+
+    // ノイズを避けるため 50ms かけてミュート/ミュート解除完了になるように設定
+    this.#muteGain.gain.cancelScheduledValues(now);
+    this.#muteGain.gain.setValueAtTime(fromVolume, now);
+    this.#muteGain.gain.linearRampToValueAtTime(toVolume, now + 0.05);
+  }
+
+  get isMuted(): boolean {
+    return this.#muteGain.gain.value === 0;
+  }
+
+  playSe(id: string) {
     if (!this.isRunning) { return; }
 
     const buffer = this.#seBuffers.get(id);
@@ -112,6 +127,7 @@ export class WebAudioAdapter implements AudioPort {
 
     // AudioContext がまだ “running” になってなければ必ず pending
     if (!this.isRunning) {
+      // 連打も考慮して常に上書きで処理
       this.#pendingBgmId = id;
       return;
     }
@@ -131,6 +147,7 @@ export class WebAudioAdapter implements AudioPort {
     this.#seBuffers.clear();
     try { this.#bgmGain.disconnect(); } catch {}
     try { this.#seGain.disconnect(); } catch {}
+    try { this.#muteGain.disconnect(); } catch {}
     try { this.#context.close(); } catch {}
   }
 
