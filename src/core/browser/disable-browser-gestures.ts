@@ -56,36 +56,3 @@ export function disableBrowserGestures(canvas: HTMLCanvasElement) {
     window.addEventListener(type, () => clearSelection(), opts);
   });
 }
-
-/**
- * PWA 用の ServiceWorker の登録を行う
- */
-export function registerPwaServiceWorker(serviceWokerPath: string) {
-  if (import.meta.env.PROD && "serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register(serviceWokerPath, { scope: import.meta.env.BASE_URL })
-        .catch(console.error);
-    });
-  }
-}
-
-/**
- * 初回画面タッチ時にコールバックを設定する
- */
-export function setFirstTouchCallback(callback: () => void): void {
-  let fired = false;
-
-  const handler = () => {
-    if (fired) { return; }
-    fired = true;
-    callback();
-  };
-
-  const opts = { once: true, capture: true } as AddEventListenerOptions;
-  window.addEventListener("pointerdown", handler, opts);
-  window.addEventListener("mousedown",   handler, opts);
-  window.addEventListener("touchstart",  handler, opts);
-  window.addEventListener("keydown",     handler, opts);
-  window.addEventListener("click",       handler, opts);
-}

@@ -1,19 +1,36 @@
 import "./index.css";
 import { Application, Assets, BitmapFont, Container, extensions, ExtensionType, Graphics, Sprite, Spritesheet, Ticker } from "pixi.js";
-import { PAD_BIT, InputState, makePath } from "@shared";
-import { disableBrowserGestures, registerPwaServiceWorker, setFirstTouchCallback } from "@core/browser";
-import { bindKeyboard } from "@app/input";
-import { relayoutViewport, relayoutViewportBare } from "@app/features/ui/layout";
-import { isUIMode, UIMODE, type UIMode } from "@app/features/ui/mode";
-import { SkinResolver } from "@app/features/ui/skin";
-import { VirtualPadUI } from "@app/features/ui/virtual-pad";
-import { createResizeHandler, onResize } from "@app/services/resize";
-import { ViewportMetrics } from "@app/services/viewport";
-import { AppContext } from "@app/config";
-import { GameScreenSpec } from "@app/services/screen";
-import { InputPortAdapter, PixiRenderAdapter, ScreenPortAdapter, WebAudioAdapter } from "@app/adapters";
-import { GameRoot } from "@game/presentation";
-import { XorShiftRandomAdapter } from "@app/adapters/xor-shift-random-adapter";
+import { PAD_BIT, InputState } from "@shared";
+
+import {
+  disableBrowserGestures,
+  makePath,
+  registerPwaServiceWorker,
+  setFirstTouchCallback
+} from "@core";
+
+import {
+  AppContext,
+  bindKeyboard,
+  createResizeHandler,
+  GameScreenSpec,
+  InputPortAdapter,
+  isUIMode,
+  onResize,
+  PixiRenderAdapter,
+  relayoutViewport,
+  relayoutViewportBare,
+  ScreenPortAdapter,
+  SkinResolver,
+  UIMode,
+  UIMODE,
+  ViewportMetrics,
+  VirtualPadUI,
+  WebAudioAdapter,
+  XorShiftRandomAdapter
+} from "@app";
+
+import { GameRoot } from "@game";
 
 function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   const resources = [
@@ -49,7 +66,7 @@ function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
 
   const promises = Assets
     .load([...resources, ...bgmResources, ...seResources])
-    .then(()  => {
+    .then(() => {
       // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
       // スプライトシート
       nearestSpriteSheets.forEach(alias => {
@@ -152,7 +169,7 @@ export function buildAppContext(parent: Container): AppContext {
   deviceLayer.addChild(overlayLayer); // ボタン
 
   // 何も入れないうちはイベントを拾わないようにしておく
-  frameLayer.eventMode   = "none";
+  frameLayer.eventMode = "none";
   overlayLayer.eventMode = "none";
 
   const viewportMetrics = new ViewportMetrics();

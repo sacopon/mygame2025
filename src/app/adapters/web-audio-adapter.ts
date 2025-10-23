@@ -1,4 +1,4 @@
-import { isSafari, waitByRAF } from "@shared";
+import { isSafari, waitByRaf } from "@core";
 import { AudioPort } from "../../game/presentation/ports/audio-port";
 
 /**
@@ -77,7 +77,7 @@ export class WebAudioAdapter implements AudioPort {
     }
 
     // 300ms ほど待つ
-    await waitByRAF(300);
+    await waitByRaf(300);
 
     if (this.#pendingBgmId) {
       this.#playBgm(this.#pendingBgmId!);

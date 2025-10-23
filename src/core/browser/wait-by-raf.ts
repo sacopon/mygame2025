@@ -1,7 +1,7 @@
 /**
  * RequestAnimatinFrame で指定のミリ秒待つ
  */
-export async function waitByRAF(waitMs: number): Promise<void> {
+export async function waitByRaf(waitMs: number): Promise<void> {
   const started = performance.now();
 
   return await new Promise<void>(resolve => {
