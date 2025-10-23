@@ -53,6 +53,26 @@ export class PixiRenderAdapter implements RenderPort {
     return handle;
   }
 
+  getWidth(handle: ViewHandle): number {
+    const container = this.#views.get(handle);
+
+    if (!container) {
+      return 0;
+    }
+
+    return container.width;
+  }
+
+  getHeight(handle: ViewHandle): number {
+    const container = this.#views.get(handle);
+
+    if (!container) {
+      return 0;
+    }
+
+    return container.height;
+  }
+
   createNineSliceSprite(spec: NineSliceSpriteSpec): ViewHandle {
     const tex = Texture.from(spec.imageId);
     const sprite = new NineSliceSprite({

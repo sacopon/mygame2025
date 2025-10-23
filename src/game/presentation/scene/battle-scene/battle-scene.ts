@@ -30,6 +30,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { NoticeMessageWindow } from "@game/presentation/game-object/elements/window/notice-message-window";
 
 function createActors(): Actor[] {
   return [

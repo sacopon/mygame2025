@@ -29,7 +29,6 @@ export abstract class ListSelectWindow<T> extends GroupGameObject {
 
   setActive(active: boolean): void {
     this.#contents.setCursorVisible(active);
-    // TODO: 非アクティブ時は薄暗くする？
   }
 
   setToDeactiveColor(): void {
