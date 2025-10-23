@@ -9,6 +9,8 @@ export class WebAudioAdapter implements AudioPort {
   #context: AudioContext;
   // 初期化済みフラグ
   #unlocked: boolean;
+  // ミュート中フラグ
+  #userMuted: boolean;
   // ミュート管理用のボリューム調整弁
   #muteGain: GainNode;
   // BGM 用のボリューム調整弁
@@ -38,6 +40,7 @@ export class WebAudioAdapter implements AudioPort {
 
     this.#muteGain = this.#context.createGain();
     this.#muteGain.gain.value = 0;
+    this.#userMuted = true;
 
     this.#bgmGain = this.#context.createGain();
     this.#bgmGain.gain.value = 0.15;  // TODO: 音でかいのでとりあえず 0.15 で・・・(SEより小さめ)
@@ -93,6 +96,7 @@ export class WebAudioAdapter implements AudioPort {
   }
 
   setMuted(muted: boolean): void {
+    this.#userMuted = muted;
     const fromVolume = this.#muteGain.gain.value;
     const toVolume = muted ? 0.0 : 1.0;
     const now = this.#context.currentTime;
@@ -104,7 +108,7 @@ export class WebAudioAdapter implements AudioPort {
   }
 
   get isMuted(): boolean {
-    return this.#muteGain.gain.value === 0;
+    return this.#userMuted;
   }
 
   playSe(id: string) {
