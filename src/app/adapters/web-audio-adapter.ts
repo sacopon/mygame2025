@@ -9,6 +9,8 @@ export class WebAudioAdapter implements AudioPort {
   #context: AudioContext;
   // 初期化済みフラグ
   #unlocked: boolean;
+  // ミュート中フラグ
+  #userMuted: boolean;
   // ミュート管理用のボリューム調整弁
   #muteGain: GainNode;
   // BGM 用のボリューム調整弁
@@ -38,6 +40,7 @@ export class WebAudioAdapter implements AudioPort {
 
     this.#muteGain = this.#context.createGain();
     this.#muteGain.gain.value = 0;
+    this.#userMuted = true;
 
     this.#bgmGain = this.#context.createGain();
     this.#bgmGain.gain.value = 0.15;  // TODO: 音でかいのでとりあえず 0.15 で・・・(SEより小さめ)
@@ -82,6 +85,9 @@ export class WebAudioAdapter implements AudioPort {
     if (this.#pendingBgmId) {
       this.#playBgm(this.#pendingBgmId!);
     }
+
+    // ミュート状態の反映
+    this.#applyMuteNow();
   }
 
   registerSeBuffer(seId: string, buffer: AudioBuffer): void {
@@ -93,18 +99,12 @@ export class WebAudioAdapter implements AudioPort {
   }
 
   setMuted(muted: boolean): void {
-    const fromVolume = this.#muteGain.gain.value;
-    const toVolume = muted ? 0.0 : 1.0;
-    const now = this.#context.currentTime;
-
-    // ノイズを避けるため 50ms かけてミュート/ミュート解除完了になるように設定
-    this.#muteGain.gain.cancelScheduledValues(now);
-    this.#muteGain.gain.setValueAtTime(fromVolume, now);
-    this.#muteGain.gain.linearRampToValueAtTime(toVolume, now + 0.05);
+    this.#userMuted = muted;
+    this.#applyMuteNow();
   }
 
   get isMuted(): boolean {
-    return this.#muteGain.gain.value === 0;
+    return this.#userMuted;
   }
 
   playSe(id: string) {
@@ -165,5 +165,22 @@ export class WebAudioAdapter implements AudioPort {
     try { src.start(startAt ?? this.#context.currentTime); } catch(e) { console.log(e); }
     this.#currentBgmSource = src;
     this.#currentBgmId = id;
+  }
+
+  #applyMuteNow(): void {
+    const fromVolume = this.#muteGain.gain.value;
+    const toVolume = this.#userMuted ? 0.0 : 1.0;
+    const now = this.#context.currentTime;
+    this.#muteGain.gain.cancelScheduledValues(now);
+
+    if (this.#context.state === "suspended") {
+      // サスペンド中なので即時設定
+      this.#muteGain.gain.setValueAtTime(toVolume, now);
+    }
+    else {
+      // ノイズを避けるため 50ms かけてミュート/ミュート解除完了になるように設定
+      this.#muteGain.gain.setValueAtTime(fromVolume, now);
+      this.#muteGain.gain.linearRampToValueAtTime(toVolume, now + 0.05);
+    }
   }
 }

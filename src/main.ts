@@ -135,23 +135,23 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
   const buttonContainer = new Container();
   parent.addChild(buttonContainer);
   const button = new Graphics();
-  button.pivot.set(0.5, 0.5);
-  button.rect(-24, -24, 48, 48);
-  button.fill({ color: 0xFFFFFF });
-  button.tint = 0x666666;
+  const buttonSize = 48;
+  button.pivot.set(buttonSize / 2, buttonSize / 2);
+  button.rect(0, 0, buttonSize, buttonSize);
+  button.fill({ color: 0x666666 });
   button.interactive = true;
   button.on("pointerdown", () => {
     button.scale.set(1.2);
   });
   button.on("pointerup", () => {
     const muted = callback();
-    if (muted) { button.tint = 0x666666; }
-    else { button.tint = 0x00FF00; }
+    if (muted) { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x666666 }); }
+    else { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x00FF00 }); }
 
     button.scale.set(1.0);
   });
   buttonContainer.addChild(button);
-  buttonContainer.position.set(40, 40);
+  buttonContainer.position.set(34, 34);
 }
 
 function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
@@ -254,9 +254,8 @@ function buildAppContext(parent: Container, debugCallback: () => boolean): AppCo
   const context = buildAppContext(app.stage,
     () => {
       // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
-      const isMuted = audioPort.isMuted;
-      audioPort.setMuted(!isMuted);
-      return !isMuted;
+      audioPort.setMuted(!audioPort.isMuted);
+      return audioPort.isMuted;
     });
 
   // ポート・ゲーム側システムの作成
