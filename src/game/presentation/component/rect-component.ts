@@ -43,6 +43,14 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
     gameObject.render.destroyView(this.#handle);
     this.#handle = null;
   }
+
+  setAlpha(alpha: number): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.setAlpha(this.#handle, alpha);
+  }
 }
 
 declare module "@game/presentation/component/component-registry" {

@@ -30,6 +30,17 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
     this.reset();
   }
 
+  override setActive(active: boolean): void {
+    super.setActive(active);
+
+    if (active) {
+      this.setToActiveColor();
+    }
+    else {
+      this.setToDeactiveColor();
+    }
+  }
+
   setActorName(actorName: string): void {
     (this.contents as CommandSelectWindowContents).setActorName(actorName);
   }

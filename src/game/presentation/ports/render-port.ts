@@ -142,6 +142,7 @@ export interface RenderPort {
   setSpriteTransform(handle: ViewHandle, transform: Partial<Transform2D>): void;
   setSpriteVisible(view: ViewHandle, visible: boolean): void;
   setSpriteLayer?(view: ViewHandle, layer: number): void;
+  setAlpha(view: ViewHandle, alpha: number): void;
   destroyView(view: ViewHandle): void;
 
   // テキスト描画

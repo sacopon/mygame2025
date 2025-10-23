@@ -14,6 +14,7 @@ export abstract class ListWindowContents extends GroupGameObject {
   constructor(ports: GamePorts, windowSize: Size) {
     super(ports);
     this.#windowSize = windowSize;
+    this.#ensureCursor().setEnable(false);
   }
 
   get windowWidth(): number {

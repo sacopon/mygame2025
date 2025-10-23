@@ -27,6 +27,7 @@ export class PixiRenderAdapter implements RenderPort {
   constructor(rootContainer: Container) {
     this.#rootContainer = rootContainer;
   }
+
   createSprite(spec: SpriteSpec): ViewHandle {
     // 指定のアトラスキーから Sprite を作成
     // (事前にロードされているものとする)
@@ -165,6 +166,13 @@ export class PixiRenderAdapter implements RenderPort {
     this.#views.set(handle, g);
 
     return handle;
+  }
+
+  setAlpha(handle: ViewHandle, alpha: number): void {
+    const view = this.#views.get(handle);
+    if (!view) { return; }
+
+    view.alpha = alpha;
   }
 
   setNineSpriteSize(handle: ViewHandle, size: { width: number; height: number; }): void {

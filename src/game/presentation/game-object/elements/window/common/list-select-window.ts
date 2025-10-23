@@ -3,6 +3,7 @@ import { ListWindowContents } from "./list-window-contents";
 import { WindowBase } from "./window-base";
 import { wrapIndex } from "@shared/utils";
 import { GamePorts } from "@game/presentation";
+import { WindowCoverRect } from "./window-cover-rect";
 
 /**
  * 選択系ウィンドウ共通部分
@@ -10,18 +11,33 @@ import { GamePorts } from "@game/presentation";
  */
 export abstract class ListSelectWindow<T> extends GroupGameObject {
   #contents: ListWindowContents;
+  #cover: WindowCoverRect;
   #selectedIndex = 0;
 
   constructor(ports: GamePorts, size: { width: number, height: number }, alpha: number, createContents: (ports: GamePorts) => ListWindowContents) {
     super(ports);
 
-    this.addChild(new WindowBase(ports, size.width, size.height, alpha));
-    this.#contents = this.addChild(createContents(ports));
+    const base = new WindowBase(ports, size.width, size.height, alpha);
+    this.#contents = createContents(ports);
+    this.#cover = new WindowCoverRect(ports, base, 0x000000);
+
+    this.addChild(base);
+    this.addChild(this.#contents);
+    this.addChild(this.#cover);
+    this.#cover.setAlpha(0);
   }
 
   setActive(active: boolean): void {
     this.#contents.setCursorVisible(active);
     // TODO: 非アクティブ時は薄暗くする？
+  }
+
+  setToDeactiveColor(): void {
+    this.#cover.setAlpha(0.25);
+  }
+
+  setToActiveColor(): void {
+    this.#cover.setAlpha(0);
   }
 
   select(index: number, force: boolean = false) {

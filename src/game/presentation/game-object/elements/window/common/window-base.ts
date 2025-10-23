@@ -6,6 +6,9 @@ import { GamePorts } from "@game/presentation";
  * コマンド選択ウィンドウの枠 + 背景表示
  */
 export class WindowBase extends GameObject {
+  #width: number;
+  #height: number;
+
   constructor(ports: GamePorts, width: number, height: number, alpha: number) {
     super(ports);
 
@@ -29,5 +32,16 @@ export class WindowBase extends GameObject {
       border: { left: 8, top: 8, right: 8, bottom: 8 },
       size: { width, height },
     }))!;
+
+    this.#width = width;
+    this.#height = height;
+  }
+
+  get width(): number {
+    return this.#width;
+  }
+
+  get height(): number {
+    return this.#height;
   }
 }
