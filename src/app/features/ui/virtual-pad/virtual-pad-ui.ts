@@ -165,10 +165,9 @@ export class VirtualPadUI {
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
 
-    // 任意：当たり判定をしっかり確保（アンカー中心前提）
+    // 当たり判定を確保
     if (!sprite.hitArea) {
       const r = Math.max(sprite.width, sprite.height) * 0.5;
-      // 円で十分。十字にしたければ Polygon などで調整
       sprite.hitArea = new Circle(0, 0, r);
     }
 

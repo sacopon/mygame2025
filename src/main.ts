@@ -151,7 +151,11 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
     button.scale.set(1.0);
   });
   buttonContainer.addChild(button);
-  buttonContainer.position.set(34, 34);
+  const longSide = 64;
+  const shortSide = 32;
+  buttonContainer.position.set(
+    window.innerWidth < window.innerHeight ? shortSide : longSide,
+    window.innerWidth < window.innerHeight ? longSide : shortSide);
 }
 
 function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
