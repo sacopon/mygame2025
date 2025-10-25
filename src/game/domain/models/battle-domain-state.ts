@@ -75,32 +75,32 @@ export class BattleDomainState {
   /**
    * 全アクターの状態を配列として取得します。
    */
-  public getActorStates(): ReadonlyArray<ActorState> {
+  getActorStates(): ReadonlyArray<ActorState> {
     return Array.from(this.#actorStateByActorId.values());
   }
 
   /**
    * プレイヤー側のアクターの状態を配列として取得します。
    */
-  public getAllyActorStates(): ReadonlyArray<AllyActorState> {
+  getAllyActorStates(): ReadonlyArray<AllyActorState> {
     return this.getActorStates().filter(s => isAllyState(s));
   }
 
   /**
    * 生存しているプレイヤー側のアクターの状態を配列として取得します。
    */
-  public getAliveAllyActorStates(): ReadonlyArray<AllyActorState> {
+  getAliveAllyActorStates(): ReadonlyArray<AllyActorState> {
     return this.getActorStates().filter(s => isAllyState(s)).filter(isAlive);
   }
 
   /**
    * 敵側のアクターの状態を配列として取得します。
    */
-  public getEnemyActorStates(): ReadonlyArray<EnemyActorState> {
+  getEnemyActorStates(): ReadonlyArray<EnemyActorState> {
     return this.getActorStates().filter(s => !isAllyState(s));
   }
 
-  public isAlive(actorId: ActorId): boolean {
+  isAlive(actorId: ActorId): boolean {
     const actorState = this.#actorStateByActorId.get(actorId);
 
     if (!actorState) {
@@ -108,6 +108,10 @@ export class BattleDomainState {
     }
 
     return isAlive(actorState);
+  }
+
+  isDead(actorId: ActorId): boolean {
+    return !this.isAlive(actorId);
   }
 
   #applyDamage(damageEvent: DamageApplied): Readonly<BattleDomainState> {

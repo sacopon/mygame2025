@@ -31,6 +31,11 @@ export function resolveActions(state: Readonly<BattleDomainState>, actions: Read
   let currentState = state;
 
   for (const action of actions) {
+    // 死んでいるキャラクターの Action は無視
+    if (currentState.isDead(action.actorId)) {
+      continue;
+    }
+
     const { state: nextState, effects } = resolveAction(currentState, action, deps);
     currentState = nextState;
     resultEffects.push(...effects);
