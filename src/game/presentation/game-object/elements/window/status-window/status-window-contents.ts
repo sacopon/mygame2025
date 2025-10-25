@@ -5,6 +5,8 @@ import { StatusWindow } from "./status-window";
 import { ActorId, ActorState, BattleDomainState } from "@game/domain";
 import { toZenkaku } from "@shared/utils";
 
+const DEAD_COLOR = 0xFF6666;
+
 /**
  * 各プレイヤーの名前
  */
@@ -21,13 +23,17 @@ class Name extends GameObject {
         },
       }));
   }
+
+  setToDeadColor(): void {
+    this.getComponent(TextComponent.typeId)?.setColor(DEAD_COLOR);
+  }
 }
 
 /**
  * 各プレイヤーのステータス(HP, MP, LV)
  */
 class Status extends GameObject {
-  constructor(ports: GamePorts, hp: number, mp: number, lv: number) {
+  constructor(ports: GamePorts, params: { hp?: number, mp?: number, lv?: number }) {
     super(ports);
 
     this.addComponent(new TextListComponent(
@@ -39,12 +45,13 @@ class Status extends GameObject {
       {
         lineHeight: STATUS_WINDOW_SETTINGS.lineHeight,
       }));
-    this.updateStatus({ hp, mp, lv });
+    this.updateStatus(params);
   }
 
   updateStatus(params: { hp?: number, mp?: number, lv?: number }): void {
     if (params.hp !== undefined) {
-      const hpString = `Ｈ ${toZenkaku(params.hp)}`;
+      const hp = params.hp;
+      const hpString = `Ｈ ${toZenkaku(hp)}`;
       this.getComponent(TextListComponent.typeId)?.setLine(0, hpString);
     }
 
@@ -58,25 +65,29 @@ class Status extends GameObject {
       this.getComponent(TextListComponent.typeId)?.setLine(2, lvString);
     }
   }
+
+  setToDeadColor(): void {
+    this.getComponent(TextListComponent.typeId)?.setColor(DEAD_COLOR);
+  }
 }
 
 /**
  * 各プレイヤーの名前とステータス
  */
 class CharacterStatus extends GroupGameObject {
+  #name: Name;
   #status: Status;
 
   constructor(ports: GamePorts, actorState: ActorState, nameResolver: (actorId: ActorId) => string) {
     super(ports);
 
-    this
-      .addChild(new Name(ports, nameResolver(actorState.actorId)))
-      .setPosition(0, 0);
+    this.#name = new Name(ports, nameResolver(actorState.actorId));
+    this.addChild(this.#name).setPosition(0, 0);
 
-    this.#status = new Status(ports, actorState.hp.value, 999, 99);
-    this
-      .addChild(this.#status)
-      .setPosition(0, 16);
+    this.#status = new Status(ports, {});
+    this.addChild(this.#status).setPosition(0, 16);
+
+    this.updateStatus(actorState);
   }
 
   updateStatus(actorState: ActorState): void {
@@ -85,6 +96,11 @@ class CharacterStatus extends GroupGameObject {
       mp: 999,
       lv: 99,
     });
+
+    if (actorState.hp.isDead) {
+      this.#name.setToDeadColor();
+      this.#status.setToDeadColor();
+    }
   }
 }
 

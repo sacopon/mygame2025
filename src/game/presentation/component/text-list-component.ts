@@ -69,6 +69,12 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
     this.owner.ports.render.setTextContent(this.#handles[index], text);
   }
 
+  setColor(color: number): void {
+    this.#handles.forEach(handle => {
+      this.owner.ports.render.setTextStyle(handle, { color });
+    });
+  }
+
   #createAllLines(gameObject: GameObject) {
     return this.#lines.map(line => gameObject.render.createText({
       text: line,

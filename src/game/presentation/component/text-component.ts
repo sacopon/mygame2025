@@ -84,6 +84,11 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
     if (!this.#handle) { return 0; }
     return this.owner.render.getHeight(this.#handle);
   }
+
+  setColor(color: number): void {
+    if (!this.#handle) { return; }
+    this.owner.render.setTextStyle(this.#handle, { color });
+  }
 }
 
 declare module "@game/presentation/component/component-registry" {

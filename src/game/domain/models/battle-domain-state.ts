@@ -37,7 +37,7 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(80),
+        hp: Hp.of(40),
       });
     }
 
@@ -46,7 +46,7 @@ export class BattleDomainState {
         actorId: enemy.actorId,
         originId: enemy.originId,
         actorType: ActorType.Enemy,
-        hp: Hp.of(80),
+        hp: Hp.of(40),
       });
     }
 
