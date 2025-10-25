@@ -4,7 +4,6 @@ import { UiPorts, GameObjectAccess, BattleMessageWindow } from "../..";
 import {
   GameObject,
   Background,
-  BattleBackground,
   CommandSelectWindow,
   EnemyView,
   EnemySelectWindow,
@@ -132,8 +131,7 @@ export class BattleScene implements Scene {
     // 敵画像
     const { width, height } = context.ui.screen.getGameSize();
     context.gameObjectAccess.spawnGameObject(new Background(context.ui, width, height));
-    context.gameObjectAccess.spawnGameObject(new BattleBackground(context.ui, width, height));
-    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ui, width, height));
+    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ui, "bgsample.png"));
 
     // 一旦全て同じ敵の画像
     // 中央揃えにしたいところだが、ここも仮
