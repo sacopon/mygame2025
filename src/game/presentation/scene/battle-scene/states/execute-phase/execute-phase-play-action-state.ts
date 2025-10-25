@@ -1,6 +1,5 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
-import { BattleSceneContext } from "..";
-import { BattleScene } from "../..";
+import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
 import { ActorId } from "@game/domain";
 

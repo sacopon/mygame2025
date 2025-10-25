@@ -1,5 +1,5 @@
-import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
-import { BattleScene, CommandChoice } from "../..";
+import { BaseBattleSceneState } from "../battle-scene-state";
+import { BattleScene, BattleSceneContext, CommandChoice } from "../..";
 import { InputPhaseSelectCommandState } from "./input-phase-select-command-state";
 import { ExecutePhaseTurnPlanningState } from "..";
 
@@ -15,6 +15,7 @@ export class InputPhaseFlowState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
+    context.domainState.debugDump();
 
     if (context.inputUi) {
       throw new Error("InputPhaseFlowState: inputUi already exists.");

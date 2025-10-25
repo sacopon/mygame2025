@@ -1,6 +1,6 @@
-import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
+import { BaseBattleSceneState } from "../battle-scene-state";
 import { InputPhaseSelectTargetEnemyState } from "./input-phase-select-target-enemy-state";
-import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, CommandChoice } from "../..";
+import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, BattleSceneContext, CommandChoice } from "../..";
 import { assertNever } from "@shared";
 import { AllyActor } from "@game/domain";
 import { GameButton } from "@game/presentation/ports";

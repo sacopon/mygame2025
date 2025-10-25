@@ -1,8 +1,8 @@
 import { BattleScene } from "../../battle-scene";
 import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
-import { planTurnOrder, resolveActions } from "@game/application";
-import { BattleSceneContext } from "../battle-scene-state";
+import { BattleSceneContext } from "../..";
+import { applyEventsToState, planTurnOrder, resolveActions } from "@game/application";
 import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
 
 /**
@@ -34,6 +34,9 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       aliveEnemiesInGroup: (groupId: EnemyGroupId) => this.scene.getAliveEnemiesInGroup(groupId),
       aliveAllActors: () => this.scene.getAliveAllActors(),
     });
+
+    // 生成された解決済みアクションをバトル状態に反映する
+    context.domainState = applyEventsToState(context.domainState, events);
 
     this.context.turnResolution = {
       orderedActions,

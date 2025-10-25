@@ -1,5 +1,6 @@
 import { BattleScene } from "../../battle-scene";
-import { BaseBattleSceneState, BattleSceneContext } from "..";
+import { BaseBattleSceneState } from "..";
+import { BattleSceneContext } from "../..";
 import { convertCommandChoiceToAction, createEnemyActions, planAction } from "@game/application";
 import { ActorId, ActorType } from "@game/domain";
 import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state";

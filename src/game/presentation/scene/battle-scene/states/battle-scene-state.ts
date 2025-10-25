@@ -1,39 +1,8 @@
+import { type BattleSceneContext } from "../battle-scene";
 import { StackState } from "../../../../shared/state-stack";
-import { BattleScene, CommandChoice } from "..";
-import { UiPorts } from "../..";
-import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
+import { BattleScene } from "..";
 import { PresentationEffect } from "@game/application";
-import { DomainPorts, Action, ActorId, DomainEvent, PlannedAction } from "@game/domain";
-
-/**
- * バトルシーンの共有オブジェクト
- */
-export type BattleSceneContext = {
-  ui: Readonly<UiPorts>;
-  domain: Readonly<DomainPorts>;
-  allyActorIds: ReadonlyArray<ActorId>;
-  enemyActorIds: ReadonlyArray<ActorId>;
-
-  // 入力フェーズでのみ使用する UI オブジェクト
-  inputUi?: {
-    coordinator: UILayoutCoordinator;
-    commandSelectWindow: CommandSelectWindow;
-    enemySelectWindow: EnemySelectWindow;
-  };
-
-  // 実行フェーズで使用する UI オブジェクト
-  executeUi?: {
-    coordinator: UILayoutCoordinator;
-    messageWindow: BattleMessageWindow;
-  }
-
-  // 入力フェーズで設定、実行フェーズで破棄
-  commandChoices: ReadonlyArray<CommandChoice>;
-  // 実行フェーズで設定、実行フェーズで破棄
-  turnPlan?: Readonly<TurnPlan>;
-  // 実行フェーズで設定、実行フェーズで破棄
-  turnResolution?: Readonly<TurnResolution>;
-};
+import { Action, DomainEvent, PlannedAction } from "@game/domain";
 
 /**
  * 1ターンの実行計画
@@ -54,9 +23,9 @@ export type TurnResolution = Readonly<{
   // 行動順解決後の行動内容配列
   orderedActions: ReadonlyArray<Action>;
   // 行動内容解決後の、状態を変化させるイベント配列
-  domainEvents: ReadonlyArray<DomainEvent>;
+  domainEvents: ReadonlyArray<DomainEvent>; // TODO: 使用されていないので不要
   // DomainEvent を元に生成されたプレゼンテーション層向けの演出指示
-  atomicEffects: ReadonlyArray<PresentationEffect>;
+  atomicEffects: ReadonlyArray<PresentationEffect>; // TODO: PresentationEffect に名前を変更
 }>;
 
 /**
@@ -98,3 +67,5 @@ export class BaseBattleSceneState implements BattleSceneState {
   onResume(): void {}
   update(_deltaTime: number): void {}
 }
+export { BattleSceneContext };
+

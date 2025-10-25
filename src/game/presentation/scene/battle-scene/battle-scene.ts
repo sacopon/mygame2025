@@ -1,10 +1,6 @@
-import { GameObjectAccess, Scene } from "../../scene/core/scene";
-import { BattleCommand } from "./core";
-import {
-  BattleSceneContext,
-  BattleSceneState,
-  InputPhaseFlowState,
-} from "./states";
+import { Scene } from "../../scene/core/scene";
+import { BattleCommand, BattleSceneState, CommandChoice, InputPhaseFlowState, TurnPlan, TurnResolution } from ".";
+import { UiPorts, GameObjectAccess, BattleMessageWindow } from "../..";
 import {
   GameObject,
   Background,
@@ -24,13 +20,46 @@ import {
   Ally,
   AllyActor,
   AllyId,
+  BattleDomainState,
   DomainPorts,
   EnemyActor,
   EnemyGroupId,
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
-import { NoticeMessageWindow } from "@game/presentation/game-object/elements/window/notice-message-window";
+
+/**
+ * バトルシーンの共有オブジェクト
+ */
+export type BattleSceneContext = {
+  ui: Readonly<UiPorts>;
+  domain: Readonly<DomainPorts>;
+  allyActorIds: ReadonlyArray<ActorId>;
+  enemyActorIds: ReadonlyArray<ActorId>;
+
+  // バトルのドメイン状態
+  domainState: Readonly<BattleDomainState>;
+
+  // 入力フェーズでのみ使用する UI オブジェクト
+  inputUi?: {
+    coordinator: UILayoutCoordinator;
+    commandSelectWindow: CommandSelectWindow;
+    enemySelectWindow: EnemySelectWindow;
+  };
+
+  // 実行フェーズで使用する UI オブジェクト
+  executeUi?: {
+    coordinator: UILayoutCoordinator;
+    messageWindow: BattleMessageWindow;
+  }
+
+  // 入力フェーズで設定、実行フェーズで破棄
+  commandChoices: ReadonlyArray<CommandChoice>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnPlan?: Readonly<TurnPlan>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnResolution?: Readonly<TurnResolution>;
+};
 
 function createActors(): Actor[] {
   return [
@@ -62,7 +91,7 @@ export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
-  #partyAllyCharacters: ReadonlyArray<Ally> = [];
+  #partyAllyCharacters: ReadonlyArray<Ally> = []; // TODO: パーティは Ally ではなく AllyActor で持つ
   // 実行フェーズ -> 入力フェーズへ戻る際のマーカー
   #markAtExecutePhase?: number;
 
@@ -87,6 +116,13 @@ export class BattleScene implements Scene {
     this.#partyAllyCharacters = this.#allActors
       .filter(isAllyActor)
       .map(actor => context.domain.allyRepository.findAlly(actor.originId));
+    const partyAllyActors = this.#allActors.filter(isAllyActor);
+
+    // 敵選定
+    const enemyActors = this.#allActors.filter(isEnemyActor);
+
+    // ドメインステート作成
+    const domainState = BattleDomainState.fromActors(partyAllyActors, enemyActors);
 
     // アクセス簡易化のためのマップ生成
     this.#setupDictionary();
@@ -102,7 +138,6 @@ export class BattleScene implements Scene {
     // 一旦全て同じ敵の画像
     // 中央揃えにしたいところだが、ここも仮
     // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
-    const enemyActors = this.#allActors.filter(isEnemyActor);
     for (let i = 0; i < enemyActors.length; ++i) {
       const actor = enemyActors[i];
       const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, actor.originId, width, height, i));
@@ -115,6 +150,7 @@ export class BattleScene implements Scene {
       domain: context.domain,
       allyActorIds: this.#allAllyActorIds,
       enemyActorIds: this.#allEnemyActorIds,
+      domainState,
       commandChoices: [],
       // inputUi は #beginInputPhase() にて作成
     };
