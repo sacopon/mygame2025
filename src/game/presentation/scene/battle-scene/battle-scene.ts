@@ -99,7 +99,7 @@ export class BattleScene implements Scene {
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
-  #allyActorByAllyId!: Map<AllyId, AllyActor>;
+  #allyActorByAllyId!: Map<Readonly<AllyId>, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
@@ -186,12 +186,13 @@ export class BattleScene implements Scene {
     return false;
   }
 
-  getPartyCharacterCount(): number {
-    return this.#partyAllyActors.length;
+  getAlivePartyCharacterCount(): number {
+    return this.#context.domainState.getAliveAllyActorStates().length;
   }
 
   getCurrentActor(index: number): AllyActor {
-    const allyId = this.#partyAllyActors[index].originId;
+    const states = this.#context.domainState.getAliveAllyActorStates();
+    const allyId = states[index].originId;
     const ally = this.#getAllyActorByAllyId(allyId);
 
     if (!ally) {
@@ -357,7 +358,7 @@ export class BattleScene implements Scene {
     });
   }
 
-  #getAllyActorByAllyId(allyId: AllyId): AllyActor {
+  #getAllyActorByAllyId(allyId: Readonly<AllyId>): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {

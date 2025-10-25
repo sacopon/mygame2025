@@ -90,6 +90,6 @@ export class InputPhaseFlowState extends BaseBattleSceneState {
   }
 
   #isAllConfirmed(): boolean {
-    return this.scene.getPartyCharacterCount() <= this.#progressIndex;
+    return this.scene.getAlivePartyCharacterCount() <= this.#progressIndex;
   }
 }

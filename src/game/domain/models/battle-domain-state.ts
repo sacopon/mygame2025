@@ -21,6 +21,7 @@ export type EnemyActorState = ActorStateBase & {
 export type ActorState = AllyActorState | EnemyActorState;
 
 const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
+const isAlive = (s: ActorState): boolean => s.hp.isAlive;
 
 export class BattleDomainState {
   #actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>;
@@ -37,7 +38,7 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(20),
+        hp: Hp.of(40),
       });
     }
 
@@ -83,6 +84,30 @@ export class BattleDomainState {
    */
   public getAllyActorStates(): ReadonlyArray<AllyActorState> {
     return this.getActorStates().filter(s => isAllyState(s));
+  }
+
+  /**
+   * 生存しているプレイヤー側のアクターの状態を配列として取得します。
+   */
+  public getAliveAllyActorStates(): ReadonlyArray<AllyActorState> {
+    return this.getActorStates().filter(s => isAllyState(s)).filter(isAlive);
+  }
+
+  /**
+   * 敵側のアクターの状態を配列として取得します。
+   */
+  public getEnemyActorStates(): ReadonlyArray<EnemyActorState> {
+    return this.getActorStates().filter(s => !isAllyState(s));
+  }
+
+  public isAlive(actorId: ActorId): boolean {
+    const actorState = this.#actorStateByActorId.get(actorId);
+
+    if (!actorState) {
+      throw new Error(`invalid actorId: ${actorId}`);
+    }
+
+    return isAlive(actorState);
   }
 
   #applyDamage(damageEvent: DamageApplied): Readonly<BattleDomainState> {

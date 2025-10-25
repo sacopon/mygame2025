@@ -86,11 +86,13 @@ function resolveAction(currentState: Readonly<BattleDomainState>, action: Readon
  * @param action 行動内容
  * @returns 決定された具体的な対象(配列)、1体の場合でも配列で戻す
  */
-function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
+function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<PlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
   switch (action.mode.kind) {
     case "single":
       // すでに決まっていたらその内容で確定する
-      if (action.mode.targetId) return [ action.mode.targetId ];
+      if (action.mode.targetId) {
+        return [ action.mode.targetId ];
+      }
 
       if (action.selection.kind === "group") {
         // グループを選択をしている(= 味方の行動であることが型から確定している)
@@ -99,8 +101,8 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
       }
       else {
         // 敵の場合
-        const allies = deps.aliveAllAllies();
-        return 0 < allies.length ? [deps.random.shuffle(allies)[0]] : [];
+        const allies = state.getAliveAllyActorStates();
+        return 0 < allies.length ? [deps.random.shuffle(allies)[0].actorId] : [];
       }
 
     case "group":
@@ -131,7 +133,7 @@ function createAttackResolution(currentState: Readonly<BattleDomainState>, actio
   } {
   const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
-  const targets = resolveTargets(action, deps);
+  const targets = resolveTargets(currentState, action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
   const seEffect: PresentationEffect[] = [];
   seEffect.push(
