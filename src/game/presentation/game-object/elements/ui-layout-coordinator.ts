@@ -14,6 +14,9 @@ type Windows = {
 
 type OffsetsByWindow = Map<CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow, { dx: number, dy: number }>;
 
+const statusWindowY = 12;
+const battleMessageWindowY = 148;
+
 /**
  * 描画を持たないゲームオブジェクト
  * ウィンドウの配置/再配置を司る
@@ -28,7 +31,8 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, vw: number, vh: number, windows: Windows) {
     super(ports);
 
-    console.log(windows);
+    // TODO: MainWindow, BattleBackground も UILayoutCoordinator 管理下に
+    // TODO: MainWindow の枠だけ揺らす
     this.#commandWindow = windows.commandSelectWindow;
     this.#enemySelectWindow = windows.enemySelectWindow;
     this.#messageWindow = windows.messageWindow;
@@ -81,7 +85,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     // ステータスウィンドウ
     {
       const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
-      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, 4 + offset.dy);
+      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
     }
 
     const windowWidth = this.#commandWindow.width + this.#enemySelectWindow.width;
@@ -109,13 +113,13 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     // ステータスウィンドウ
     {
       const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
-      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, 4 + offset.dy);
+      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
     }
 
     // メッセージウィンドウ
     {
       const offset = offsets?.get(this.#messageWindow) || { dx: 0, dy: 0 };
-      this.#messageWindow.setPosition(Math.floor((width - this.#messageWindow.width) / 2) + offset.dx, 140 + offset.dy);
+      this.#messageWindow.setPosition(Math.floor((width - this.#messageWindow.width) / 2) + offset.dx, battleMessageWindowY + offset.dy);
     }
   }
 }

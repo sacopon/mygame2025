@@ -31,7 +31,7 @@ export class MainWindow extends GameObject implements ScreenSizeAware {
   #calcPosition(vw: number, vh: number): { x: number, y: number } {
     return {
       x: (vw / 2) | 0,
-      y: (vh / 2) - 28 | 0,
+      y: (vh / 2) - 12 | 0,
     };
   }
 
