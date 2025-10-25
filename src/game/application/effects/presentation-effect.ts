@@ -60,6 +60,12 @@ export type ShowSelfDefenceText = {
   actorId: ActorId;
 };
 
+// 「${actor.name}は　しんでしまった！」(味方）
+export type ShowDeadText = {
+  kind: "ShowDeadText";
+  actorId: ActorId;
+};
+
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ShowAttackStartedText
@@ -68,4 +74,5 @@ export type PresentationEffect = ApplyState
   | ShowEnemyDamageText
   | PlayerDamageShake
   | ShowPlayerDamageText
-  | ShowSelfDefenceText;
+  | ShowSelfDefenceText
+  | ShowDeadText;

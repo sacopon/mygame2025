@@ -35,6 +35,7 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
     case "ShowSelfDefenceText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
+    case "ShowDeadText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     default: assertNever(effect);
   }
 }
@@ -132,6 +133,11 @@ export class PresentationEffectRunner {
       case "ShowSelfDefenceText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は みをまもっている。`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　みをまもっている。`);
+        break;
+
+      case "ShowDeadText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は しんでしまった！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　しんでしまった！`);
         break;
 
       default:

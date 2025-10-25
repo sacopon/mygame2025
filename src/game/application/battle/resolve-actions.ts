@@ -238,8 +238,12 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       { kind: "ShowPlayerDamageText", actorId: event.targetId, amount: event.amount },
       // 画面の揺れ
       { kind: "PlayerDamageShake", actorId: event.targetId },
-      // TODO: 死んでいたら(画面揺れの終了を待って)画面を赤くする＆死んだメッセージが入る
     );
+
+    if (appliedState.isDead(event.targetId)) {
+      // 「${actor.name}は　しんでしまった！」
+      effects.push({ kind: "ShowDeadText", actorId: event.targetId });
+    }
   }
 
   return effects;
