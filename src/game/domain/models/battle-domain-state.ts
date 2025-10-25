@@ -20,8 +20,8 @@ export type EnemyActorState = ActorStateBase & {
 
 export type ActorState = AllyActorState | EnemyActorState;
 
+export const isAlive = (s: ActorState): boolean => s.hp.isAlive;
 const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
-const isAlive = (s: ActorState): boolean => s.hp.isAlive;
 
 export class BattleDomainState {
   #actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>;
@@ -38,7 +38,7 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(40),
+        hp: Hp.of(999),
       });
     }
 
@@ -70,6 +70,16 @@ export class BattleDomainState {
       default:
         return assertNever(event);
     }
+  }
+
+  /**
+   * 指定アクターの状態を取得します
+   */
+  getActorState(actorId: Readonly<ActorId>): Readonly<ActorState> {
+    const state = this.#actorStateByActorId.get(actorId);
+    if (!state) { throw new Error(`invalid actorId:${actorId}`); };
+
+    return state;
   }
 
   /**

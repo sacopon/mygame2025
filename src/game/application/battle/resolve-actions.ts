@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { PresentationEffect } from "..";
-import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, PlannedAction, SelfDefence } from "@game/domain";
+import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, isAlive, PlannedAction, SelfDefence } from "@game/domain";
 import { RandomPort } from "@game/presentation";
 
 /**
@@ -11,7 +11,7 @@ export type ResolveDeps = {
   isAlly: (id: ActorId) => boolean;
   aliveAllAllies: () => ReadonlyArray<ActorId>;
   aliveAllEnemies: () => ReadonlyArray<ActorId>;
-  aliveEnemiesInGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
+  getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
   aliveAllActors: () => ReadonlyArray<ActorId>;
 };
 
@@ -101,7 +101,9 @@ function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<Pla
 
       if (action.selection.kind === "group") {
         // グループを選択をしている(= 味方の行動であることが型から確定している)
-        const list = deps.aliveEnemiesInGroup(action.selection.groupId);
+        const list = deps
+          .getActorIdsByEnemyGroup(action.selection.groupId)
+          .filter(id => isAlive(state.getActorState(id)));
         return 0 < list.length ? [deps.random.shuffle(list)[0]] : [];
       }
       else {
@@ -112,7 +114,10 @@ function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<Pla
 
     case "group":
       // グループ攻撃は味方のみ
-      return deps.aliveEnemiesInGroup(action.mode.groupId);
+      const list = deps
+        .getActorIdsByEnemyGroup(action.mode.groupId)
+        .filter(id => isAlive(state.getActorState(id)));
+      return 0 < list.length ? list : [];
 
     case "all":
       return deps.isAlly(action.actorId) ? deps.aliveAllEnemies() : deps.aliveAllAllies();
@@ -225,8 +230,14 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       { kind: "ShowEnemyDamageText", actorId: event.targetId, amount: event.amount },
       // ダメージを受けた敵の点滅
       { kind: "EnemyDamageBlink", actorId: event.targetId },
-      // TODO: 死んでいたら(点滅の終了を待って)倒したメッセージが入る
     );
+
+    if (appliedState.isDead(event.targetId)) {
+      // 敵消去
+      effects.push({ kind: "EnemyHideByDefeat", actorId: event.targetId });
+      // 「${actor.name}を　たおした！」
+      effects.push({ kind: "ShowDefeatText", actorId: event.targetId });
+    }
   }
   else {
     effects.push(

@@ -16,6 +16,7 @@ type EffectDeps = {
   clear: () => void,
   print: (text: string) => void,
   bilkEnemyByDamage: (id: ActorId, durationMs: number) => void,
+  hideEnemyByDefeat: (id: ActorId) => void,
   shake: () => void,
   playSe: (id: SeId) => void,
   resolveName: (actorId: ActorId) => string,
@@ -34,8 +35,10 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
+    case "EnemyHideByDefeat": return 0;
     case "ShowSelfDefenceText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     case "ShowDeadText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
+    case "ShowDefeatText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     default: assertNever(effect);
   }
 }
@@ -115,6 +118,11 @@ export class PresentationEffectRunner {
         this.#deps.bilkEnemyByDamage(effect.actorId, ENEMY_BLINK_BY_DAMAGE_DURATION_MS);
         break;
 
+      case "EnemyHideByDefeat":
+        if (__DEV__) console.log(`💥 敵消去: actor=${effect.actorId}`);
+        this.#deps.hideEnemyByDefeat(effect.actorId);
+        break;
+
       case "ShowEnemyDamageText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}に ${toZenkaku(effect.amount)}の ダメージ！！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}に　${toZenkaku(effect.amount)}の　ダメージ！！`);
@@ -138,6 +146,11 @@ export class PresentationEffectRunner {
       case "ShowDeadText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は しんでしまった！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　しんでしまった！`);
+        break;
+
+      case "ShowDefeatText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}を たおした！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}を　たおした！`);
         break;
 
       default:

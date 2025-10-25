@@ -23,7 +23,8 @@ import {
   DomainPorts,
   EnemyActor,
   EnemyGroupId,
-  EnemyId
+  EnemyId,
+  isAlive
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
@@ -245,7 +246,7 @@ export class BattleScene implements Scene {
    * データに基づいて入力系UIの作成
    */
   buildInputUi(): void {
-    const { domain, ui } = this.#context;
+    const { domain, ui, domainState: state } = this.#context;
     const { width, height } = ui.screen.getGameSize();
 
     // ロジックエラー
@@ -264,7 +265,7 @@ export class BattleScene implements Scene {
     const commandSelectWindow = this.spawn(new CommandSelectWindow(ui, commands));
 
     // 敵選択ウィンドウ
-    const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain)));
+    const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain, state)));
 
     // ステータスウィンドウ
     const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
@@ -332,13 +333,14 @@ export class BattleScene implements Scene {
     return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
   }
 
-  getAliveEnemiesInGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
+  getActorIdsByEnemyGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
     if (!this.#enemyActorsByGroupId.has(groupId)) {
       return [];
     }
 
-    return this.#enemyActorsByGroupId.get(groupId)!.map(a => a.actorId);
+    return this.#enemyActorsByGroupId
+      .get(groupId)!
+      .map(a => a.actorId);
   }
 
   getEnemyViewByActorId(actorId: ActorId): EnemyView {
@@ -348,14 +350,30 @@ export class BattleScene implements Scene {
     return this.#enemyViewByActorId.get(actorId)!;
   }
 
-  #buildEnemyGroups(domain: Readonly<DomainPorts>) {
-    return [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => {
-      return {
-        enemyGroupId: groupId,
-        name: domain.enemyRepository.findEnemy(list[0].originId).name,
-        count: list.length,
-      };
-    });
+  #buildEnemyGroups(domain: Readonly<DomainPorts>, state: Readonly<BattleDomainState>)
+    : {
+      enemyGroupId: EnemyGroupId,
+      name: string
+      count: number,
+      }[]
+  {
+    const enemyGroups: { enemyGroupId: EnemyGroupId, name: string, count: number }[] = [];
+
+    for (const entry of this.#enemyActorsByGroupId.entries()) {
+      const groupId = entry[0];
+      const list = entry[1];
+      const aliveList = list.filter(actor => isAlive(state.getActorState(actor.actorId)));
+
+      if (0 < aliveList.length) {
+        enemyGroups.push({
+          enemyGroupId: groupId,
+          name: domain.enemyRepository.findEnemy(aliveList[0].originId).name,
+          count: aliveList.length,
+        });
+      }
+    }
+
+    return enemyGroups;
   }
 
   #getAllyActorByAllyId(allyId: Readonly<AllyId>): AllyActor {
