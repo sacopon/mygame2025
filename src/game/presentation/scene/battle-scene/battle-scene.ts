@@ -268,7 +268,7 @@ export class BattleScene implements Scene {
     const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain, state)));
 
     // ステータスウィンドウ
-    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
+    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, true, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
 
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(

@@ -39,11 +39,11 @@ class Name extends GameObject {
  * 各プレイヤーのステータスのラベル(HP, MP, LV)
  */
 class StatusLabel extends GameObject {
-  constructor(ports: GamePorts) {
+  constructor(ports: GamePorts, forInputPhase: boolean) {
     super(ports);
 
     this.addComponent(new TextListComponent(
-      ["Ｈ", "Ｍ", "Lv:"],
+      forInputPhase ? ["Ｈ", "Ｍ", "Lv:"] : ["Ｈ"],
       {
         style: {
           fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
@@ -64,11 +64,14 @@ class StatusLabel extends GameObject {
  * 各プレイヤーのステータスの値(HP, MP, LV)
  */
 class StatusValue extends GameObject {
-  constructor(ports: GamePorts, params: { hp?: number, mp?: number, lv?: number }) {
+  #forInputPhase: boolean;
+
+  constructor(ports: GamePorts, forInputPhase: boolean, params: { hp?: number, mp?: number, lv?: number }) {
     super(ports);
 
+    this.#forInputPhase = forInputPhase;
     this.addComponent(new TextListComponent(
-      ["", "", ""],
+      forInputPhase ? ["", "", ""] : [""],
       {
         style: {
           fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
@@ -91,12 +94,12 @@ class StatusValue extends GameObject {
       this.getComponent(TextListComponent.typeId)?.setLine(0, hpString);
     }
 
-    if (params.mp !== undefined) {
+    if (this.#forInputPhase && params.mp !== undefined) {
       const mpString = toZenkaku(params.mp);
       this.getComponent(TextListComponent.typeId)?.setLine(1, mpString);
     }
 
-    if (params.lv !== undefined) {
+    if (this.#forInputPhase && params.lv !== undefined) {
       const lvString = toZenkaku(params.lv);
       this.getComponent(TextListComponent.typeId)?.setLine(2, lvString);
     }
@@ -114,11 +117,11 @@ class Status extends GroupGameObject {
   #labelObj: StatusLabel;
   #valueObj: StatusValue;
 
-  constructor(ports: GamePorts, params: { hp?: number, mp?: number, lv?: number }) {
+  constructor(ports: GamePorts, forInputPhase: boolean, params: { hp?: number, mp?: number, lv?: number }) {
     super(ports);
 
-    this.#labelObj = new StatusLabel(ports);
-    this.#valueObj = new StatusValue(ports, params);
+    this.#labelObj = new StatusLabel(ports, forInputPhase);
+    this.#valueObj = new StatusValue(ports, forInputPhase, params);
     this.addChild(this.#labelObj);
     this.addChild(this.#valueObj).setPosition(44, 0);
   }
@@ -140,13 +143,13 @@ class CharacterStatus extends GroupGameObject {
   #name: Name;
   #status: Status;
 
-  constructor(ports: GamePorts, actorState: ActorState, nameResolver: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, actorState: ActorState, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
     super(ports);
 
-    this.#name = new Name(ports, nameResolver(actorState.actorId));
+    this.#name = new Name(ports, resolveActorName(actorState.actorId));
     this.addChild(this.#name).setPosition(24, -1);
 
-    this.#status = new Status(ports, {});
+    this.#status = new Status(ports, forInputPhase, {});
     this.addChild(this.#status).setPosition(0, 16);
 
     this.updateStatus(actorState);
@@ -173,7 +176,7 @@ export class StatusWindowContents extends GroupGameObject {
   #index: number = 0;
   #characterStatusByActorId: Map<ActorId, CharacterStatus>;
 
-  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, nameResolver: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
     super(ports);
     this.#characterStatusByActorId = new Map<ActorId, CharacterStatus>();
 
@@ -181,7 +184,7 @@ export class StatusWindowContents extends GroupGameObject {
 
     for (let i = 0; i < actorStates.length; ++i) {
       const as = actorStates[i];
-      const status = new CharacterStatus(ports, as, nameResolver);
+      const status = new CharacterStatus(ports, as, forInputPhase, resolveActorName);
       this.addChild(status).setPosition(STATUS_WIDTH * i, 0);
       this.#characterStatusByActorId.set(as.actorId, status);
     }

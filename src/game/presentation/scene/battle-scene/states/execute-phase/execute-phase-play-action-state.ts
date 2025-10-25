@@ -54,7 +54,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     // メッセージウィンドウを作成
     const messageWindow = this.scene.spawn(new BattleMessageWindow(this.context.ui));
     // ステータスウィンドウを作成
-    const statusWindow = this.scene.spawn(new StatusWindow(this.context.ui, context.domainState, resolveName));
+    const statusWindow = this.scene.spawn(new StatusWindow(this.context.ui, context.domainState, false, resolveName));
     // レイアウトコーディネイター
     const { width, height } = this.context.ui.screen.getGameSize();
     const coordinator = this.scene.spawn(new UILayoutCoordinator(this.context.ui, width, height, { messageWindow, statusWindow: statusWindow }));
