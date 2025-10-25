@@ -23,9 +23,9 @@ export type TurnResolution = Readonly<{
   // 行動順解決後の行動内容配列
   orderedActions: ReadonlyArray<Action>;
   // 行動内容解決後の、状態を変化させるイベント配列
-  domainEvents: ReadonlyArray<DomainEvent>;
+  domainEvents: ReadonlyArray<DomainEvent>; // TODO: 使用されていないので不要
   // DomainEvent を元に生成されたプレゼンテーション層向けの演出指示
-  atomicEffects: ReadonlyArray<PresentationEffect>;
+  atomicEffects: ReadonlyArray<PresentationEffect>; // TODO: PresentationEffect に名前を変更
 }>;
 
 /**

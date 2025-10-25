@@ -15,6 +15,7 @@ export class InputPhaseFlowState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
+    context.domainState.debugDump();
 
     if (context.inputUi) {
       throw new Error("InputPhaseFlowState: inputUi already exists.");

@@ -38,7 +38,7 @@ export type BattleSceneContext = {
   enemyActorIds: ReadonlyArray<ActorId>;
 
   // バトルのドメイン状態
-  domainState: BattleDomainState;
+  domainState: Readonly<BattleDomainState>;
 
   // 入力フェーズでのみ使用する UI オブジェクト
   inputUi?: {
@@ -122,8 +122,7 @@ export class BattleScene implements Scene {
     const enemyActors = this.#allActors.filter(isEnemyActor);
 
     // ドメインステート作成
-    const domainState = new BattleDomainState(partyAllyActors, enemyActors);
-    domainState.debugDump();
+    const domainState = BattleDomainState.fromActors(partyAllyActors, enemyActors);
 
     // アクセス簡易化のためのマップ生成
     this.#setupDictionary();

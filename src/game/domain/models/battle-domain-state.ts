@@ -1,5 +1,7 @@
+import { assertNever } from "@shared/utils";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
-import { Hp } from "./status-value-objects";
+import { DamageApplied, DomainEvent } from "./domain-event";
+import { Damage, Hp } from "./status-value-objects";
 
 export type ActorStateBase = {
   actorId: ActorId;
@@ -7,25 +9,29 @@ export type ActorStateBase = {
 }
 
 export type AllyActorSstae = ActorStateBase & {
-  actorType: typeof ActorType.Ally;
-  originId: AllyId;
+  actorType: Readonly<typeof ActorType.Ally>;
+  originId: Readonly<AllyId>;
 }
 
 export type EnemyActorState = ActorStateBase & {
-  actorType: typeof ActorType.Enemy;
-  originId: EnemyId;
+  actorType: Readonly<typeof ActorType.Enemy>;
+  originId: Readonly<EnemyId>;
 }
 
 export type ActorState = AllyActorSstae | EnemyActorState;
 
 export class BattleDomainState {
-  #actorStateByActorId: Map<ActorId, ActorState>;
+  #actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>;
 
-  constructor(allies: ReadonlyArray<AllyActor>, enemies: ReadonlyArray<EnemyActor>) {
-    this.#actorStateByActorId = new Map<ActorId, ActorState>();
+  constructor(actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>) {
+    this.#actorStateByActorId = new Map(actorStateByActorId);
+  }
+
+  static fromActors(allies: ReadonlyArray<AllyActor>, enemies: ReadonlyArray<EnemyActor>) {
+    const stateMap = new Map<Readonly<ActorId>, Readonly<ActorState>>();
 
     for (const ally of allies) {
-      this.#actorStateByActorId.set(ally.actorId, {
+      stateMap.set(ally.actorId, {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
@@ -34,13 +40,45 @@ export class BattleDomainState {
     }
 
     for (const enemy of enemies) {
-      this.#actorStateByActorId.set(enemy.actorId, {
+      stateMap.set(enemy.actorId, {
         actorId: enemy.actorId,
         originId: enemy.originId,
         actorType: ActorType.Enemy,
         hp: Hp.of(999),
       });
     }
+
+    return new BattleDomainState(stateMap);
+  }
+
+  clone(): BattleDomainState {
+    return new BattleDomainState(this.#actorStateByActorId);
+  }
+
+  apply(event: DomainEvent): Readonly<BattleDomainState> {
+    switch (event.type) {
+      case "DamageApplied":
+        return this.#applyDamage(event);
+
+      case "SelfDefence":
+        // TODO: 未実装
+        return new BattleDomainState(this.#actorStateByActorId);
+
+      default:
+        return assertNever(event);
+    }
+  }
+
+  #applyDamage(damageEvent: DamageApplied): Readonly<BattleDomainState> {
+    const actorState = this.#actorStateByActorId.get(damageEvent.targetId);
+
+    if (!actorState) {
+      throw new Error(`invalid targetId: ${damageEvent.targetId}`);
+    }
+
+    const nextStateMap = new Map(this.#actorStateByActorId);
+    nextStateMap.set(actorState.actorId, { ...actorState, hp: actorState.hp.takeDamage(Damage.of(damageEvent.amount)) });
+    return new BattleDomainState(nextStateMap);
   }
 
   debugDump(): void {
