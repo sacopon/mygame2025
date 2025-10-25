@@ -23,12 +23,20 @@ export class BattleMessageWindow extends GroupGameObject {
     this.#content = this.addChild(new BattleMessageWindowContents(ports));
   }
 
-  get width(): number {
+  static get width(): number {
     return BattleMessageWindow.#windowSpec.width;
   }
 
-  get height(): number {
+  static get height(): number {
     return BattleMessageWindow.#windowSpec.height;
+  }
+
+  get width(): number {
+    return BattleMessageWindow.width;
+  }
+
+  get height(): number {
+    return BattleMessageWindow.height;
   }
 
   clearText(): void {

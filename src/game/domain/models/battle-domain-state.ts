@@ -8,7 +8,7 @@ export type ActorStateBase = {
   hp: Hp;
 }
 
-export type AllyActorSstae = ActorStateBase & {
+export type AllyActorState = ActorStateBase & {
   actorType: Readonly<typeof ActorType.Ally>;
   originId: Readonly<AllyId>;
 }
@@ -18,7 +18,9 @@ export type EnemyActorState = ActorStateBase & {
   originId: Readonly<EnemyId>;
 }
 
-export type ActorState = AllyActorSstae | EnemyActorState;
+export type ActorState = AllyActorState | EnemyActorState;
+
+const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
 
 export class BattleDomainState {
   #actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>;
@@ -67,6 +69,20 @@ export class BattleDomainState {
       default:
         return assertNever(event);
     }
+  }
+
+  /**
+   * 全アクターの状態を配列として取得します。
+   */
+  public getActorStates(): ReadonlyArray<ActorState> {
+    return Array.from(this.#actorStateByActorId.values());
+  }
+
+  /**
+   * プレイヤー側のアクターの状態を配列として取得します。
+   */
+  public getAllyActorStates(): ReadonlyArray<AllyActorState> {
+    return this.getActorStates().filter(s => isAllyState(s));
   }
 
   #applyDamage(damageEvent: DamageApplied): Readonly<BattleDomainState> {

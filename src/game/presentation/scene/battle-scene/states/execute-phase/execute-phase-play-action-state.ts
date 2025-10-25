@@ -2,6 +2,7 @@ import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
 import { ActorId } from "@game/domain";
+import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
  * バトルシーン状態: 演出実行
@@ -23,6 +24,8 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
 
     if (__DEV__) console.log(context.turnResolution);
 
+    const resolveName = (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId);
+
     // 演出再生のランナー作成
     this.#presentationEffectRunner = new PresentationEffectRunner(
       context.turnResolution.atomicEffects,
@@ -30,20 +33,31 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         clear: () => this.context.executeUi?.messageWindow.clearText(),
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
         bilkEnemyByDamage: (id: ActorId, durationMs: number) => this.scene.getEnemyViewByActorId(id).blinkByDamage(durationMs),
-        shake: () => this.context.executeUi?.coordinator.shake(this.context.executeUi.messageWindow),
+        shake: () => {
+          [
+            // ダメージ時に揺れるウィンドウ列挙
+            this.context.executeUi?.messageWindow,
+            this.context.executeUi?.statusWindow,
+          ]
+          .filter(w => !!w)
+          .forEach(w => this.context.executeUi?.coordinator.shake(w));
+        },
         playSe: (id: SeId): void => this.context.ui.audio.playSe(id),
-        resolveName: (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId),
+        resolveName,
       });
 
     // メッセージウィンドウを作成
     const messageWindow = this.scene.spawn(new BattleMessageWindow(this.context.ui));
+    // ステータスウィンドウを作成
+    const statusWindow = this.scene.spawn(new StatusWindow(this.context.ui, context.domainState, resolveName));
     // レイアウトコーディネイター
     const { width, height } = this.context.ui.screen.getGameSize();
-    const coordinator = this.scene.spawn(new UILayoutCoordinator(this.context.ui, width, height, { messageWindow }));
+    const coordinator = this.scene.spawn(new UILayoutCoordinator(this.context.ui, width, height, { messageWindow, statusWindow: statusWindow }));
 
     this.context.executeUi = {
       coordinator,
       messageWindow,
+      statusWindow,
     };
   }
 
@@ -80,6 +94,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
 
     this.scene.despawn(this.context.executeUi.coordinator);
     this.scene.despawn(this.context.executeUi.messageWindow);
+    this.scene.despawn(this.context.executeUi.statusWindow);
     this.context.executeUi = undefined;
   }
 }

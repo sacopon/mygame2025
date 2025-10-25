@@ -27,6 +27,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -45,12 +46,14 @@ export type BattleSceneContext = {
     coordinator: UILayoutCoordinator;
     commandSelectWindow: CommandSelectWindow;
     enemySelectWindow: EnemySelectWindow;
+    statusWindow: StatusWindow;
   };
 
   // 実行フェーズで使用する UI オブジェクト
   executeUi?: {
     coordinator: UILayoutCoordinator;
     messageWindow: BattleMessageWindow;
+    statusWindow: StatusWindow;
   }
 
   // 入力フェーズで設定、実行フェーズで破棄
@@ -265,15 +268,19 @@ export class BattleScene implements Scene {
     // 敵選択ウィンドウ
     const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain)));
 
+    // ステータスウィンドウ
+    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
+
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(
       ui, width, height, {
         commandSelectWindow,
         enemySelectWindow,
+        statusWindow,
       }));
 
     // コンテキストに設定
-    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow };
+    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow, statusWindow };
   }
 
   /**
@@ -287,6 +294,7 @@ export class BattleScene implements Scene {
     this.despawn(this.#context.inputUi.coordinator);
     this.despawn(this.#context.inputUi.commandSelectWindow);
     this.despawn(this.#context.inputUi.enemySelectWindow);
+    this.despawn(this.#context.inputUi.statusWindow);
     this.#context.inputUi = undefined;
   }
 
