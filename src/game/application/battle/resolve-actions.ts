@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { PresentationEffect } from "..";
-import { ActionType, ActorId, DamageApplied, DomainEvent, EnemyGroupId, PlannedAction } from "@game/domain";
+import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, PlannedAction, SelfDefence } from "@game/domain";
 import { RandomPort } from "@game/presentation";
 
 /**
@@ -21,21 +21,22 @@ export type ResolveDeps = {
  * @param actions 行動内容の配列
  * @returns ドメインイベントとアトミックイベントそれぞれの配列
  */
-export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: ResolveDeps)
+export function resolveActions(state: Readonly<BattleDomainState>, actions: ReadonlyArray<PlannedAction>, deps: ResolveDeps)
   : {
-    events: ReadonlyArray<DomainEvent>,
+    state: Readonly<BattleDomainState>,
     effects: ReadonlyArray<PresentationEffect>,
   } {
-  const resultEvents: DomainEvent[] = [];
   const resultEffects: PresentationEffect[] = [];
 
+  let currentState = state;
+
   for (const action of actions) {
-    const { events, effects } = resolveAction(action, deps);
-    resultEvents.push(...events);
+    const { state: nextState, effects } = resolveAction(currentState, action, deps);
+    currentState = nextState;
     resultEffects.push(...effects);
   }
 
-  return { events: resultEvents, effects: resultEffects };
+  return { state: currentState, effects: resultEffects };
 }
 
 /**
@@ -44,25 +45,25 @@ export function resolveActions(actions: ReadonlyArray<PlannedAction>, deps: Reso
  * @param action 行動内容
  * @returns どうかけば良いのか
  */
-function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
+function resolveAction(currentState: Readonly<BattleDomainState>, action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
-    events: ReadonlyArray<DomainEvent>,
+    state: Readonly<BattleDomainState>,
     effects: ReadonlyArray<PresentationEffect>,
   } {
-  const resultEvents: DomainEvent[] = [];
+  let nextState: Readonly<BattleDomainState> = currentState;
   const resultEffects: PresentationEffect[] = [];
 
   switch(action.actionType) {
     case ActionType.Attack: {
-        const { events, effects } = createAttackResolution(action, deps);
-        resultEvents.push(...events);
+        const { state, effects } = createAttackResolution(currentState, action, deps);
+        nextState = state;
         resultEffects.push(...effects);
       }
       break;
 
     case ActionType.SelfDefence: {
-        const { events, effects } = createSelfDefenceResolution(action);
-        resultEvents.push(...events);
+        const { state, effects } = createEffectsFromSelfDefence(currentState, action);
+        nextState = state;
         resultEffects.push(...effects);
       }
       break;
@@ -76,7 +77,7 @@ function resolveAction(action: Readonly<PlannedAction>, deps: ResolveDeps)
       assertNever(action);
   }
 
-  return { events: resultEvents, effects: resultEffects };
+  return { state: nextState, effects: resultEffects };
 }
 
 /**
@@ -123,12 +124,11 @@ function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): Rea
  * @param action 行動内容(actionType: Attack)
  * @returns どうかけば良いのか
  */
-function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDeps)
+function createAttackResolution(currentState: Readonly<BattleDomainState>, action: Readonly<PlannedAction>, deps: ResolveDeps)
   : {
-    events: ReadonlyArray<DomainEvent>,
+    state: Readonly<BattleDomainState>,
     effects: ReadonlyArray<PresentationEffect>,
   } {
-  const events: DomainEvent[] = [];
   const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
   const targets = resolveTargets(action, deps);
@@ -157,11 +157,11 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
       critical: false,
     };
 
-    events.push(event);
-    effects.push(...createEffectsFromDamageApplied(event, deps));
+    currentState = currentState.apply(event);
+    effects.push(...createEffectsFromDamageApplied(currentState, event, deps));
   }
 
-  return { events, effects };
+  return { state: currentState.clone(), effects };
 }
 
 /**
@@ -170,31 +170,32 @@ function createAttackResolution(action: Readonly<PlannedAction>, deps: ResolveDe
  * @param action 行動内容(actionType: SelfDefence)
  * @returns どうかけば良いのか
  */
-function createSelfDefenceResolution(action: Readonly<PlannedAction>)
+function createEffectsFromSelfDefence(currentState: Readonly<BattleDomainState>, action: Readonly<PlannedAction>)
   : {
-    events: ReadonlyArray<DomainEvent>,
+    state: Readonly<BattleDomainState>,
     effects: ReadonlyArray<PresentationEffect>,
   } {
-  const events: DomainEvent[] = [];
   const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
+
+  const event = {
+    // 防御効果
+    type: "SelfDefence",
+    sourceId,
+  } as const as SelfDefence;
+
+  currentState = currentState.apply(event);
 
   effects.push(
     // 画面クリア
     { kind: "ClearMessageWindowText" },
+    // 状態反映
+    { kind: "ApplyState", state: currentState },
     // 「${actorId}は　みをまもっている！」を表示
     { kind: "ShowSelfDefenceText", actorId: sourceId },
   );
 
-  events.push(
-    // 防御効果
-    {
-      type: "SelfDefence",
-      sourceId,
-    },
-  );
-
-  return { events, effects };
+  return { state: currentState, effects };
 }
 
 /**
@@ -203,12 +204,14 @@ function createSelfDefenceResolution(action: Readonly<PlannedAction>)
  * @param event DamageApplied イベントの内容
  * @returns PresentationEffect の配列
  */
-function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
+function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState>, event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
   const isPlayerAttack = deps.isAlly(event.sourceId);
   const effects: PresentationEffect[] = [];
 
   if (isPlayerAttack) {
     effects.push(
+      // ダメージ後の状態を適用
+      { kind: "ApplyState", state: appliedState },
       // SE再生
       { kind: "PlaySe", seId: "enemy_damage" },
       // 「${actorId}は　${amount}の　ダメージ！
@@ -220,6 +223,8 @@ function createEffectsFromDamageApplied(event: DamageApplied, deps: ResolveDeps)
   }
   else {
     effects.push(
+      // ダメージ後の状態を適用
+      { kind: "ApplyState", state: appliedState },
       // SE再生
       { kind: "PlaySe", seId: "player_damage" },
       // 「${actor.name}は　${amount}の　ダメージを　うけた！」

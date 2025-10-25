@@ -17,7 +17,6 @@ import {
   Actor,
   ActorId,
   ActorType,
-  Ally,
   AllyActor,
   AllyId,
   BattleDomainState,
@@ -27,6 +26,7 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
+import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
  * バトルシーンの共有オブジェクト
@@ -39,18 +39,21 @@ export type BattleSceneContext = {
 
   // バトルのドメイン状態
   domainState: Readonly<BattleDomainState>;
+  nextDomainState: Readonly<BattleDomainState>;
 
   // 入力フェーズでのみ使用する UI オブジェクト
   inputUi?: {
     coordinator: UILayoutCoordinator;
     commandSelectWindow: CommandSelectWindow;
     enemySelectWindow: EnemySelectWindow;
+    statusWindow: StatusWindow;
   };
 
   // 実行フェーズで使用する UI オブジェクト
   executeUi?: {
     coordinator: UILayoutCoordinator;
     messageWindow: BattleMessageWindow;
+    statusWindow: StatusWindow;
   }
 
   // 入力フェーズで設定、実行フェーズで破棄
@@ -67,7 +70,7 @@ function createActors(): Actor[] {
     { actorId: ActorId(1), actorType: ActorType.Ally, originId: AllyId(1) },
     { actorId: ActorId(2), actorType: ActorType.Ally, originId: AllyId(2) },
     { actorId: ActorId(3), actorType: ActorType.Ally, originId: AllyId(3) },
-    { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
+    // { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
 
     // 敵
     // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい
@@ -91,9 +94,7 @@ export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
-  #partyAllyCharacters: ReadonlyArray<Ally> = []; // TODO: パーティは Ally ではなく AllyActor で持つ
-  // 実行フェーズ -> 入力フェーズへ戻る際のマーカー
-  #markAtExecutePhase?: number;
+  #partyAllyActors: ReadonlyArray<AllyActor> = []; // TODO: パーティは Ally ではなく AllyActor で持つ
 
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
@@ -113,16 +114,14 @@ export class BattleScene implements Scene {
     this.#allActors = Object.freeze(createActors());
 
     // パーティ編成
-    this.#partyAllyCharacters = this.#allActors
-      .filter(isAllyActor)
-      .map(actor => context.domain.allyRepository.findAlly(actor.originId));
-    const partyAllyActors = this.#allActors.filter(isAllyActor);
+    this.#partyAllyActors = this.#allActors
+      .filter(isAllyActor);
 
     // 敵選定
     const enemyActors = this.#allActors.filter(isEnemyActor);
 
     // ドメインステート作成
-    const domainState = BattleDomainState.fromActors(partyAllyActors, enemyActors);
+    const domainState = BattleDomainState.fromActors(this.#partyAllyActors, enemyActors);
 
     // アクセス簡易化のためのマップ生成
     this.#setupDictionary();
@@ -151,6 +150,7 @@ export class BattleScene implements Scene {
       allyActorIds: this.#allAllyActorIds,
       enemyActorIds: this.#allEnemyActorIds,
       domainState,
+      nextDomainState: domainState,
       commandChoices: [],
       // inputUi は #beginInputPhase() にて作成
     };
@@ -187,11 +187,11 @@ export class BattleScene implements Scene {
   }
 
   getPartyCharacterCount(): number {
-    return this.#partyAllyCharacters.length;
+    return this.#partyAllyActors.length;
   }
 
   getCurrentActor(index: number): AllyActor {
-    const allyId = this.#partyAllyCharacters[index].allyId;
+    const allyId = this.#partyAllyActors[index].originId;
     const ally = this.#getAllyActorByAllyId(allyId);
 
     if (!ally) {
@@ -265,15 +265,19 @@ export class BattleScene implements Scene {
     // 敵選択ウィンドウ
     const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain)));
 
+    // ステータスウィンドウ
+    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
+
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(
       ui, width, height, {
         commandSelectWindow,
         enemySelectWindow,
+        statusWindow,
       }));
 
     // コンテキストに設定
-    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow };
+    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow, statusWindow };
   }
 
   /**
@@ -287,6 +291,7 @@ export class BattleScene implements Scene {
     this.despawn(this.#context.inputUi.coordinator);
     this.despawn(this.#context.inputUi.commandSelectWindow);
     this.despawn(this.#context.inputUi.enemySelectWindow);
+    this.despawn(this.#context.inputUi.statusWindow);
     this.#context.inputUi = undefined;
   }
 
@@ -388,12 +393,12 @@ export class BattleScene implements Scene {
 
     // アクターIDのキャッシュ
     // 種類別アクターのキャッシュを利用するので、最後に作成すること
-    if (!this.#partyAllyCharacters || this.#partyAllyCharacters.length === 0) {
+    if (!this.#partyAllyActors || this.#partyAllyActors.length === 0) {
       throw new Error("setupDictionary: BattleScene#partyAllyCharacters not set yet");
     }
 
     // 味方のアクターID
-    this.#allAllyActorIds = Object.freeze(this.#partyAllyCharacters.map(a => a.allyId).map(aid => this.#getAllyActorByAllyId(aid).actorId));
+    this.#allAllyActorIds = Object.freeze(this.#partyAllyActors.map(a => a.originId).map(aid => this.#getAllyActorByAllyId(aid).actorId));
     // 敵のアクターID
     this.#allEnemyActorIds = Object.freeze(Array.from(this.#enemyActorsByGroupId.values()).flat().map(e => e.actorId));
   }

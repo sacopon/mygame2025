@@ -47,7 +47,7 @@ export class CommandSelectWindowContents extends ListWindowContents {
 
     const headerTextPos = {
       x: Math.floor(this.windowWidth / 2), // ウィンドウの中央に表示したい(anchor:0.5 なので、ウィンドウ幅の1/2を指定)
-      y: COMMAND_SELECT_WINDOW_SETTINGS.borderHeight + COMMAND_SELECT_WINDOW_SETTINGS.marginTop,
+      y: COMMAND_SELECT_WINDOW_SETTINGS.borderHeight + COMMAND_SELECT_WINDOW_SETTINGS.marginTop - 1,
     };
     header.setPosition(headerTextPos.x, headerTextPos.y);
 

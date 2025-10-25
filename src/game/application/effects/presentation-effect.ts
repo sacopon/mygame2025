@@ -1,9 +1,15 @@
-import { ActorId } from "@game/domain";
+import { ActorId, BattleDomainState } from "@game/domain";
 import { SeId } from "@game/presentation";
 
 /**
  * DomainEvent を元に生成されるプレゼンテーション層向けの演出指示
  */
+
+// 状態の反映
+export type ApplyState = {
+  kind: "ApplyState";
+  state: Readonly<BattleDomainState>,
+};
 
 // メッセージウィンドウのクリア
 export type ClearMessageWindowText = {
@@ -54,7 +60,8 @@ export type ShowSelfDefenceText = {
   actorId: ActorId;
 };
 
-export type PresentationEffect = ClearMessageWindowText
+export type PresentationEffect = ApplyState
+  | ClearMessageWindowText
   | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink

@@ -2,7 +2,7 @@ import { BattleScene } from "../../battle-scene";
 import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
 import { BattleSceneContext } from "../..";
-import { applyEventsToState, planTurnOrder, resolveActions } from "@game/application";
+import { planTurnOrder, resolveActions } from "@game/application";
 import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
 
 /**
@@ -26,7 +26,7 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions, context.ui.random);
 
     // バトル処理
-    const { events, effects } = resolveActions(orderedActions, {
+    const { state, effects } = resolveActions(context.domainState, orderedActions, {
       random: this.context.ui.random,
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
@@ -36,11 +36,10 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     });
 
     // 生成された解決済みアクションをバトル状態に反映する
-    context.domainState = applyEventsToState(context.domainState, events);
+    context.nextDomainState = state;
 
     this.context.turnResolution = {
       orderedActions,
-      domainEvents: events,
       atomicEffects: effects,
     } satisfies BattleSceneContext["turnResolution"];
 

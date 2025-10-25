@@ -1,7 +1,7 @@
 import { SeId } from "..";
 import { assertNever, toZenkaku } from "@shared";
 import { PresentationEffect } from "@game/application";
-import { ActorId } from "@game/domain";
+import { ActorId, BattleDomainState } from "@game/domain";
 
 // 味方のダメージ時にウィンドウが揺れている時間(ms)
 const ALLY_SHAKE_BY_DAMAGE_DURATION_MS = 650;
@@ -12,6 +12,7 @@ const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 550;
  * ランナー側で使用する依存部分
  */
 type EffectDeps = {
+  applyState: (state: Readonly<BattleDomainState>) => void,
   clear: () => void,
   print: (text: string) => void,
   bilkEnemyByDamage: (id: ActorId, durationMs: number) => void,
@@ -25,6 +26,7 @@ type EffectDeps = {
  */
 function durationOf(effect: Readonly<PresentationEffect>): number {
   switch (effect.kind) {
+    case "ApplyState": return 0;
     case "ClearMessageWindowText": return 50; // 同じメッセージが連続する場合に消えている状態が少しだけ見えるように
     case "ShowAttackStartedText": return 420;
     case "PlaySe": return 0;
@@ -87,6 +89,11 @@ export class PresentationEffectRunner {
     const effect = task.effect;
 
     switch (effect.kind) {
+      case "ApplyState":
+        if (__DEV__) { console.log("状態反映"); effect.state.debugDump(); }
+        this.#deps.applyState(effect.state);
+        break;
+
       case "ClearMessageWindowText":
         if (__DEV__) console.log("メッセージウィンドウ消去");
         this.#deps.clear();
