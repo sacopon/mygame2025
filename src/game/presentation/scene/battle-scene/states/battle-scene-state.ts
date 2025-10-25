@@ -1,39 +1,8 @@
+import { BattleSceneContext } from "../battle-scene";
 import { StackState } from "../../../../shared/state-stack";
-import { BattleScene, CommandChoice } from "..";
-import { UiPorts } from "../..";
-import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, UILayoutCoordinator } from "../../..";
+import { BattleScene } from "..";
 import { PresentationEffect } from "@game/application";
-import { DomainPorts, Action, ActorId, DomainEvent, PlannedAction } from "@game/domain";
-
-/**
- * バトルシーンの共有オブジェクト
- */
-export type BattleSceneContext = {
-  ui: Readonly<UiPorts>;
-  domain: Readonly<DomainPorts>;
-  allyActorIds: ReadonlyArray<ActorId>;
-  enemyActorIds: ReadonlyArray<ActorId>;
-
-  // 入力フェーズでのみ使用する UI オブジェクト
-  inputUi?: {
-    coordinator: UILayoutCoordinator;
-    commandSelectWindow: CommandSelectWindow;
-    enemySelectWindow: EnemySelectWindow;
-  };
-
-  // 実行フェーズで使用する UI オブジェクト
-  executeUi?: {
-    coordinator: UILayoutCoordinator;
-    messageWindow: BattleMessageWindow;
-  }
-
-  // 入力フェーズで設定、実行フェーズで破棄
-  commandChoices: ReadonlyArray<CommandChoice>;
-  // 実行フェーズで設定、実行フェーズで破棄
-  turnPlan?: Readonly<TurnPlan>;
-  // 実行フェーズで設定、実行フェーズで破棄
-  turnResolution?: Readonly<TurnResolution>;
-};
+import { Action, DomainEvent, PlannedAction } from "@game/domain";
 
 /**
  * 1ターンの実行計画

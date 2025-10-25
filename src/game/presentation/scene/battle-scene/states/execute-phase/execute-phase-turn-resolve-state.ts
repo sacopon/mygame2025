@@ -1,8 +1,8 @@
 import { BattleScene } from "../../battle-scene";
 import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
+import { BattleSceneContext } from "../..";
 import { planTurnOrder, resolveActions } from "@game/application";
-import { BattleSceneContext } from "../battle-scene-state";
 import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
 
 /**

@@ -1,7 +1,7 @@
 import { ListSelectWindow } from "../common/list-select-window";
+import { EnemyGroupId } from "../../../../../domain/models/actor";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { EnemySelectWindowContents } from "./enemy-select-window-contents";
-import { EnemyGroupId } from "../../../../../domain/actor";
 import { GamePorts } from "@game/presentation";
 
 /**

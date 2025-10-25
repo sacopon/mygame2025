@@ -1,10 +1,6 @@
-import { GameObjectAccess, Scene } from "../../scene/core/scene";
-import { BattleCommand } from "./core";
-import {
-  BattleSceneContext,
-  BattleSceneState,
-  InputPhaseFlowState,
-} from "./states";
+import { Scene } from "../../scene/core/scene";
+import { BattleCommand, BattleSceneState, CommandChoice, InputPhaseFlowState, TurnPlan, TurnResolution } from ".";
+import { UiPorts, GameObjectAccess, BattleMessageWindow } from "../..";
 import {
   GameObject,
   Background,
@@ -30,7 +26,36 @@ import {
   EnemyId
 } from "@game/domain";
 import { StateStack } from "@game/shared";
-import { NoticeMessageWindow } from "@game/presentation/game-object/elements/window/notice-message-window";
+
+/**
+ * バトルシーンの共有オブジェクト
+ */
+export type BattleSceneContext = {
+  ui: Readonly<UiPorts>;
+  domain: Readonly<DomainPorts>;
+  allyActorIds: ReadonlyArray<ActorId>;
+  enemyActorIds: ReadonlyArray<ActorId>;
+
+  // 入力フェーズでのみ使用する UI オブジェクト
+  inputUi?: {
+    coordinator: UILayoutCoordinator;
+    commandSelectWindow: CommandSelectWindow;
+    enemySelectWindow: EnemySelectWindow;
+  };
+
+  // 実行フェーズで使用する UI オブジェクト
+  executeUi?: {
+    coordinator: UILayoutCoordinator;
+    messageWindow: BattleMessageWindow;
+  }
+
+  // 入力フェーズで設定、実行フェーズで破棄
+  commandChoices: ReadonlyArray<CommandChoice>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnPlan?: Readonly<TurnPlan>;
+  // 実行フェーズで設定、実行フェーズで破棄
+  turnResolution?: Readonly<TurnResolution>;
+};
 
 function createActors(): Actor[] {
   return [

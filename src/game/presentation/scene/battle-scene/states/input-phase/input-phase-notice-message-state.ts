@@ -1,6 +1,6 @@
-import { BaseBattleSceneState, BattleSceneContext } from "../battle-scene-state";
+import { BaseBattleSceneState } from "../battle-scene-state";
 import { NoticeMessageWindow } from "@game/presentation/game-object/elements/window/notice-message-window";
-import { BattleScene } from "../..";
+import { BattleScene, BattleSceneContext } from "../..";
 import { GameButton } from "../../../..";
 
 /**
