@@ -1,4 +1,4 @@
-import { BattleSceneContext } from "../battle-scene";
+import { type BattleSceneContext } from "../battle-scene";
 import { StackState } from "../../../../shared/state-stack";
 import { BattleScene } from "..";
 import { PresentationEffect } from "@game/application";
@@ -67,3 +67,5 @@ export class BaseBattleSceneState implements BattleSceneState {
   onResume(): void {}
   update(_deltaTime: number): void {}
 }
+export { BattleSceneContext };
+
