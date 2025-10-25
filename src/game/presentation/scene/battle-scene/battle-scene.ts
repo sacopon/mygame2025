@@ -19,11 +19,14 @@ import {
   AllyActor,
   AllyId,
   BattleDomainState,
+  createAllyActor,
+  createEnemyActor,
   DomainPorts,
   EnemyActor,
   EnemyGroupId,
   EnemyId,
-  isAlive
+  isAlive,
+  Level
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
@@ -52,6 +55,7 @@ export type BattleSceneContext = {
   // 実行フェーズで使用する UI オブジェクト
   executeUi?: {
     coordinator: UILayoutCoordinator;
+    mainWindow: MainWindow;
     messageWindow: BattleMessageWindow;
     statusWindow: StatusWindow;
   }
@@ -64,23 +68,23 @@ export type BattleSceneContext = {
   turnResolution?: Readonly<TurnResolution>;
 };
 
-function createActors(): Actor[] {
-  return [
-    // 味方
-    { actorId: ActorId(1), actorType: ActorType.Ally, originId: AllyId(1) },
-    { actorId: ActorId(2), actorType: ActorType.Ally, originId: AllyId(2) },
-    { actorId: ActorId(3), actorType: ActorType.Ally, originId: AllyId(3) },
-    { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
+function createActors(domain: DomainPorts): ReadonlyArray<Actor> {
+  const allyActors: AllyActor[] = [];
+  const enemyActors: EnemyActor[] = [];
 
-    // 敵
-    // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい
-    { actorId: ActorId(5),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(1) },
-    { actorId: ActorId(6),  actorType: ActorType.Enemy, originId: EnemyId(1), enemyGroupId: EnemyGroupId(1) },
-    { actorId: ActorId(7),  actorType: ActorType.Enemy, originId: EnemyId(2), enemyGroupId: EnemyGroupId(2) },
-    { actorId: ActorId(8),  actorType: ActorType.Enemy, originId: EnemyId(2), enemyGroupId: EnemyGroupId(2) },
-    { actorId: ActorId(9),  actorType: ActorType.Enemy, originId: EnemyId(3), enemyGroupId: EnemyGroupId(3) },
-    { actorId: ActorId(10), actorType: ActorType.Enemy, originId: EnemyId(4), enemyGroupId: EnemyGroupId(4) },
-  ];
+  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(1)), ActorId(1)));
+  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(2)), ActorId(2)));
+  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(3)), ActorId(3)));
+  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(4)), ActorId(4)));
+
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(1)), ActorId(5),  EnemyGroupId(1)));
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(1)), ActorId(6),  EnemyGroupId(1)));
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(2)), ActorId(7),  EnemyGroupId(2)));
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(2)), ActorId(8),  EnemyGroupId(2)));
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(3)), ActorId(9),  EnemyGroupId(3)));
+  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(4)), ActorId(10), EnemyGroupId(4)));
+
+  return [...allyActors, ...enemyActors];
 }
 
 const isAllyActor = (actor: Actor): actor is AllyActor => actor.actorType === ActorType.Ally;
@@ -112,7 +116,7 @@ export class BattleScene implements Scene {
 
   onEnter(context: SceneContext) {
     this.#enemyViewByActorId.clear();
-    this.#allActors = Object.freeze(createActors());
+    this.#allActors = Object.freeze(createActors(context.domain));
 
     // パーティ編成
     this.#partyAllyActors = this.#allActors
@@ -137,11 +141,8 @@ export class BattleScene implements Scene {
     // 一旦全て同じ敵の画像
     // 中央揃えにしたいところだが、ここも仮
     // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
-    for (let i = 0; i < enemyActors.length; ++i) {
-    // for (let i = 0; i < 1; ++i) {
-      const actor = enemyActors[i];
-      // const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, actor.originId, width, height, i));
-      const view = new EnemyView(context.ui, actor.originId, width, height, i);
+    for (const actor of enemyActors) {
+      const view = new EnemyView(context.ui, actor.originId);
       this.#mainWindow.addEnemy(view);
       this.#enemyViewByActorId.set(actor.actorId, view);
     }
@@ -190,7 +191,7 @@ export class BattleScene implements Scene {
   }
 
   getAlivePartyCharacterCount(): number {
-    return this.#context.domainState.getAliveAllyActorStates().length;
+    return this.#context.domainState.getAliveAllyActorIds().length;
   }
 
   getCurrentActor(index: number): AllyActor {
@@ -270,7 +271,11 @@ export class BattleScene implements Scene {
     const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain, state)));
 
     // ステータスウィンドウ
-    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, true, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
+    const resolver = {
+      resolveName: (actorId: ActorId) => this.getActorDisplayNameById(actorId),
+      resolveLevel: (actorId: ActorId) => this.getAllyLevelById(actorId),
+    };
+    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, true, resolver));
 
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(
@@ -319,6 +324,13 @@ export class BattleScene implements Scene {
       // TODO: A, B, C... 個体識別子を付与する場合は同一 enemyId 内での actorId 順で割り振る
       return this.#context.domain.enemyRepository.findEnemy(actor.originId).name;
     }
+  }
+
+  getAllyLevelById(actorId: ActorId): Level {
+    const actor = this.getActorById(actorId);
+    if (!isAllyActor(actor)) { throw new Error(`It's not Ally(actorId:${actorId})`); }
+
+    return this.#context.domain.allyRepository.findAlly(actor.originId).level;
   }
 
   getAliveAllies(): ReadonlyArray<ActorId> {

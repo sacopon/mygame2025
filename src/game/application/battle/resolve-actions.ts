@@ -96,20 +96,33 @@ function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<Pla
     case "single":
       // すでに決まっていたらその内容で確定する
       if (action.mode.targetId) {
-        return [ action.mode.targetId ];
+        if (state.isAlive(action.mode.targetId)) {
+          // 生きていればそれで確定
+          return [ action.mode.targetId ];
+        }
+        else if (deps.isAlly(action.actorId)) {
+          // 味方の攻撃、生存している敵をひとり選択
+          return [deps.random.shuffle(state.getAliveEnemyActorIds())[0]];
+        }
+        else {
+          // 敵の攻撃、生存している味方をひとり選択
+          return [deps.random.shuffle(state.getAliveAllyActorIds())[0]];
+        }
       }
 
       if (action.selection.kind === "group") {
-        // グループを選択をしている(= 味方の行動であることが型から確定している)
+        // グループ選択 で 対象は1人(= 味方の行動であることが型から確定している)
         const list = deps
           .getActorIdsByEnemyGroup(action.selection.groupId)
           .filter(id => isAlive(state.getActorState(id)));
-        return 0 < list.length ? [deps.random.shuffle(list)[0]] : [];
+        return 0 < list.length ?
+          [deps.random.shuffle(list)[0]] :  // グループ内に生存者がいればその中からランダム
+          [deps.random.shuffle(state.getAliveEnemyActorIds())[0]];
       }
       else {
         // 敵の場合
-        const allies = state.getAliveAllyActorStates();
-        return 0 < allies.length ? [deps.random.shuffle(allies)[0].actorId] : [];
+        const allies = state.getAliveAllyActorIds();
+        return 0 < allies.length ? [deps.random.shuffle(allies)[0]] : [];
       }
 
     case "group":

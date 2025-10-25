@@ -1,3 +1,5 @@
+import { Hp, Level } from "./status-value-objects";
+
 type Brand<T, B extends string> = T & { readonly __brand: B };
 
 // 味方キャラクター内での一意なID
@@ -28,8 +30,10 @@ export type AllyActor = {
   actorId: ActorId;
   actorType: typeof ActorType.Ally;
   originId: AllyId;
-  // 現在のHPなど...
-  // 詳細部分やバトル開始前のベース部分となる値は Ally に定義
+  name: Readonly<string>;
+  level: Readonly<Level>;
+  maxHp: Readonly<Hp>;
+  currentHp: Hp;
 };
 
 /**
@@ -37,8 +41,10 @@ export type AllyActor = {
  */
 export type Ally = {
   allyId: AllyId;
-  name: string;
-  // バトル開始前の各種パラメータなどを追加
+  name: Readonly<string>;
+  level: Level;
+  maxHp: Hp;
+  currentHp: Hp;
 }
 
 // Actor(敵キャラクター)の定義
@@ -47,8 +53,8 @@ export type EnemyActor = {
   enemyGroupId: EnemyGroupId;
   actorType: typeof ActorType.Enemy;
   originId: EnemyId;
-  // 現在のHPなど...
-  // 詳細部分や全個体のベースとなる値は Enemy に定義
+  name: Readonly<string>;
+  baseHp: Hp;
 };
 
 /**
@@ -57,7 +63,30 @@ export type EnemyActor = {
 export type Enemy = {
   enemyId: EnemyId;
   name: string;
-  // 各種パラメータなどを追加
+  baseHp: Hp;
 }
 
 export type Actor = AllyActor | EnemyActor;
+
+export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
+  return {
+    actorId,
+    actorType: ActorType.Ally,
+    originId: ally.allyId,
+    name: ally.name,
+    level: Level.of(ally.level.value),
+    maxHp: Hp.of(ally.maxHp.value),
+    currentHp: Hp.of(ally.currentHp.value),
+  };
+}
+
+export function createEnemyActor(enemy: Enemy, actorId: ActorId, groupId: EnemyGroupId): EnemyActor {
+  return {
+    actorId,
+    actorType: ActorType.Enemy,
+    originId: enemy.enemyId,
+    enemyGroupId: groupId,
+    name: enemy.name,
+    baseHp: Hp.of(enemy.baseHp.value),
+  };
+}

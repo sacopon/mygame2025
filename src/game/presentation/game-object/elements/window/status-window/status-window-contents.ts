@@ -2,7 +2,7 @@ import { GroupGameObject } from "../../../../core/group-game-object";
 import { GameObject, GamePorts, NineSliceSpriteComponent, TextComponent, TextListComponent } from "../../../..";
 import { STATUS_WINDOW_SETTINGS } from "./status-winodw-constants";
 import { StatusWindow } from "./status-window";
-import { ActorId, ActorState, BattleDomainState } from "@game/domain";
+import { ActorId, ActorState, BattleDomainState, Level } from "@game/domain";
 import { toZenkaku } from "@shared/utils";
 
 // キャラクターひとり分あたりの幅
@@ -11,6 +11,11 @@ const STATUS_WIDTH = 54;  // 5文字用
 
 // 死んだ時のテキスト色(TODO: グローバル config 的なところに移動したい)
 const DEAD_COLOR = 0xFF6666;
+
+export type StatusWindowResolver = {
+  resolveName: (actorId: ActorId) => string,
+  resolveLevel: (actorId: ActorId) => Level,
+}
 
 /**
  * 各プレイヤーの名前
@@ -142,11 +147,13 @@ class Status extends GroupGameObject {
 class CharacterStatus extends GroupGameObject {
   #name: Name;
   #status: Status;
+  #resolver: StatusWindowResolver;
 
-  constructor(ports: GamePorts, actorState: ActorState, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, actorState: ActorState, forInputPhase: boolean, resolver: StatusWindowResolver) {
     super(ports);
 
-    this.#name = new Name(ports, resolveActorName(actorState.actorId));
+    this.#resolver = resolver;
+    this.#name = new Name(ports, resolver.resolveName(actorState.actorId));
     this.addChild(this.#name).setPosition(24, -1);
 
     this.#status = new Status(ports, forInputPhase, {});
@@ -158,8 +165,8 @@ class CharacterStatus extends GroupGameObject {
   updateStatus(actorState: ActorState): void {
     this.#status.updateStatus({
       hp: actorState.hp.value,
-      mp: 999,
-      lv: 99,
+      mp: 0,
+      lv: this.#resolver.resolveLevel(actorState.actorId).value,
     });
 
     if (actorState.hp.isDead) {
@@ -176,7 +183,7 @@ export class StatusWindowContents extends GroupGameObject {
   #index: number = 0;
   #characterStatusByActorId: Map<ActorId, CharacterStatus>;
 
-  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolver: StatusWindowResolver) {
     super(ports);
     this.#characterStatusByActorId = new Map<ActorId, CharacterStatus>();
 
@@ -184,7 +191,7 @@ export class StatusWindowContents extends GroupGameObject {
 
     for (let i = 0; i < actorStates.length; ++i) {
       const as = actorStates[i];
-      const status = new CharacterStatus(ports, as, forInputPhase, resolveActorName);
+      const status = new CharacterStatus(ports, as, forInputPhase, resolver);
       this.addChild(status).setPosition(STATUS_WIDTH * i, 0);
       this.#characterStatusByActorId.set(as.actorId, status);
     }

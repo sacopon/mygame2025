@@ -13,17 +13,15 @@ const makeEnemyTextureKey = (enemyId: EnemyId) => {
  * 敵キャラクター画像
  */
 export class EnemyView extends GameObject {
-  #index: number;
   #blinkController: BlinkController;
   #sprite: SpriteComponent;
   #dead: boolean;
 
-  constructor(ports: GamePorts, enemyId: EnemyId, vw: number, vh: number, index: number) {
+  constructor(ports: GamePorts, enemyId: EnemyId) {
     super(ports);
 
     this.#blinkController = new BlinkController(50);
     this.#dead = false;
-    this.#index = index;
     this.#sprite = this.addComponent(new SpriteComponent({
       imageId: makeEnemyTextureKey(enemyId),
       anchor: { x: 0.5, y: 1.0 },

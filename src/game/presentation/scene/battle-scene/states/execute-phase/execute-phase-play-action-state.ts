@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
-import { ActorId, BattleDomainState } from "@game/domain";
+import { ActorId, BattleDomainState, Level } from "@game/domain";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
@@ -25,6 +25,10 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     if (__DEV__) console.log(context.turnResolution);
 
     const resolveName = (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId);
+    const resolver = {
+      resolveName,
+      resolveLevel: (actorId: ActorId): Level => this.scene.getAllyLevelById(actorId),
+    };
 
     // 演出再生のランナー作成
     this.#presentationEffectRunner = new PresentationEffectRunner(
@@ -43,6 +47,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
             // ダメージ時に揺れるウィンドウ列挙
             this.context.executeUi?.messageWindow,
             this.context.executeUi?.statusWindow,
+            this.context.executeUi?.mainWindow,
           ]
           .filter(w => !!w)
           .forEach(w => this.context.executeUi?.coordinator.shake(w));
@@ -54,13 +59,14 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     // メッセージウィンドウを作成
     const messageWindow = this.scene.spawn(new BattleMessageWindow(this.context.ui));
     // ステータスウィンドウを作成
-    const statusWindow = this.scene.spawn(new StatusWindow(this.context.ui, context.domainState, false, resolveName));
+    const statusWindow = this.scene.spawn(new StatusWindow(this.context.ui, context.domainState, false, resolver));
     // レイアウトコーディネイター
     const { width, height } = this.context.ui.screen.getGameSize();
     const coordinator = this.scene.spawn(new UILayoutCoordinator(this.context.ui, width, height, { mainWindow: this.scene.mainWindow, messageWindow, statusWindow: statusWindow }));
 
     this.context.executeUi = {
       coordinator,
+      mainWindow: this.scene.mainWindow,
       messageWindow,
       statusWindow,
     };

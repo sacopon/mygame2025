@@ -143,6 +143,9 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
   button.on("pointerdown", () => {
     button.scale.set(1.2);
   });
+  // button.on("pointermove", () => {
+  //   button.scale.set(1.0);
+  // });
   button.on("pointerup", () => {
     const muted = callback();
     if (muted) { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x666666 }); }

@@ -1,4 +1,24 @@
 /**
+ * レベル
+ * (本来経験値から計算で導き出されるものかもしれない)
+ */
+export class Level {
+  readonly #value: number;
+
+  private constructor(value: number) {
+    this.#value = value;
+  }
+
+  static of(value: number): Level {
+    return new Level(value);
+  }
+
+  get value(): number {
+    return this.#value;
+  }
+}
+
+/**
  * ヒットポイント
  */
 export class Hp {

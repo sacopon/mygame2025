@@ -2,22 +2,22 @@ import { GameObjectAccess, UiPorts } from "../scene/core/scene";
 import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
-import { Ally, AllyId, DomainPorts, Enemy, EnemyId } from "@game/domain";
+import { Ally, AllyId, DomainPorts, Enemy, EnemyId, Hp, Level } from "@game/domain";
 import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastructure";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "あああああ" },
-    { allyId: AllyId(2), name: "いいいいい" },
-    { allyId: AllyId(3), name: "ううううう" },
-    { allyId: AllyId(4), name: "えええええ" },
+    { allyId: AllyId(1), name: "あああああ", level: Level.of(3),  maxHp: Hp.of(80),  currentHp: Hp.of(80) },
+    { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), maxHp: Hp.of(130), currentHp: Hp.of(130) },
+    { allyId: AllyId(3), name: "ううううう", level: Level.of(6),  maxHp: Hp.of(60),  currentHp: Hp.of(60) },
+    { allyId: AllyId(4), name: "えええええ", level: Level.of(2),  maxHp: Hp.of(35),  currentHp: Hp.of(35) },
   ] as const;
 
 const allEnemies: Enemy[] = [
-  { enemyId: EnemyId(1), name: "スライム" },
-  { enemyId: EnemyId(2), name: "おおねずみ" },
-  { enemyId: EnemyId(3), name: "ビッグベアー" },
-  { enemyId: EnemyId(4), name: "パンプキン" },
+  { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20) },
+  { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35) },
+  { enemyId: EnemyId(3), name: "ビッグベアー", baseHp: Hp.of(80) },
+  { enemyId: EnemyId(4), name: "パンプキン", baseHp: Hp.of(30) },
 ] as const;
 
   return {

@@ -47,10 +47,8 @@ class EnemyLayer extends GroupGameObject {
   #replace(): void {
     const totalWidth = this.#enemyViews.reduce((prev, current) => prev + current.width, 0);
     let x = -totalWidth / 2;
-    console.log(`totalWidth: ${totalWidth}`);
 
     for (const view of this.#enemyViews) {
-      console.log(`x:${x}, view.width:${view.width}`);
       view.setPosition(x + (view.width / 2) | 0 , enemyBottomY);
       x += view.width;
     }
@@ -63,17 +61,22 @@ export class MainWindow extends GroupGameObject implements ScreenSizeAware {
     height: 136,
   } as const;
 
+  #border: Border;
   #enemyLayer: EnemyLayer;
 
   constructor(ports: GamePorts, backgroundImageId: string) {
     super(ports);
 
     this.addChild(new Background(ports, backgroundImageId));
-    this.addChild(new Border(ports, MainWindow.#windowSpec));
+    this.#border = this.addChild(new Border(ports, MainWindow.#windowSpec));
     this.#enemyLayer = this.addChild(new EnemyLayer(ports));
   }
 
   addEnemy(enemyView: EnemyView): void {
     this.#enemyLayer.addEnemy(enemyView);
+  }
+
+  shake(offset: { dx: number, dy: number }): void {
+    this.#border.setPosition(this.x + offset.dx, this.y + offset.dy);
   }
 }
