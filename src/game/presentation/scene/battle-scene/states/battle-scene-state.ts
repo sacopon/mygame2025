@@ -2,7 +2,7 @@ import { type BattleSceneContext } from "../battle-scene";
 import { StackState } from "../../../../shared/state-stack";
 import { BattleScene } from "..";
 import { PresentationEffect } from "@game/application";
-import { Action, DomainEvent, PlannedAction } from "@game/domain";
+import { Action, PlannedAction } from "@game/domain";
 
 /**
  * 1ターンの実行計画
@@ -22,8 +22,6 @@ export type TurnPlan = Readonly<{
 export type TurnResolution = Readonly<{
   // 行動順解決後の行動内容配列
   orderedActions: ReadonlyArray<Action>;
-  // 行動内容解決後の、状態を変化させるイベント配列
-  domainEvents: ReadonlyArray<DomainEvent>; // TODO: 使用されていないので不要
   // DomainEvent を元に生成されたプレゼンテーション層向けの演出指示
   atomicEffects: ReadonlyArray<PresentationEffect>; // TODO: PresentationEffect に名前を変更
 }>;

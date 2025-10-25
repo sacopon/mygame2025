@@ -30,12 +30,8 @@ class Status extends GameObject {
   constructor(ports: GamePorts, hp: number, mp: number, lv: number) {
     super(ports);
 
-    const hpString = `Ｈ ${toZenkaku(hp)}`;
-    const mpString = `Ｍ ${toZenkaku(mp)}`;
-    const lvString = `Lv:${toZenkaku(lv)}`;
-
     this.addComponent(new TextListComponent(
-      [hpString, mpString, lvString],
+      ["", "", ""],
       {
         fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
         fontSize: STATUS_WINDOW_SETTINGS.fontSize,
@@ -43,6 +39,24 @@ class Status extends GameObject {
       {
         lineHeight: STATUS_WINDOW_SETTINGS.lineHeight,
       }));
+    this.updateStatus({ hp, mp, lv });
+  }
+
+  updateStatus(params: { hp?: number, mp?: number, lv?: number }): void {
+    if (params.hp !== undefined) {
+      const hpString = `Ｈ ${toZenkaku(params.hp)}`;
+      this.getComponent(TextListComponent.typeId)?.setLine(0, hpString);
+    }
+
+    if (params.mp !== undefined) {
+      const mpString = `Ｍ ${toZenkaku(params.mp)}`;
+      this.getComponent(TextListComponent.typeId)?.setLine(1, mpString);
+    }
+
+    if (params.lv !== undefined) {
+      const lvString = `Lv:${toZenkaku(params.lv)}`;
+      this.getComponent(TextListComponent.typeId)?.setLine(2, lvString);
+    }
   }
 }
 
@@ -50,6 +64,8 @@ class Status extends GameObject {
  * 各プレイヤーの名前とステータス
  */
 class CharacterStatus extends GroupGameObject {
+  #status: Status;
+
   constructor(ports: GamePorts, actorState: ActorState, nameResolver: (actorId: ActorId) => string) {
     super(ports);
 
@@ -57,9 +73,18 @@ class CharacterStatus extends GroupGameObject {
       .addChild(new Name(ports, nameResolver(actorState.actorId)))
       .setPosition(0, 0);
 
+    this.#status = new Status(ports, actorState.hp.value, 999, 99);
     this
-      .addChild(new Status(ports, actorState.hp.value, 999, 99))
+      .addChild(this.#status)
       .setPosition(0, 16);
+  }
+
+  updateStatus(actorState: ActorState): void {
+    this.#status.updateStatus({
+      hp: actorState.hp.value,
+      mp: 999,
+      lv: 99,
+    });
   }
 }
 
@@ -68,16 +93,19 @@ class CharacterStatus extends GroupGameObject {
  */
 export class StatusWindowContents extends GroupGameObject {
   #index: number = 0;
+  #characterStatusByActorId: Map<ActorId, CharacterStatus>;
 
   constructor(ports: GamePorts, state: Readonly<BattleDomainState>, nameResolver: (actorId: ActorId) => string) {
     super(ports);
+    this.#characterStatusByActorId = new Map<ActorId, CharacterStatus>();
 
     const actorStates = state.getAllyActorStates();
 
     for (let i = 0; i < actorStates.length; ++i) {
-      this
-        .addChild(new CharacterStatus(ports, actorStates[i], nameResolver))
-        .setPosition(56 * i, 0);
+      const as = actorStates[i];
+      const status = new CharacterStatus(ports, as, nameResolver);
+      this.addChild(status).setPosition(56 * i, 0);
+      this.#characterStatusByActorId.set(as.actorId, status);
     }
 
     // 名前とステータスの区切り線
@@ -89,5 +117,20 @@ export class StatusWindowContents extends GroupGameObject {
       }));
 
     separator.setPosition(-6, 12);
+  }
+
+  updateState(state: Readonly<BattleDomainState>): void {
+    const actorStates = state.getAllyActorStates();
+
+    for (let i = 0; i < actorStates.length; ++i) {
+      const as = actorStates[i];
+      const status = this.#characterStatusByActorId.get(as.actorId);
+
+      if (!status) {
+        continue;
+      }
+
+      status.updateStatus(as);
+    }
   }
 }

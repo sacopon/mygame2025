@@ -39,6 +39,7 @@ export type BattleSceneContext = {
 
   // バトルのドメイン状態
   domainState: Readonly<BattleDomainState>;
+  nextDomainState: Readonly<BattleDomainState>;
 
   // 入力フェーズでのみ使用する UI オブジェクト
   inputUi?: {
@@ -149,6 +150,7 @@ export class BattleScene implements Scene {
       allyActorIds: this.#allAllyActorIds,
       enemyActorIds: this.#allEnemyActorIds,
       domainState,
+      nextDomainState: domainState,
       commandChoices: [],
       // inputUi は #beginInputPhase() にて作成
     };

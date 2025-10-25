@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
-import { ActorId } from "@game/domain";
+import { ActorId, BattleDomainState } from "@game/domain";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
@@ -30,6 +30,10 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     this.#presentationEffectRunner = new PresentationEffectRunner(
       context.turnResolution.atomicEffects,
       {
+        applyState: (state: Readonly<BattleDomainState>) => {
+          this.context.domainState = state;
+          this.context.executeUi?.statusWindow.updateState(state);
+        },
         clear: () => this.context.executeUi?.messageWindow.clearText(),
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
         bilkEnemyByDamage: (id: ActorId, durationMs: number) => this.scene.getEnemyViewByActorId(id).blinkByDamage(durationMs),
@@ -65,6 +69,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     this.#presentationEffectRunner.update(deltaMs);
 
     if (!this.#presentationEffectRunner.isRunning) {
+      this.context.domainState = this.context.nextDomainState;
       this.scene.returnToInputPhaseForNextTurn();
       return;
     }

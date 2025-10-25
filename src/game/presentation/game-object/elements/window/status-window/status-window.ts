@@ -1,7 +1,7 @@
 import { GroupGameObject } from "../../../../core/group-game-object";
 import { WindowBase } from "..";
 import { GamePorts } from "../../../..";
-import { StatusWindowContents } from "./status-windowcontents";
+import { StatusWindowContents } from "./status-window-contents";
 import { STATUS_WINDOW_SETTINGS } from "./status-winodw-constants";
 import { ActorId, BattleDomainState } from "@game/domain";
 
@@ -44,5 +44,12 @@ export class StatusWindow extends GroupGameObject {
 
   get height(): number {
     return StatusWindow.height;
+  }
+
+  /**
+   * 状態を反映する
+   */
+  updateState(state: Readonly<BattleDomainState>): void {
+    this.#content.updateState(state);
   }
 }
