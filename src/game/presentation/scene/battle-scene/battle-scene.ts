@@ -70,7 +70,7 @@ function createActors(): Actor[] {
     { actorId: ActorId(1), actorType: ActorType.Ally, originId: AllyId(1) },
     { actorId: ActorId(2), actorType: ActorType.Ally, originId: AllyId(2) },
     { actorId: ActorId(3), actorType: ActorType.Ally, originId: AllyId(3) },
-    // { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
+    { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
 
     // 敵
     // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい

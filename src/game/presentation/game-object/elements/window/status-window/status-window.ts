@@ -10,7 +10,7 @@ import { ActorId, BattleDomainState } from "@game/domain";
  */
 export class StatusWindow extends GroupGameObject {
   static readonly #windowSpec = {
-    width: 178,
+    width: STATUS_WINDOW_SETTINGS.width,
     height:
       STATUS_WINDOW_SETTINGS.borderHeight + STATUS_WINDOW_SETTINGS.marginTop +
       STATUS_WINDOW_SETTINGS.lineHeight * 4 +
