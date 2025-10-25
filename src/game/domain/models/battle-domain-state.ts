@@ -20,6 +20,7 @@ export type EnemyActorState = ActorStateBase & {
 
 export type ActorState = AllyActorState | EnemyActorState;
 
+export const isAlive = (s: ActorState): boolean => s.hp.isAlive;
 const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
 
 export class BattleDomainState {
@@ -37,7 +38,7 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(80),
+        hp: Hp.of(999),
       });
     }
 
@@ -46,7 +47,7 @@ export class BattleDomainState {
         actorId: enemy.actorId,
         originId: enemy.originId,
         actorType: ActorType.Enemy,
-        hp: Hp.of(80),
+        hp: Hp.of(40),
       });
     }
 
@@ -72,17 +73,55 @@ export class BattleDomainState {
   }
 
   /**
+   * 指定アクターの状態を取得します
+   */
+  getActorState(actorId: Readonly<ActorId>): Readonly<ActorState> {
+    const state = this.#actorStateByActorId.get(actorId);
+    if (!state) { throw new Error(`invalid actorId:${actorId}`); };
+
+    return state;
+  }
+
+  /**
    * 全アクターの状態を配列として取得します。
    */
-  public getActorStates(): ReadonlyArray<ActorState> {
+  getActorStates(): ReadonlyArray<ActorState> {
     return Array.from(this.#actorStateByActorId.values());
   }
 
   /**
    * プレイヤー側のアクターの状態を配列として取得します。
    */
-  public getAllyActorStates(): ReadonlyArray<AllyActorState> {
+  getAllyActorStates(): ReadonlyArray<AllyActorState> {
     return this.getActorStates().filter(s => isAllyState(s));
+  }
+
+  /**
+   * 生存しているプレイヤー側のアクターの状態を配列として取得します。
+   */
+  getAliveAllyActorStates(): ReadonlyArray<AllyActorState> {
+    return this.getActorStates().filter(s => isAllyState(s)).filter(isAlive);
+  }
+
+  /**
+   * 敵側のアクターの状態を配列として取得します。
+   */
+  getEnemyActorStates(): ReadonlyArray<EnemyActorState> {
+    return this.getActorStates().filter(s => !isAllyState(s));
+  }
+
+  isAlive(actorId: ActorId): boolean {
+    const actorState = this.#actorStateByActorId.get(actorId);
+
+    if (!actorState) {
+      throw new Error(`invalid actorId: ${actorId}`);
+    }
+
+    return isAlive(actorState);
+  }
+
+  isDead(actorId: ActorId): boolean {
+    return !this.isAlive(actorId);
   }
 
   #applyDamage(damageEvent: DamageApplied): Readonly<BattleDomainState> {

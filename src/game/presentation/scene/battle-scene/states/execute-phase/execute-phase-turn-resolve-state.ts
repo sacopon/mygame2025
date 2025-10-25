@@ -31,7 +31,7 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
       aliveAllEnemies: () => this.scene.getAliveEnemies(),
-      aliveEnemiesInGroup: (groupId: EnemyGroupId) => this.scene.getAliveEnemiesInGroup(groupId),
+      getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => this.scene.getActorIdsByEnemyGroup(groupId),
       aliveAllActors: () => this.scene.getAliveAllActors(),
     });
 

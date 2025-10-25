@@ -23,7 +23,8 @@ import {
   DomainPorts,
   EnemyActor,
   EnemyGroupId,
-  EnemyId
+  EnemyId,
+  isAlive
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
@@ -70,7 +71,7 @@ function createActors(): Actor[] {
     { actorId: ActorId(1), actorType: ActorType.Ally, originId: AllyId(1) },
     { actorId: ActorId(2), actorType: ActorType.Ally, originId: AllyId(2) },
     { actorId: ActorId(3), actorType: ActorType.Ally, originId: AllyId(3) },
-    // { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
+    { actorId: ActorId(4), actorType: ActorType.Ally, originId: AllyId(4) },
 
     // 敵
     // TODO: 同一 enemyGroupId 内は必ず同一 originId であることをチェックしたい
@@ -99,7 +100,7 @@ export class BattleScene implements Scene {
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
-  #allyActorByAllyId!: Map<AllyId, AllyActor>;
+  #allyActorByAllyId!: Map<Readonly<AllyId>, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
@@ -186,12 +187,13 @@ export class BattleScene implements Scene {
     return false;
   }
 
-  getPartyCharacterCount(): number {
-    return this.#partyAllyActors.length;
+  getAlivePartyCharacterCount(): number {
+    return this.#context.domainState.getAliveAllyActorStates().length;
   }
 
   getCurrentActor(index: number): AllyActor {
-    const allyId = this.#partyAllyActors[index].originId;
+    const states = this.#context.domainState.getAliveAllyActorStates();
+    const allyId = states[index].originId;
     const ally = this.#getAllyActorByAllyId(allyId);
 
     if (!ally) {
@@ -244,7 +246,7 @@ export class BattleScene implements Scene {
    * データに基づいて入力系UIの作成
    */
   buildInputUi(): void {
-    const { domain, ui } = this.#context;
+    const { domain, ui, domainState: state } = this.#context;
     const { width, height } = ui.screen.getGameSize();
 
     // ロジックエラー
@@ -263,10 +265,10 @@ export class BattleScene implements Scene {
     const commandSelectWindow = this.spawn(new CommandSelectWindow(ui, commands));
 
     // 敵選択ウィンドウ
-    const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain)));
+    const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain, state)));
 
     // ステータスウィンドウ
-    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
+    const statusWindow = this.spawn(new StatusWindow(ui, this.#context.domainState, true, (actorId: ActorId) => this.getActorDisplayNameById(actorId)));
 
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(
@@ -331,13 +333,14 @@ export class BattleScene implements Scene {
     return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
   }
 
-  getAliveEnemiesInGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
+  getActorIdsByEnemyGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
     if (!this.#enemyActorsByGroupId.has(groupId)) {
       return [];
     }
 
-    return this.#enemyActorsByGroupId.get(groupId)!.map(a => a.actorId);
+    return this.#enemyActorsByGroupId
+      .get(groupId)!
+      .map(a => a.actorId);
   }
 
   getEnemyViewByActorId(actorId: ActorId): EnemyView {
@@ -347,17 +350,33 @@ export class BattleScene implements Scene {
     return this.#enemyViewByActorId.get(actorId)!;
   }
 
-  #buildEnemyGroups(domain: Readonly<DomainPorts>) {
-    return [...this.#enemyActorsByGroupId.entries()].map(([groupId, list]) => {
-      return {
-        enemyGroupId: groupId,
-        name: domain.enemyRepository.findEnemy(list[0].originId).name,
-        count: list.length,
-      };
-    });
+  #buildEnemyGroups(domain: Readonly<DomainPorts>, state: Readonly<BattleDomainState>)
+    : {
+      enemyGroupId: EnemyGroupId,
+      name: string
+      count: number,
+      }[]
+  {
+    const enemyGroups: { enemyGroupId: EnemyGroupId, name: string, count: number }[] = [];
+
+    for (const entry of this.#enemyActorsByGroupId.entries()) {
+      const groupId = entry[0];
+      const list = entry[1];
+      const aliveList = list.filter(actor => isAlive(state.getActorState(actor.actorId)));
+
+      if (0 < aliveList.length) {
+        enemyGroups.push({
+          enemyGroupId: groupId,
+          name: domain.enemyRepository.findEnemy(aliveList[0].originId).name,
+          count: aliveList.length,
+        });
+      }
+    }
+
+    return enemyGroups;
   }
 
-  #getAllyActorByAllyId(allyId: AllyId): AllyActor {
+  #getAllyActorByAllyId(allyId: Readonly<AllyId>): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {

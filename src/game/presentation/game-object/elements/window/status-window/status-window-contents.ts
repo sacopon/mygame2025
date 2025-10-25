@@ -5,6 +5,13 @@ import { StatusWindow } from "./status-window";
 import { ActorId, ActorState, BattleDomainState } from "@game/domain";
 import { toZenkaku } from "@shared/utils";
 
+// キャラクターひとり分あたりの幅
+// const STATUS_WIDTH = 46;  // 4文字用
+const STATUS_WIDTH = 54;  // 5文字用
+
+// 死んだ時のテキスト色(TODO: グローバル config 的なところに移動したい)
+const DEAD_COLOR = 0xFF6666;
+
 /**
  * 各プレイヤーの名前
  */
@@ -15,48 +22,117 @@ class Name extends GameObject {
     this.addComponent(new TextComponent(
       name,
       {
+        anchor: { x: 0.5 },
         style: {
           fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
           fontSize: STATUS_WINDOW_SETTINGS.fontSize,
         },
       }));
   }
+
+  setToDeadColor(): void {
+    this.getComponent(TextComponent.typeId)?.setColor(DEAD_COLOR);
+  }
 }
 
 /**
- * 各プレイヤーのステータス(HP, MP, LV)
+ * 各プレイヤーのステータスのラベル(HP, MP, LV)
  */
-class Status extends GameObject {
-  constructor(ports: GamePorts, hp: number, mp: number, lv: number) {
+class StatusLabel extends GameObject {
+  constructor(ports: GamePorts, forInputPhase: boolean) {
     super(ports);
 
     this.addComponent(new TextListComponent(
-      ["", "", ""],
+      forInputPhase ? ["Ｈ", "Ｍ", "Lv:"] : ["Ｈ"],
       {
-        fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
-        fontSize: STATUS_WINDOW_SETTINGS.fontSize,
-      },
-      {
-        lineHeight: STATUS_WINDOW_SETTINGS.lineHeight,
+        style: {
+          fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
+          fontSize: STATUS_WINDOW_SETTINGS.fontSize,
+        },
+        layout: {
+          lineHeight: STATUS_WINDOW_SETTINGS.lineHeight,
+        },
       }));
-    this.updateStatus({ hp, mp, lv });
+  }
+
+  setToDeadColor(): void {
+    this.getComponent(TextListComponent.typeId)?.setColor(DEAD_COLOR);
+  }
+}
+
+/**
+ * 各プレイヤーのステータスの値(HP, MP, LV)
+ */
+class StatusValue extends GameObject {
+  #forInputPhase: boolean;
+
+  constructor(ports: GamePorts, forInputPhase: boolean, params: { hp?: number, mp?: number, lv?: number }) {
+    super(ports);
+
+    this.#forInputPhase = forInputPhase;
+    this.addComponent(new TextListComponent(
+      forInputPhase ? ["", "", ""] : [""],
+      {
+        style: {
+          fontFamily: STATUS_WINDOW_SETTINGS.fontFamily,
+          fontSize: STATUS_WINDOW_SETTINGS.fontSize,
+        },
+        anchor: {
+          x: 1.0,
+        },
+        layout: {
+          lineHeight: STATUS_WINDOW_SETTINGS.lineHeight,
+        },
+      }));
+    this.updateStatus(params);
   }
 
   updateStatus(params: { hp?: number, mp?: number, lv?: number }): void {
     if (params.hp !== undefined) {
-      const hpString = `Ｈ ${toZenkaku(params.hp)}`;
+      const hp = params.hp;
+      const hpString = toZenkaku(hp);
       this.getComponent(TextListComponent.typeId)?.setLine(0, hpString);
     }
 
-    if (params.mp !== undefined) {
-      const mpString = `Ｍ ${toZenkaku(params.mp)}`;
+    if (this.#forInputPhase && params.mp !== undefined) {
+      const mpString = toZenkaku(params.mp);
       this.getComponent(TextListComponent.typeId)?.setLine(1, mpString);
     }
 
-    if (params.lv !== undefined) {
-      const lvString = `Lv:${toZenkaku(params.lv)}`;
+    if (this.#forInputPhase && params.lv !== undefined) {
+      const lvString = toZenkaku(params.lv);
       this.getComponent(TextListComponent.typeId)?.setLine(2, lvString);
     }
+  }
+
+  setToDeadColor(): void {
+    this.getComponent(TextListComponent.typeId)?.setColor(DEAD_COLOR);
+  }
+}
+
+/**
+ * 各プレイヤーのステータス
+ */
+class Status extends GroupGameObject {
+  #labelObj: StatusLabel;
+  #valueObj: StatusValue;
+
+  constructor(ports: GamePorts, forInputPhase: boolean, params: { hp?: number, mp?: number, lv?: number }) {
+    super(ports);
+
+    this.#labelObj = new StatusLabel(ports, forInputPhase);
+    this.#valueObj = new StatusValue(ports, forInputPhase, params);
+    this.addChild(this.#labelObj);
+    this.addChild(this.#valueObj).setPosition(44, 0);
+  }
+
+  updateStatus(params: { hp?: number, mp?: number, lv?: number }): void {
+    this.#valueObj.updateStatus(params);
+  }
+
+  setToDeadColor(): void {
+    this.#labelObj.setToDeadColor();
+    this.#valueObj.setToDeadColor();
   }
 }
 
@@ -64,19 +140,19 @@ class Status extends GameObject {
  * 各プレイヤーの名前とステータス
  */
 class CharacterStatus extends GroupGameObject {
+  #name: Name;
   #status: Status;
 
-  constructor(ports: GamePorts, actorState: ActorState, nameResolver: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, actorState: ActorState, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
     super(ports);
 
-    this
-      .addChild(new Name(ports, nameResolver(actorState.actorId)))
-      .setPosition(0, 0);
+    this.#name = new Name(ports, resolveActorName(actorState.actorId));
+    this.addChild(this.#name).setPosition(24, -1);
 
-    this.#status = new Status(ports, actorState.hp.value, 999, 99);
-    this
-      .addChild(this.#status)
-      .setPosition(0, 16);
+    this.#status = new Status(ports, forInputPhase, {});
+    this.addChild(this.#status).setPosition(0, 16);
+
+    this.updateStatus(actorState);
   }
 
   updateStatus(actorState: ActorState): void {
@@ -85,6 +161,11 @@ class CharacterStatus extends GroupGameObject {
       mp: 999,
       lv: 99,
     });
+
+    if (actorState.hp.isDead) {
+      this.#name.setToDeadColor();
+      this.#status.setToDeadColor();
+    }
   }
 }
 
@@ -95,7 +176,7 @@ export class StatusWindowContents extends GroupGameObject {
   #index: number = 0;
   #characterStatusByActorId: Map<ActorId, CharacterStatus>;
 
-  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, nameResolver: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
     super(ports);
     this.#characterStatusByActorId = new Map<ActorId, CharacterStatus>();
 
@@ -103,8 +184,8 @@ export class StatusWindowContents extends GroupGameObject {
 
     for (let i = 0; i < actorStates.length; ++i) {
       const as = actorStates[i];
-      const status = new CharacterStatus(ports, as, nameResolver);
-      this.addChild(status).setPosition(56 * i, 0);
+      const status = new CharacterStatus(ports, as, forInputPhase, resolveActorName);
+      this.addChild(status).setPosition(STATUS_WIDTH * i, 0);
       this.#characterStatusByActorId.set(as.actorId, status);
     }
 

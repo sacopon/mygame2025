@@ -162,5 +162,5 @@ export interface RenderPort {
   // テキスト描画
   createText(spec: TextSpec): ViewHandle;
   setTextContent(handle: ViewHandle, text: string): void;
-  setTextStyle?(handle: ViewHandle, style: Partial<TextStyle>): void;
+  setTextStyle(handle: ViewHandle, style: Partial<TextStyle>): void;
 }

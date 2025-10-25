@@ -34,6 +34,12 @@ export type EnemyDamageBlink = {
   actorId: ActorId;
 };
 
+// 敵を倒した時の敵消去
+export type EnemyHideByDefeat = {
+  kind: "EnemyHideByDefeat";
+  actorId: ActorId;
+};
+
 // 「${actor.name}に　${amount}の　ダメージ！！」(味方→敵）
 export type ShowEnemyDamageText = {
   kind: "ShowEnemyDamageText";
@@ -60,12 +66,27 @@ export type ShowSelfDefenceText = {
   actorId: ActorId;
 };
 
+// 「${actor.name}は　しんでしまった！」(味方）
+export type ShowDeadText = {
+  kind: "ShowDeadText";
+  actorId: ActorId;
+};
+
+// 「${actor.name}を　たおした！」(敵）
+export type ShowDefeatText = {
+  kind: "ShowDefeatText";
+  actorId: ActorId;
+};
+
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink
+  | EnemyHideByDefeat
   | ShowEnemyDamageText
   | PlayerDamageShake
   | ShowPlayerDamageText
-  | ShowSelfDefenceText;
+  | ShowSelfDefenceText
+  | ShowDeadText
+  | ShowDefeatText;

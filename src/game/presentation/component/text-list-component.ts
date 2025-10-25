@@ -12,9 +12,10 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
   #handles: ViewHandle[] = [];
   #lines: string[] = [];
   #style: TextStyle;
+  #anchor: { x: number, y: number };
   #layout = { offsetX: 0, offsetY: 0, lineHeight: 14 };
 
-  constructor(lines: ReadonlyArray<string>, style?: Partial<TextStyle>, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number }) {
+  constructor(lines: ReadonlyArray<string>, options: { style?: Partial<TextStyle>, anchor?: { x?: number, y?: number }, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number } } = {}) {
     super();
     this.#lines = lines.slice();
     this.#style = {
@@ -24,13 +25,18 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
       align: "left",
       wordWrap: true,
       wordWrapWidth: 300,
-      ...style,
+      ...options.style,
+    };
+
+    this.#anchor = {
+      x: options.anchor?.x ?? 0.0,
+      y: options.anchor?.y ?? 0.0,
     };
 
     this.#layout = {
-      offsetX: layout?.offsetX ?? 0,
-      offsetY: layout?.offsetY ?? 0,
-      lineHeight: layout?.lineHeight ?? 14,
+      offsetX: options.layout?.offsetX ?? 0,
+      offsetY: options.layout?.offsetY ?? 0,
+      lineHeight: options.layout?.lineHeight ?? 14,
     };
   }
 
@@ -69,10 +75,17 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
     this.owner.ports.render.setTextContent(this.#handles[index], text);
   }
 
+  setColor(color: number): void {
+    this.#handles.forEach(handle => {
+      this.owner.ports.render.setTextStyle(handle, { color });
+    });
+  }
+
   #createAllLines(gameObject: GameObject) {
     return this.#lines.map(line => gameObject.render.createText({
       text: line,
       style: this.#style,
+      anchor: this.#anchor,
     }));
   }
 }

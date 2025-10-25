@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { PresentationEffect } from "..";
-import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, PlannedAction, SelfDefence } from "@game/domain";
+import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, isAlive, PlannedAction, SelfDefence } from "@game/domain";
 import { RandomPort } from "@game/presentation";
 
 /**
@@ -11,7 +11,7 @@ export type ResolveDeps = {
   isAlly: (id: ActorId) => boolean;
   aliveAllAllies: () => ReadonlyArray<ActorId>;
   aliveAllEnemies: () => ReadonlyArray<ActorId>;
-  aliveEnemiesInGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
+  getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
   aliveAllActors: () => ReadonlyArray<ActorId>;
 };
 
@@ -31,6 +31,11 @@ export function resolveActions(state: Readonly<BattleDomainState>, actions: Read
   let currentState = state;
 
   for (const action of actions) {
+    // 死んでいるキャラクターの Action は無視
+    if (currentState.isDead(action.actorId)) {
+      continue;
+    }
+
     const { state: nextState, effects } = resolveAction(currentState, action, deps);
     currentState = nextState;
     resultEffects.push(...effects);
@@ -86,26 +91,33 @@ function resolveAction(currentState: Readonly<BattleDomainState>, action: Readon
  * @param action 行動内容
  * @returns 決定された具体的な対象(配列)、1体の場合でも配列で戻す
  */
-function resolveTargets(action: Readonly<PlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
+function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<PlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
   switch (action.mode.kind) {
     case "single":
       // すでに決まっていたらその内容で確定する
-      if (action.mode.targetId) return [ action.mode.targetId ];
+      if (action.mode.targetId) {
+        return [ action.mode.targetId ];
+      }
 
       if (action.selection.kind === "group") {
         // グループを選択をしている(= 味方の行動であることが型から確定している)
-        const list = deps.aliveEnemiesInGroup(action.selection.groupId);
+        const list = deps
+          .getActorIdsByEnemyGroup(action.selection.groupId)
+          .filter(id => isAlive(state.getActorState(id)));
         return 0 < list.length ? [deps.random.shuffle(list)[0]] : [];
       }
       else {
         // 敵の場合
-        const allies = deps.aliveAllAllies();
-        return 0 < allies.length ? [deps.random.shuffle(allies)[0]] : [];
+        const allies = state.getAliveAllyActorStates();
+        return 0 < allies.length ? [deps.random.shuffle(allies)[0].actorId] : [];
       }
 
     case "group":
       // グループ攻撃は味方のみ
-      return deps.aliveEnemiesInGroup(action.mode.groupId);
+      const list = deps
+        .getActorIdsByEnemyGroup(action.mode.groupId)
+        .filter(id => isAlive(state.getActorState(id)));
+      return 0 < list.length ? list : [];
 
     case "all":
       return deps.isAlly(action.actorId) ? deps.aliveAllEnemies() : deps.aliveAllAllies();
@@ -131,7 +143,7 @@ function createAttackResolution(currentState: Readonly<BattleDomainState>, actio
   } {
   const effects: PresentationEffect[] = [];
   const sourceId = action.actorId;
-  const targets = resolveTargets(action, deps);
+  const targets = resolveTargets(currentState, action, deps);
   const isPlayerAction = deps.isAlly(sourceId);
   const seEffect: PresentationEffect[] = [];
   seEffect.push(
@@ -218,8 +230,14 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       { kind: "ShowEnemyDamageText", actorId: event.targetId, amount: event.amount },
       // ダメージを受けた敵の点滅
       { kind: "EnemyDamageBlink", actorId: event.targetId },
-      // TODO: 死んでいたら(点滅の終了を待って)倒したメッセージが入る
     );
+
+    if (appliedState.isDead(event.targetId)) {
+      // 敵消去
+      effects.push({ kind: "EnemyHideByDefeat", actorId: event.targetId });
+      // 「${actor.name}を　たおした！」
+      effects.push({ kind: "ShowDefeatText", actorId: event.targetId });
+    }
   }
   else {
     effects.push(
@@ -231,8 +249,12 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       { kind: "ShowPlayerDamageText", actorId: event.targetId, amount: event.amount },
       // 画面の揺れ
       { kind: "PlayerDamageShake", actorId: event.targetId },
-      // TODO: 死んでいたら(画面揺れの終了を待って)画面を赤くする＆死んだメッセージが入る
     );
+
+    if (appliedState.isDead(event.targetId)) {
+      // 「${actor.name}は　しんでしまった！」
+      effects.push({ kind: "ShowDeadText", actorId: event.targetId });
+    }
   }
 
   return effects;

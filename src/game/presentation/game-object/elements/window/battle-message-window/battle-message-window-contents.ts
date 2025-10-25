@@ -18,11 +18,13 @@ export class BattleMessageWindowContents extends GameObject {
     this.#textList = this.addComponent(new TextListComponent(
       ["", "", ""],
       {
-        fontFamily: DEFAULT_WINDOW_SETTINGS.fontFamily,
-        fontSize: DEFAULT_WINDOW_SETTINGS.fontSize,
-      },
-      {
-        lineHeight: DEFAULT_WINDOW_SETTINGS.lineHeight,
+        style: {
+          fontFamily: DEFAULT_WINDOW_SETTINGS.fontFamily,
+          fontSize: DEFAULT_WINDOW_SETTINGS.fontSize,
+        },
+        layout: {
+          lineHeight: DEFAULT_WINDOW_SETTINGS.lineHeight,
+        }
       }))!;
   }
 

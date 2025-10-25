@@ -16,11 +16,13 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
   #index: number;
   #blinkController: BlinkController;
   #sprite: SpriteComponent;
+  #dead: boolean;
 
   constructor(ports: GamePorts, enemyId: EnemyId, vw: number, vh: number, index: number) {
     super(ports);
 
     this.#blinkController = new BlinkController(50);
+    this.#dead = false;
     this.#index = index;
     const pos = this.#calcPosition(vw, vh, this.#index);
     this.setPosition(pos.x, pos.y);
@@ -34,11 +36,16 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
     super.update(deltaMs);
 
     this.#blinkController.update(deltaMs);
-    this.#sprite.visible = this.#blinkController.isBlinking ? this.#blinkController.visible : true;
+    this.#sprite.visible = !this.#dead && (this.#blinkController.isBlinking ? this.#blinkController.visible : true);
   }
 
   blinkByDamage(durationMs: number) {
     this.#blinkController.start(durationMs);
+  }
+
+  hideByDefeat(): void {
+    this.#dead = true;
+    this.#sprite.visible = false;
   }
 
   onScreenSizeChanged() {

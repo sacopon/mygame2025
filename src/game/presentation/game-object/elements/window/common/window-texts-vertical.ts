@@ -14,11 +14,13 @@ export class WindowTextsVertical extends GameObject {
     this.#textList = this.addComponent(new TextListComponent(
       texts,
       {
-        fontFamily: style.fontFamily,
-        fontSize: style.fontSize,
-      },
-      {
-        lineHeight: this.#lineHeight,
+        style: {
+          fontFamily: style.fontFamily,
+          fontSize: style.fontSize,
+        },
+        layout: {
+          lineHeight: this.#lineHeight,
+        },
       }))!;
   }
 
