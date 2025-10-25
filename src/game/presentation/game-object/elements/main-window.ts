@@ -1,8 +1,11 @@
 import { GroupGameObject } from "../../core/group-game-object";
 import { GameObject } from "../../core/game-object";
+import { EnemyView } from "./enemy-view";
 import { DEFAULT_WINDOW_SETTINGS } from ".";
 import { GamePorts, NineSliceSpriteComponent, ScreenSizeAware, SpriteComponent } from "../..";
-import { GAME_SCREEN } from "@app/config";
+import { GAME_SCREEN } from "@app";
+
+const enemyBottomY = 32;
 
 class Background extends GameObject {
   constructor(ports: GamePorts, imageId: string) {
@@ -28,33 +31,49 @@ class Border extends GameObject {
   }
 }
 
+class EnemyLayer extends GroupGameObject {
+  #enemyViews: EnemyView[] = [];
+
+  constructor(ports: GamePorts) {
+    super(ports);
+  }
+
+  addEnemy(enemyView: EnemyView): void {
+    this.addChild(enemyView);
+    this.#enemyViews.push(enemyView);
+    this.#replace();
+  }
+
+  #replace(): void {
+    const totalWidth = this.#enemyViews.reduce((prev, current) => prev + current.width, 0);
+    let x = -totalWidth / 2;
+    console.log(`totalWidth: ${totalWidth}`);
+
+    for (const view of this.#enemyViews) {
+      console.log(`x:${x}, view.width:${view.width}`);
+      view.setPosition(x + (view.width / 2) | 0 , enemyBottomY);
+      x += view.width;
+    }
+  }
+}
+
 export class MainWindow extends GroupGameObject implements ScreenSizeAware {
   static readonly #windowSpec = {
     width: GAME_SCREEN.WIDTH + DEFAULT_WINDOW_SETTINGS.borderWidth * 2 + 4, // 最後の +4 はウィンドウの端が見えないようにやや余裕を持たせるため
     height: 136,
   } as const;
 
+  #enemyLayer: EnemyLayer;
+
   constructor(ports: GamePorts, backgroundImageId: string) {
     super(ports);
 
     this.addChild(new Background(ports, backgroundImageId));
     this.addChild(new Border(ports, MainWindow.#windowSpec));
-    const { width, height } = this.ports.screen.getGameSize();
-    const pos = this.#calcPosition(width, height);
-    this.setPosition(pos.x, pos.y);
+    this.#enemyLayer = this.addChild(new EnemyLayer(ports));
   }
 
-  override onScreenSizeChanged() {
-    super.onScreenSizeChanged();
-    const { width, height } = this.ports.screen.getGameSize();
-    const pos = this.#calcPosition(width, height);
-    this.setPosition(pos.x, pos.y);
-  }
-
-  #calcPosition(vw: number, vh: number): { x: number, y: number } {
-    return {
-      x: (vw / 2) | 0,
-      y: (vh / 2) - 12 | 0,
-    };
+  addEnemy(enemyView: EnemyView): void {
+    this.#enemyLayer.addEnemy(enemyView);
   }
 }

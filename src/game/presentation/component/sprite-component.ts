@@ -32,6 +32,22 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
     this.#visible = value;
   }
 
+  get width(): number {
+    if (!this.#handle) {
+      return 0;
+    }
+
+    return this.owner.render.getWidth(this.#handle);
+  }
+
+  get height(): number {
+    if (!this.#handle) {
+      return 0;
+    }
+
+    return this.owner.render.getHeight(this.#handle);
+  }
+
   protected override onAttached(): void {
     this.#handle = this.owner.render.createSprite(this.#spec);
   }

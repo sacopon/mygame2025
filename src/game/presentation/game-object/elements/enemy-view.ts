@@ -1,5 +1,5 @@
 import { GameObject } from "../../core/game-object";
-import { BlinkController, ScreenSizeAware } from "../..";
+import { BlinkController } from "../..";
 import { SpriteComponent } from "@game/presentation/component";
 import { GamePorts } from "@game/presentation";
 import { EnemyId } from "@game/domain";
@@ -12,7 +12,7 @@ const makeEnemyTextureKey = (enemyId: EnemyId) => {
 /**
  * 敵キャラクター画像
  */
-export class EnemyView extends GameObject implements ScreenSizeAware {
+export class EnemyView extends GameObject {
   #index: number;
   #blinkController: BlinkController;
   #sprite: SpriteComponent;
@@ -24,8 +24,6 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
     this.#blinkController = new BlinkController(50);
     this.#dead = false;
     this.#index = index;
-    const pos = this.#calcPosition(vw, vh, this.#index);
-    this.setPosition(pos.x, pos.y);
     this.#sprite = this.addComponent(new SpriteComponent({
       imageId: makeEnemyTextureKey(enemyId),
       anchor: { x: 0.5, y: 1.0 },
@@ -39,6 +37,14 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
     this.#sprite.visible = !this.#dead && (this.#blinkController.isBlinking ? this.#blinkController.visible : true);
   }
 
+  get width(): number {
+    return this.#sprite.width;
+  }
+
+  get height(): number {
+    return this.#sprite.height;
+  }
+
   blinkByDamage(durationMs: number) {
     this.#blinkController.start(durationMs);
   }
@@ -46,18 +52,5 @@ export class EnemyView extends GameObject implements ScreenSizeAware {
   hideByDefeat(): void {
     this.#dead = true;
     this.#sprite.visible = false;
-  }
-
-  onScreenSizeChanged() {
-    const { width, height } = this.ports.screen.getGameSize();
-    const pos = this.#calcPosition(width, height, this.#index);
-    this.setPosition(pos.x, pos.y);
-  }
-
-  #calcPosition(vw: number, vh: number, index: number): { x: number, y: number } {
-    const x = (vw - 36 * 5) / 2 + index * 36;
-    const y = vh / 2 + 16;
-
-    return { x, y };
   }
 }

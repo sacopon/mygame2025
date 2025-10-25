@@ -1,11 +1,12 @@
 import { GameObject } from "../../core/game-object";
 import { ScreenSizeAware } from "../../core/game-component";
-import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow } from "..";
+import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow } from "..";
 import { GamePorts } from "@game/presentation";
 import { DEFAULT_SHAKE_PATTERNS, ShakeRunner } from "@game/presentation/effects/shake-runner";
 import { StatusWindow } from "./window/status-window";
 
 type Windows = {
+  mainWindow?: MainWindow;
   commandSelectWindow?: CommandSelectWindow;
   enemySelectWindow?: EnemySelectWindow;
   messageWindow?: BattleMessageWindow;
@@ -22,6 +23,7 @@ const battleMessageWindowY = 148;
  * ウィンドウの配置/再配置を司る
  */
 export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
+  #mainWindow?: MainWindow;
   #commandWindow?: CommandSelectWindow;
   #enemySelectWindow?: EnemySelectWindow;
   #messageWindow?: BattleMessageWindow;
@@ -33,6 +35,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
 
     // TODO: MainWindow, BattleBackground も UILayoutCoordinator 管理下に
     // TODO: MainWindow の枠だけ揺らす
+    this.#mainWindow = windows.mainWindow;
     this.#commandWindow = windows.commandSelectWindow;
     this.#enemySelectWindow = windows.enemySelectWindow;
     this.#messageWindow = windows.messageWindow;
@@ -72,14 +75,19 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
 
   #place(offsets?: OffsetsByWindow) {
     const { width, height } = this.ports.screen.getGameSize();
+    this.#placeCommonWindow(width, height, offsets);
     this.#placeInputWindow(width, height, offsets);
     this.#placeMessageWindow(width, height, offsets);
   }
 
-  #placeInputWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
-
-    if (!this.#commandWindow || !this.#enemySelectWindow || !this.#statusWindow) {
+  #placeCommonWindow(width: number, height: number, offsets?: OffsetsByWindow) {
+    if (!this.#mainWindow || !this.#statusWindow) {
       return;
+    }
+
+    // メインウィンドウ
+    {
+      this.#mainWindow?.setPosition(width / 2 | 0, ((height / 2) - 12) | 0);
     }
 
     // ステータスウィンドウ
@@ -87,6 +95,19 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
       const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
       this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
     }
+  }
+
+  #placeInputWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
+
+    if (!this.#commandWindow || !this.#enemySelectWindow /*|| !this.#statusWindow*/) {
+      return;
+    }
+
+    // // ステータスウィンドウ
+    // {
+    //   const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
+    //   this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
+    // }
 
     const windowWidth = this.#commandWindow.width + this.#enemySelectWindow.width;
     const x = Math.floor((width - windowWidth) / 2);
@@ -106,15 +127,15 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   #placeMessageWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
-    if (!this.#messageWindow || !this.#statusWindow) {
+    if (!this.#messageWindow /*|| !this.#statusWindow*/) {
       return;
     }
 
-    // ステータスウィンドウ
-    {
-      const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
-      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
-    }
+    // // ステータスウィンドウ
+    // {
+    //   const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
+    //   this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
+    // }
 
     // メッセージウィンドウ
     {

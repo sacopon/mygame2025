@@ -73,6 +73,14 @@ export class GameObject {
     this.onDisposeInternal();
   }
 
+  get x(): number {
+    return this.transform.x;
+  }
+
+  get y(): number {
+    return this.transform.y;
+  }
+
   get #transform(): TransformComponent {
     return this.#components.getComponent(TransformComponent.typeId)!;
   }

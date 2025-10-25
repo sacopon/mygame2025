@@ -94,6 +94,7 @@ export class BattleScene implements Scene {
   #context!: BattleSceneContext;
   #gameObjectAccess!: GameObjectAccess;
   #stateStack!: StateStack<BattleSceneContext>;
+  #mainWindow!: MainWindow;
   #partyAllyActors: ReadonlyArray<AllyActor> = []; // TODO: パーティは Ally ではなく AllyActor で持つ
 
   // 辞書データキャッシュ
@@ -131,15 +132,18 @@ export class BattleScene implements Scene {
     // 敵画像
     const { width, height } = context.ui.screen.getGameSize();
     context.gameObjectAccess.spawnGameObject(new Background(context.ui, width, height));
-    context.gameObjectAccess.spawnGameObject(new MainWindow(context.ui, "bgsample.png"));
+    this.#mainWindow = context.gameObjectAccess.spawnGameObject(new MainWindow(context.ui, "bgsample.png"));
 
     // 一旦全て同じ敵の画像
     // 中央揃えにしたいところだが、ここも仮
     // 敵のグループ定義を厳密に行うようになったら配置情報も合わせて作成する
     for (let i = 0; i < enemyActors.length; ++i) {
+    // for (let i = 0; i < 1; ++i) {
       const actor = enemyActors[i];
-      const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, actor.originId, width, height, i));
-      this.#enemyViewByActorId.set(actor.actorId, go);
+      // const go = context.gameObjectAccess.spawnGameObject(new EnemyView(context.ui, actor.originId, width, height, i));
+      const view = new EnemyView(context.ui, actor.originId, width, height, i);
+      this.#mainWindow.addEnemy(view);
+      this.#enemyViewByActorId.set(actor.actorId, view);
     }
 
     this.#gameObjectAccess = context.gameObjectAccess;
@@ -271,6 +275,7 @@ export class BattleScene implements Scene {
     // レイアウトコーディネイター
     const coordinator = this.spawn(new UILayoutCoordinator(
       ui, width, height, {
+        mainWindow: this.#mainWindow,
         commandSelectWindow,
         enemySelectWindow,
         statusWindow,
@@ -346,6 +351,10 @@ export class BattleScene implements Scene {
       throw new Error(`BattleScene: enemy view not found[${actorId}]`);
     }
     return this.#enemyViewByActorId.get(actorId)!;
+  }
+
+  get mainWindow(): MainWindow {
+    return this.#mainWindow;
   }
 
   #buildEnemyGroups(domain: Readonly<DomainPorts>, state: Readonly<BattleDomainState>)
