@@ -18,6 +18,18 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
 
   dir.position.set(0, vh - dir.height);
   parent.addChild(container);
+
+  // 方向キーは左下へ配置、最低でも画面端から1/10離す、画面サイズ長辺の1/3以下の大きさになるようにする
+  const longSide = Math.max(width, height);
+  const maximumSize = Math.floor(longSide / 3);
+  if (maximumSize < Math.max(dir.width, dir.height)) {
+    // 画面サイズの1/3を超える場合はスケーリングでそれ以下の大きさになるように調整する
+    dir.scale.set(maximumSize / Math.max(dir.width, dir.height));
+  }
+
+  const x = Math.floor(width / 10);
+  const y = height - dir.height - Math.floor(height / 10);
+  dir.position.set(x, y);
 }
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
