@@ -13,24 +13,40 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
   console.log([vw, vh, width, height]);
   const container = new Container();
   const dir = Sprite.from("dir128.png");
+  const buttonA = Sprite.from("button64.png");
+  const buttonB = Sprite.from("button64.png");
 
   container.addChild(dir);
-
-  dir.position.set(0, vh - dir.height);
+  container.addChild(buttonA);
+  container.addChild(buttonB);
   parent.addChild(container);
+
 
   // 方向キーは左下へ配置、最低でも画面端から1/10離す、画面サイズ長辺の1/3以下の大きさになるようにする
   const longSide = Math.max(width, height);
   const maximumSize = Math.floor(longSide / 3);
-  if (maximumSize < Math.max(dir.width, dir.height)) {
-    // 画面サイズの1/3を超える場合はスケーリングでそれ以下の大きさになるように調整する
-    dir.scale.set(maximumSize / Math.max(dir.width, dir.height));
-  }
+  // 画面サイズの1/3を超える場合はスケーリングでそれ以下の大きさになるように調整する
+  const scale = Math.max(dir.width, dir.height) < maximumSize ? 1.0 : maximumSize / Math.max(dir.width, dir.height);
+  const horizontalMargin = Math.floor(width / 15);
+  const verticalMargin = Math.floor(height / 15);
+  const left = horizontalMargin;
+  const right = width - horizontalMargin;
+  const bottom = height - verticalMargin;
 
-  const x = Math.floor(width / 10);
-  const y = height - dir.height - Math.floor(height / 10);
-  dir.position.set(x, y);
-  alert("test");
+  dir.scale.set(scale);
+  dir.position.set(left, bottom - dir.height);
+
+  buttonA.scale.set(scale);
+  buttonA.position.set(
+    right - buttonA.width,
+    bottom - Math.floor(buttonB.height / 2) - buttonA.height);
+
+  buttonB.scale.set(scale);
+  buttonB.position.set(
+    right - buttonA.width - buttonA.width / 2 - buttonB.width,
+    bottom - buttonB.height);
+
+  alert("test2");
 }
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
