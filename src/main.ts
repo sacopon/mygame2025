@@ -131,11 +131,12 @@ function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer
   });
 }
 
-function createDebugSoundOnOffButton(parent: Container, callback: () => boolean) {
+function createDebugSoundOnOffButton(parent: Container, buttonSize: number, callback: () => boolean): Container {
   const buttonContainer = new Container();
+  buttonContainer.label = "mute";
   parent.addChild(buttonContainer);
+
   const button = new Graphics();
-  const buttonSize = 48;
   button.pivot.set(buttonSize / 2, buttonSize / 2);
   button.rect(0, 0, buttonSize, buttonSize);
   button.fill({ color: 0x666666 });
@@ -154,14 +155,52 @@ function createDebugSoundOnOffButton(parent: Container, callback: () => boolean)
     button.scale.set(1.0);
   });
   buttonContainer.addChild(button);
-  const longSide = 64;
-  const shortSide = 32;
-  buttonContainer.position.set(
-    window.innerWidth < window.innerHeight ? shortSide : longSide,
-    window.innerWidth < window.innerHeight ? longSide : shortSide);
+
+  return buttonContainer;
 }
 
-function buildAppContext(parent: Container, debugCallback: () => boolean): AppContext {
+function createDebugToggleBareButton(parent: Container, buttonSize: number, callback: () => void): Container {
+  const buttonContainer = new Container();
+  buttonContainer.label = "bare";
+  parent.addChild(buttonContainer);
+
+  const button = new Graphics();
+  button.pivot.set(buttonSize / 2, buttonSize / 2);
+  button.rect(0, 0, buttonSize, buttonSize);
+  button.fill({ color: 0x3333CC });
+  button.interactive = true;
+  button.on("pointerdown", () => {
+    button.scale.set(1.2);
+  });
+  // button.on("pointermove", () => {
+  //   button.scale.set(1.0);
+  // });
+  button.on("pointerup", () => {
+    callback();
+    button.scale.set(1.0);
+  });
+  buttonContainer.addChild(button);
+
+  return buttonContainer;
+}
+
+export function layoutDebugSoundOnOffButton(buttonContainer: Container, buttonSize: number) {
+  const horizontalMargin = Math.floor(window.innerWidth / 15);
+  const verticalMargin = Math.floor(window.innerHeight / 15);
+  buttonContainer.position.set(
+    horizontalMargin + Math.floor(buttonSize / 2),
+    verticalMargin + Math.floor(buttonSize / 2));
+}
+
+export function layoutDebugToggleBareButton(buttonContainer: Container, buttonSize: number) {
+  const horizontalMargin = Math.floor(window.innerWidth / 15);
+  const verticalMargin = Math.floor(window.innerHeight / 15);
+  buttonContainer.position.set(
+    horizontalMargin + Math.floor(buttonSize * 1.5) + Math.floor(buttonSize / 2),
+    verticalMargin + Math.floor(buttonSize / 2));
+}
+
+function buildAppContext(parent: Container, debugCallback: () => boolean, debugCallback2: () => void): AppContext {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);
@@ -179,7 +218,11 @@ function buildAppContext(parent: Container, debugCallback: () => boolean): AppCo
   const appUiLayer = new Container();
   root.addChild(appUiLayer);
   // 暫定的デバッグミュートボタン配置
-  createDebugSoundOnOffButton(appUiLayer, debugCallback);
+  const button = createDebugSoundOnOffButton(appUiLayer, 48, debugCallback);
+  layoutDebugSoundOnOffButton(button, 48);
+  // 暫定的ベアモード切替ボタン配置
+  const bare = createDebugToggleBareButton(appUiLayer, 48, debugCallback2);
+  layoutDebugToggleBareButton(bare, 48);
 
   // 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー
   const frameLayer = new Container();
@@ -264,7 +307,8 @@ function buildAppContext(parent: Container, debugCallback: () => boolean): AppCo
       // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
       audioPort.setMuted(!audioPort.isMuted);
       return audioPort.isMuted;
-    });
+    },
+    () => toggleMode());
 
   // ポート・ゲーム側システムの作成
   const renderPort = new PixiRenderAdapter(context.gameLayer);

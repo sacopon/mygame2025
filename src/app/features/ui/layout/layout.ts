@@ -3,14 +3,19 @@ import { Skin } from "../";
 import { AppContext } from "@app/config";
 import { GameScreenSpec } from "@app/services";
 
-// TODO: 適切な場所へ移動する
-function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, width: number, height: number): void {
+function removeVirtualPadUi(parent: Container): void {
   parent.children.forEach(c => {
+    if (c.label === "mute" || c.label === "bare") { return; }
+
     c.removeFromParent();
     c.destroy({ children: true });
   });
+}
 
-  console.log([vw, vh, width, height]);
+// TODO: 適切な場所へ移動する
+function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, width: number, height: number): void {
+  removeVirtualPadUi(parent);
+
   const container = new Container();
   const dir = Sprite.from("dir128.png");
   const buttonA = Sprite.from("button64.png");
@@ -20,7 +25,6 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
   container.addChild(buttonA);
   container.addChild(buttonB);
   parent.addChild(container);
-
 
   // 方向キーは左下へ配置、最低でも画面端から1/10離す、画面サイズ長辺の1/3以下の大きさになるようにする
   const longSide = Math.max(width, height);
@@ -45,8 +49,6 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
   buttonB.position.set(
     right - buttonA.width - buttonA.width / 2 - buttonB.width,
     bottom - buttonB.height);
-
-  alert("test2");
 }
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
@@ -69,6 +71,10 @@ export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSp
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
+
+  // TODO: 移動
+  // 仮バーチャルパッドUIを削除
+  removeVirtualPadUi(ctx.appUiLayer);
 }
 
 export function relayoutViewportBare(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, w: number, h: number, pixelPerfect = false) {
