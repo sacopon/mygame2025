@@ -1,7 +1,24 @@
-import { Application, Sprite } from "pixi.js";
+import { Application, Container, Sprite } from "pixi.js";
 import { Skin } from "../";
 import { AppContext } from "@app/config";
 import { GameScreenSpec } from "@app/services";
+
+// TODO: 適切な場所へ移動する
+function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, width: number, height: number): void {
+  parent.children.forEach(c => {
+    c.removeFromParent();
+    c.destroy({ children: true });
+  });
+
+  console.log([vw, vh, width, height]);
+  const container = new Container();
+  const dir = Sprite.from("dir128.png");
+
+  container.addChild(dir);
+
+  dir.position.set(0, vh - dir.height);
+  parent.addChild(container);
+}
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;
@@ -71,5 +88,5 @@ export function relayoutViewportBare(app: Application, ctx: AppContext, gameScre
   ctx.background.position.set(w / 2, h / 2);
 
   // 仮UIを表示
-  ctx.appUiLayer.addChild(Sprite.from("dir240.png"));
+  createVirtualPadUiForBare(ctx.appUiLayer, vw, vh, w, h);
 }
