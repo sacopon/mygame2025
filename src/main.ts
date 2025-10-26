@@ -219,6 +219,7 @@ function buildAppContext(parent: Container, debugCallback: () => boolean): AppCo
     gameContentLayer,
     gameLayerMask,
     overlayLayer,
+    appUiLayer,
     viewportMetrics,
   };
 }

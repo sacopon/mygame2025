@@ -1,4 +1,4 @@
-import { Application } from "pixi.js";
+import { Application, Sprite } from "pixi.js";
 import { Skin } from "../";
 import { AppContext } from "@app/config";
 import { GameScreenSpec } from "@app/services";
@@ -69,4 +69,7 @@ export function relayoutViewportBare(app: Application, ctx: AppContext, gameScre
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
+
+  // 仮UIを表示
+  ctx.appUiLayer.addChild(Sprite.from("dir240.png"));
 }
