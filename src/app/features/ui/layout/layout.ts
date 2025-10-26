@@ -30,6 +30,7 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
   const x = Math.floor(width / 10);
   const y = height - dir.height - Math.floor(height / 10);
   dir.position.set(x, y);
+  alert("test");
 }
 
 export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
