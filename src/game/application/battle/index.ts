@@ -1,4 +1,5 @@
 export * from "./convert-command-choice-to-action";
+export * from "./create-actors";
 export * from "./plan-action";
 export * from "./plan-enemy-actions";
 export * from "./plan-turn-order";
