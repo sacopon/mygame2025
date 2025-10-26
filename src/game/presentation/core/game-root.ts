@@ -4,6 +4,7 @@ import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
 import { Ally, AllyId, DomainPorts, Enemy, EnemyId, Hp, Level } from "@game/domain";
 import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastructure";
+import { EncounterRepositoryInMemory } from "@game/infrastructure/repository/encounter";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
@@ -13,16 +14,17 @@ const createDomainPorts = function(): DomainPorts {
     { allyId: AllyId(4), name: "えええええ", level: Level.of(2),  maxHp: Hp.of(35),  currentHp: Hp.of(35) },
   ] as const;
 
-const allEnemies: Enemy[] = [
-  { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20) },
-  { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35) },
-  { enemyId: EnemyId(3), name: "ビッグベアー", baseHp: Hp.of(80) },
-  { enemyId: EnemyId(4), name: "パンプキン", baseHp: Hp.of(30) },
-] as const;
+  const allEnemies: Enemy[] = [
+    { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20) },
+    { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35) },
+    { enemyId: EnemyId(3), name: "ビッグベアー", baseHp: Hp.of(80) },
+    { enemyId: EnemyId(4), name: "パンプキン", baseHp: Hp.of(30) },
+  ] as const;
 
   return {
     allyRepository: new AllyRepositoryInMemory(allAllyCharacters),
     enemyRepository: new EnemyRepositoryInMemory(allEnemies),
+    encounterRepository: new EncounterRepositoryInMemory(),
   };
 };
 

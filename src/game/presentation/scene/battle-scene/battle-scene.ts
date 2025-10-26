@@ -1,6 +1,6 @@
 import { Scene } from "../../scene/core/scene";
 import { BattleCommand, BattleSceneState, CommandChoice, InputPhaseFlowState, TurnPlan, TurnResolution } from ".";
-import { UiPorts, GameObjectAccess, BattleMessageWindow } from "../..";
+import { UiPorts, GameObjectAccess, BattleMessageWindow, RandomPort } from "../..";
 import {
   GameObject,
   Background,
@@ -26,7 +26,8 @@ import {
   EnemyGroupId,
   EnemyId,
   isAlive,
-  Level
+  Level,
+  pickEncountTable
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
@@ -68,22 +69,34 @@ export type BattleSceneContext = {
   turnResolution?: Readonly<TurnResolution>;
 };
 
-function createActors(domain: DomainPorts): ReadonlyArray<Actor> {
-  const allyActors: AllyActor[] = [];
-  const enemyActors: EnemyActor[] = [];
+function createActors(domain: DomainPorts, random: RandomPort): ReadonlyArray<Actor> {
+  const allyActors: AllyActor[] = [
+    createAllyActor(domain.allyRepository.findAlly(AllyId(1)), ActorId(1)),
+    createAllyActor(domain.allyRepository.findAlly(AllyId(2)), ActorId(2)),
+    createAllyActor(domain.allyRepository.findAlly(AllyId(3)), ActorId(3)),
+    createAllyActor(domain.allyRepository.findAlly(AllyId(4)), ActorId(4)),
+  ];
 
-  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(1)), ActorId(1)));
-  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(2)), ActorId(2)));
-  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(3)), ActorId(3)));
-  allyActors.push(createAllyActor(domain.allyRepository.findAlly(AllyId(4)), ActorId(4)));
+  const encountEnemies = pickEncountTable(domain.encounterRepository.getEncounterTable(), random.next());
+  let lastEnemyId: EnemyId | null = null;
+  let groupIdIndex = 0;
 
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(1)), ActorId(5),  EnemyGroupId(1)));
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(1)), ActorId(6),  EnemyGroupId(1)));
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(2)), ActorId(7),  EnemyGroupId(2)));
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(2)), ActorId(8),  EnemyGroupId(2)));
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(3)), ActorId(9),  EnemyGroupId(3)));
-  enemyActors.push(createEnemyActor(domain.enemyRepository.findEnemy(EnemyId(4)), ActorId(10), EnemyGroupId(4)));
+  const enemyActors: EnemyActor[] = encountEnemies
+    .map((enemyId, index) => {
+      groupIdIndex += (!lastEnemyId || (lastEnemyId !== enemyId)) ? 1 : 0;
+      lastEnemyId = enemyId;
 
+      const actor = createEnemyActor(
+        domain.enemyRepository.findEnemy(enemyId),
+        ActorId(1 + allyActors.length + index),
+        EnemyGroupId(groupIdIndex));
+
+
+      return actor;
+    });
+
+  console.log(allyActors);
+  console.log(enemyActors);
   return [...allyActors, ...enemyActors];
 }
 
@@ -116,7 +129,7 @@ export class BattleScene implements Scene {
 
   onEnter(context: SceneContext) {
     this.#enemyViewByActorId.clear();
-    this.#allActors = Object.freeze(createActors(context.domain));
+    this.#allActors = Object.freeze(createActors(context.domain, context.ui.random));
 
     // パーティ編成
     this.#partyAllyActors = this.#allActors

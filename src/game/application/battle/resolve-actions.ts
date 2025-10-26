@@ -115,9 +115,17 @@ function resolveTargets(state: Readonly<BattleDomainState>, action: Readonly<Pla
         const list = deps
           .getActorIdsByEnemyGroup(action.selection.groupId)
           .filter(id => isAlive(state.getActorState(id)));
-        return 0 < list.length ?
-          [deps.random.shuffle(list)[0]] :  // グループ内に生存者がいればその中からランダム
-          [deps.random.shuffle(state.getAliveEnemyActorIds())[0]];
+
+        if (0 < list.length) {
+          // グループ内に生存者がいればその中からランダム
+          return [deps.random.shuffle(list)[0]];
+        }
+        else {
+          // そのグループが全滅している
+          const list = state.getAliveEnemyActorIds();
+          // 全体からランダム、全体がそもそも全滅している場合は空の配列
+          return 0 < list.length ? [deps.random.shuffle(list)[0]] : [];
+        }
       }
       else {
         // 敵の場合
