@@ -50,8 +50,8 @@ export class VirtualPadUI {
     ui.#slots = { body, dpad, buttons };
 
     // 各種ボタンのタッチ判定まわりの設定を行う
-    ui.enableDpadTouch(inputState, dpad);
-    buttons.forEach((button, i) => ui.enableButtonTouch(inputState, button, PAD_BIT.BUTTON1 + i));
+    VirtualPadUI.enableDpadTouch(inputState, dpad);
+    buttons.forEach((button, i) => VirtualPadUI.enableButtonTouch(inputState, button, PAD_BIT.BUTTON1 + i));
 
     // 各画像の配置
     ui.applySkin(skin);
@@ -161,7 +161,7 @@ export class VirtualPadUI {
     overlayLayer.visible = true;
   }
 
-  private enableDpadTouch(state: InputState, sprite: Sprite) {
+  private static enableDpadTouch(state: InputState, sprite: Sprite) {
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
 
@@ -226,7 +226,7 @@ export class VirtualPadUI {
     sprite.on("pointercancel", end);
   }
 
-  private enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
+  private static enableButtonTouch(state: InputState, sprite: Sprite, bit: number) {
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
 

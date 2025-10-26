@@ -17,9 +17,9 @@ function createVirtualPadUiForBare(parent: Container, vw: number, vh: number, wi
   removeVirtualPadUi(parent);
 
   const container = new Container();
-  const dir = Sprite.from("dir128.png");
-  const buttonA = Sprite.from("button64.png");
-  const buttonB = Sprite.from("button64.png");
+  const dir = Sprite.from("dir160.png");
+  const buttonA = Sprite.from("button80.png");
+  const buttonB = Sprite.from("button80.png");
 
   container.addChild(dir);
   container.addChild(buttonA);
