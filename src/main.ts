@@ -26,6 +26,7 @@ import {
   UIMODE,
   ViewportMetrics,
   VirtualPadUI,
+  VirtualPadUIForBare,
   WebAudioAdapter,
   XorShiftRandomAdapter
 } from "@app";
@@ -320,9 +321,12 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   const gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: audioPort, random: randomPort });
 
   let padUI: VirtualPadUI | null = null;
+  const bareUI = new VirtualPadUIForBare(inputState, { width: window.innerWidth, height: window.innerHeight });
+  context.appUiLayer.addChild(bareUI);
 
   if (mode === UIMODE.PAD) {
     padUI = VirtualPadUI.attach(context, skins.current, inputState);
+    bareUI.hide();
   }
 
   // 初期レイアウト
@@ -338,7 +342,7 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
-  const handleResize = createResizeHandler(app, context, gameScreenSpec, skins, () => ({ mode, padUI }));
+  const handleResize = createResizeHandler(app, context, gameScreenSpec, skins, () => ({ mode, padUI, bareUI }));
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
@@ -347,9 +351,13 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   const toggleMode = () => {
     if (mode === UIMODE.PAD) {
       padUI?.detach();
+      bareUI.onResize(window.innerWidth, window.innerHeight);
+      bareUI.show();
       mode = UIMODE.BARE;
     }
     else {
+      bareUI.hide();
+
       if (!padUI) {
         padUI = VirtualPadUI.attach(context, skins.current, inputState);
       } else {
@@ -359,7 +367,7 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
       mode = UIMODE.PAD;
     }
 
-    onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI });
+    onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI, bareUI });
   };
 
   // // 仮想解像度が変わったら「再構築」（シーン作り直し/タイル再ロード等）
@@ -389,7 +397,7 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   app.ticker.add(tick);
 
   // 初回再描画
-  onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI });
+  onResize(app, context, gameScreenSpec, skins, window.innerWidth, window.innerHeight, { mode, forceApplySkin: true, padUI, bareUI });
 
   // abort 時の終了処理
   ac.signal.addEventListener("abort", () => {
