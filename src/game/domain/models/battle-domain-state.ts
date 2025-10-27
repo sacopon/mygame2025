@@ -38,7 +38,7 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(999),
+        hp: Hp.of(ally.currentHp.value),
       });
     }
 
@@ -47,7 +47,7 @@ export class BattleDomainState {
         actorId: enemy.actorId,
         originId: enemy.originId,
         actorType: ActorType.Enemy,
-        hp: Hp.of(40),
+        hp: Hp.of(enemy.baseHp.value),
       });
     }
 
@@ -104,10 +104,24 @@ export class BattleDomainState {
   }
 
   /**
+   * 生存しているプレイヤー側のアクターのIDを配列として取得します。
+   */
+  getAliveAllyActorIds(): ReadonlyArray<ActorId> {
+    return this.getAliveAllyActorStates().map(state => state.actorId);
+  }
+
+  /**
    * 敵側のアクターの状態を配列として取得します。
    */
   getEnemyActorStates(): ReadonlyArray<EnemyActorState> {
     return this.getActorStates().filter(s => !isAllyState(s));
+  }
+
+  /**
+   * 生存している敵側のアクターの状態を配列として取得します。
+   */
+  getAliveEnemyActorIds(): ReadonlyArray<ActorId> {
+    return this.getEnemyActorStates().filter(isAlive).map(state => state.actorId);
   }
 
   isAlive(actorId: ActorId): boolean {

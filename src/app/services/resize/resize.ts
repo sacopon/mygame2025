@@ -1,7 +1,8 @@
-import { Application } from "pixi.js";
+import { Application, Container } from "pixi.js";
 import { computeViewMetrics, DefaultScreen, GameScreenSpec } from "..";
 import { AppContext } from "@app/config";
 import { relayoutViewport, relayoutViewportBare, SkinResolver, UIMODE, UIMode, VirtualPadUI } from "@app/features";
+import { layoutDebugSoundOnOffButton, layoutDebugToggleBareButton } from "../../../main";
 
 export type ResizeOptions = {
   mode: UIMode;
@@ -102,4 +103,9 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
       mode === UIMODE.PAD ? skins.current : undefined));
 
   app.render();
+
+  // TODO: ちゃんとする
+  // デバッグボタンの位置調整(適当)
+  layoutDebugSoundOnOffButton(ctx.appUiLayer.children.find(c => c.label === "mute")! as Container, 48);
+  layoutDebugToggleBareButton(ctx.appUiLayer.children.find(c => c.label === "bare")! as Container, 48);
 }

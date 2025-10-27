@@ -1,9 +1,9 @@
 import { GroupGameObject } from "../../../../core/group-game-object";
 import { WindowBase } from "..";
 import { GamePorts } from "../../../..";
-import { StatusWindowContents } from "./status-window-contents";
+import { StatusWindowContents, StatusWindowResolver } from "./status-window-contents";
 import { STATUS_WINDOW_SETTINGS } from "./status-winodw-constants";
-import { ActorId, BattleDomainState } from "@game/domain";
+import { BattleDomainState } from "@game/domain";
 
 function calcWindowHeight(forInputPhase: boolean): number {
   return STATUS_WINDOW_SETTINGS.borderHeight +
@@ -24,7 +24,7 @@ export class StatusWindow extends GroupGameObject {
   #forInputPhase: boolean;
   #content: StatusWindowContents;
 
-  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolveActorName: (actorId: ActorId) => string) {
+  constructor(ports: GamePorts, state: Readonly<BattleDomainState>, forInputPhase: boolean, resolver: StatusWindowResolver) {
     super(ports);
 
     this.addChild(new WindowBase(
@@ -33,7 +33,7 @@ export class StatusWindow extends GroupGameObject {
       calcWindowHeight(forInputPhase),
       StatusWindow.#windowSpec.baseAlpha));
 
-    this.#content = this.addChild(new StatusWindowContents(ports, state, forInputPhase, resolveActorName));
+    this.#content = this.addChild(new StatusWindowContents(ports, state, forInputPhase, resolver));
     this.#content.setPosition(
       STATUS_WINDOW_SETTINGS.borderWidth + STATUS_WINDOW_SETTINGS.marginLeft,
       STATUS_WINDOW_SETTINGS.borderHeight + STATUS_WINDOW_SETTINGS.marginTop);

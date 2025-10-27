@@ -1,18 +1,20 @@
 import { GameObject } from "../../core/game-object";
 import { ScreenSizeAware } from "../../core/game-component";
-import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow } from "..";
+import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow } from "..";
 import { GamePorts } from "@game/presentation";
 import { DEFAULT_SHAKE_PATTERNS, ShakeRunner } from "@game/presentation/effects/shake-runner";
 import { StatusWindow } from "./window/status-window";
 
 type Windows = {
+  mainWindow?: MainWindow;
   commandSelectWindow?: CommandSelectWindow;
   enemySelectWindow?: EnemySelectWindow;
   messageWindow?: BattleMessageWindow;
   statusWindow?: StatusWindow;
 }
 
-type OffsetsByWindow = Map<CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow, { dx: number, dy: number }>;
+type Window = CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow | MainWindow;
+type OffsetsByWindow = Map<Window, { dx: number, dy: number }>;
 
 const statusWindowY = 12;
 const battleMessageWindowY = 148;
@@ -22,17 +24,18 @@ const battleMessageWindowY = 148;
  * ウィンドウの配置/再配置を司る
  */
 export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
+  #mainWindow?: MainWindow;
   #commandWindow?: CommandSelectWindow;
   #enemySelectWindow?: EnemySelectWindow;
   #messageWindow?: BattleMessageWindow;
   #statusWindow?: StatusWindow;
-  #shakeRunners = new WeakMap<CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow, ShakeRunner>();
+  #shakeRunners = new WeakMap<Window, ShakeRunner>();
 
   constructor(ports: GamePorts, vw: number, vh: number, windows: Windows) {
     super(ports);
 
-    // TODO: MainWindow, BattleBackground も UILayoutCoordinator 管理下に
     // TODO: MainWindow の枠だけ揺らす
+    this.#mainWindow = windows.mainWindow;
     this.#commandWindow = windows.commandSelectWindow;
     this.#enemySelectWindow = windows.enemySelectWindow;
     this.#messageWindow = windows.messageWindow;
@@ -41,9 +44,9 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   override update(deltaMs: number): void {
-    const offsets: OffsetsByWindow = new Map<CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow, { dx: number, dy: number }>();
+    const offsets: OffsetsByWindow = new Map<Window, { dx: number, dy: number }>();
 
-    [this.#commandWindow, this.#enemySelectWindow, this.#messageWindow, this.#statusWindow]
+    [this.#mainWindow, this.#commandWindow, this.#enemySelectWindow, this.#messageWindow, this.#statusWindow]
       .forEach(window => {
         if (!window) { return; }
         const runner = this.#shakeRunners.get(window);
@@ -62,30 +65,45 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     this.#place();
   }
 
-  shake(window?: CommandSelectWindow | EnemySelectWindow | BattleMessageWindow | StatusWindow): void {
+  shake(window?: Window): void {
     if (!window) { return; }
     const patterns = DEFAULT_SHAKE_PATTERNS;
     const runner = new ShakeRunner(patterns);
     runner.start();
+    console.log(window);
     this.#shakeRunners.set(window, runner);
   }
 
   #place(offsets?: OffsetsByWindow) {
     const { width, height } = this.ports.screen.getGameSize();
+    this.#placeCommonWindow(width, height, offsets);
     this.#placeInputWindow(width, height, offsets);
     this.#placeMessageWindow(width, height, offsets);
   }
 
-  #placeInputWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
-
-    if (!this.#commandWindow || !this.#enemySelectWindow || !this.#statusWindow) {
+  #placeCommonWindow(width: number, height: number, offsets?: OffsetsByWindow) {
+    if (!this.#mainWindow || !this.#statusWindow) {
       return;
+    }
+
+    // メインウィンドウ
+    {
+      this.#mainWindow?.setPosition(Math.floor(width / 2), Math.floor(height / 2) - 12);
+      // メインウィンドウはシェイク時に枠のみ揺れるようにするため別メソッドで対応
+      this.#mainWindow?.shake(offsets?.get(this.#mainWindow) || { dx: 0, dy: 0 });
     }
 
     // ステータスウィンドウ
     {
       const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
       this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
+    }
+  }
+
+  #placeInputWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
+
+    if (!this.#commandWindow || !this.#enemySelectWindow) {
+      return;
     }
 
     const windowWidth = this.#commandWindow.width + this.#enemySelectWindow.width;
@@ -106,14 +124,8 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   #placeMessageWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
-    if (!this.#messageWindow || !this.#statusWindow) {
+    if (!this.#messageWindow) {
       return;
-    }
-
-    // ステータスウィンドウ
-    {
-      const offset = offsets?.get(this.#statusWindow) || { dx: 0, dy: 0 };
-      this.#statusWindow?.setPosition(Math.floor((width - BattleMessageWindow.width) / 2) + offset.dx, statusWindowY + offset.dy);
     }
 
     // メッセージウィンドウ
