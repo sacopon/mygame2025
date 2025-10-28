@@ -21,6 +21,7 @@ import {
   relayoutViewport,
   relayoutViewportBare,
   ScreenPortAdapter,
+  ScreenTouchHandler,
   SkinResolver,
   UIMode,
   UIMODE,
@@ -322,10 +323,13 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
 
   let padUI: VirtualPadUI | null = null;
   const bareUI = new VirtualPadUIForBare(inputState, { width: window.innerWidth, height: window.innerHeight });
+  const bareUIShower = new ScreenTouchHandler(() => bareUI.show());
+  context.appUiLayer.addChild(bareUIShower);
   context.appUiLayer.addChild(bareUI);
 
   if (mode === UIMODE.PAD) {
     padUI = VirtualPadUI.attach(context, skins.current, inputState);
+    bareUIShower.setEnable(false);
     bareUI.hide();
   }
 
@@ -353,10 +357,12 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
       padUI?.detach();
       bareUI.onResize(window.innerWidth, window.innerHeight);
       bareUI.show();
+      bareUIShower.setEnable(true);
       mode = UIMODE.BARE;
     }
     else {
       bareUI.hide();
+      bareUIShower.setEnable(false);
 
       if (!padUI) {
         padUI = VirtualPadUI.attach(context, skins.current, inputState);
