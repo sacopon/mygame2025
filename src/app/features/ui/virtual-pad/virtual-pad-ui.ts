@@ -85,7 +85,7 @@ function updateButtonImages(skin: Skin, inputState: InputState, slots: VirtualPa
   }
 }
 
-function enableDpadTouch(state: InputState, sprite: Sprite): void {
+function enableDpadTouch(state: InputState, sprite: Sprite, optionalCallback?: () => void): void {
   sprite.eventMode = "static";
   sprite.cursor = "pointer";
 
@@ -124,6 +124,7 @@ function enableDpadTouch(state: InputState, sprite: Sprite): void {
     activeId = e.pointerId;
     const p = e.getLocalPosition(sprite);
     setDir(p.x, p.y);
+    optionalCallback?.();
   });
 
   sprite.on("pointermove", (e: FederatedPointerEvent) => {
@@ -150,7 +151,7 @@ function enableDpadTouch(state: InputState, sprite: Sprite): void {
   sprite.on("pointercancel", end);
 }
 
-function enableButtonTouch(state: InputState, sprite: Sprite, bit: number): void {
+function enableButtonTouch(state: InputState, sprite: Sprite, bit: number, optionalCallback?: () => void): void {
   sprite.eventMode = "static";
   sprite.cursor = "pointer";
 
@@ -159,6 +160,7 @@ function enableButtonTouch(state: InputState, sprite: Sprite, bit: number): void
   sprite.on("pointerdown", e => {
     downs.add(e.pointerId);
     state.setTouch(bit, true);
+    optionalCallback?.();
   });
 
   const onUp = (e: FederatedPointerEvent) => {
@@ -278,11 +280,29 @@ export class VirtualPadUI {
 
 /**
  * ベアモード用の入力UI
- * TODO: タッチすると表示され、しばらくタッチしてないと非表示になるようにしたい
  */
 export class VirtualPadUIForBare extends Container {
+  // 👇 状態定義
+  private static readonly State = {
+    // 表示状態
+    Active: 0,
+    // 非表示へ移行中
+    FadingOut: 1,
+    // 非表示状態
+    Hidden: 2,
+  } as const;
+
   #dpad: Sprite;
   #buttons: Sprite[];
+  #state: (typeof VirtualPadUIForBare.State)[keyof typeof VirtualPadUIForBare.State] =
+    VirtualPadUIForBare.State.Hidden;
+
+  // 自動非表示開始時刻
+  #nextHideAt: number | null = null;
+  // 自動非表示監視タイマーID
+  #watchRafId: number | null = null;
+  // UI非表示遷移用タイマーID
+  #fadeRafId: number | null = null;
 
   constructor(inputState: InputState, screenSize: { width: number, height: number }) {
     super();
@@ -304,8 +324,8 @@ export class VirtualPadUIForBare extends Container {
     }
 
     // 各種ボタンのタッチ判定まわりの設定を行う
-    enableDpadTouch(inputState, dpad);
-    buttons.forEach((button, i) => enableButtonTouch(inputState, button, PAD_BIT.BUTTON1 + i));
+    enableDpadTouch(inputState, dpad, () => this.#resetHideCounter());
+    buttons.forEach((button, i) => enableButtonTouch(inputState, button, PAD_BIT.BUTTON1 + i, () => this.#resetHideCounter()));
 
     this.#dpad = dpad;
     this.#buttons = buttons;
@@ -361,13 +381,89 @@ export class VirtualPadUIForBare extends Container {
 
   // 表示状態変更/イベント許可設定
   show() {
+    this.#showNow();
+    this.#resetHideCounter();
+  }
+
+  hide(durationMS: number = 0) {
+    this.#state = 1;
+    this.#nextHideAt = null;
+    this.#cancelFade();
+
+    if (durationMS === 0) {
+      this.#hideNow();
+      return;
+    }
+
+    const fromAlpha = this.alpha;
+    const toAlpha = 0.0;
+    let start: number | null = null;
+
+    const step = (now: number): void => {
+      if (start === null) { start = now; }
+      if (this.#state !== 1) { return; }  // show() で状態が変わっていたら中断
+
+      const t = Math.min((now - start) / durationMS, 1.0);
+      this.alpha = fromAlpha + (toAlpha - fromAlpha) * t;
+
+      // フェードみ完了
+      if (t < 1.0) {
+        this.#fadeRafId = requestAnimationFrame(step);
+        return;
+      }
+
+      // フェード完了
+      this.#hideNow();
+      this.#fadeRafId = null;
+    };
+
+    this.#fadeRafId = requestAnimationFrame(step);
+  }
+
+  #cancelFade(): void {
+    if (this.#fadeRafId === null) {
+      return;
+    }
+
+    cancelAnimationFrame(this.#fadeRafId);
+    this.#fadeRafId = null;
+  }
+
+  #resetHideCounter(): void {
+    this.#showNow();
+    // 非表示を5秒後に再スケジューリング
+    this.#scheduleAutoHide(5000);
+  }
+
+  /**
+   * 自動非表示をスケジューリングする
+   */
+  #scheduleAutoHide(delayMS: number): void {
+    this.#nextHideAt = performance.now() + delayMS;
+
+    if (this.#watchRafId !== null) { return; }
+
+    const loop = (now: number) => {
+      if (this.#state === VirtualPadUIForBare.State.Active && this.#nextHideAt && this.#nextHideAt <= now) {
+        this.hide(1000);
+        this.#nextHideAt = null;
+      }
+      this.#watchRafId = requestAnimationFrame(loop);
+    };
+
+    this.#watchRafId = requestAnimationFrame(loop);
+  }
+
+  #showNow(): void {
     this.eventMode = "auto";
     this.visible = true;
     this.alpha = 0.5;
+    this.#state = VirtualPadUIForBare.State.Active;
   }
 
-  hide() {
+  #hideNow(): void {
     this.eventMode = "none";
     this.visible = false;
+    this.#state = VirtualPadUIForBare.State.Hidden;
   }
 }
