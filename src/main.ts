@@ -23,6 +23,7 @@ import {
   ScreenPortAdapter,
   ScreenTouchHandler,
   SkinResolver,
+  ToggleButton,
   UIMode,
   UIMODE,
   ViewportMetrics,
@@ -133,76 +134,7 @@ function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer
   });
 }
 
-function createDebugSoundOnOffButton(parent: Container, buttonSize: number, callback: () => boolean): Container {
-  const buttonContainer = new Container();
-  buttonContainer.label = "mute";
-  parent.addChild(buttonContainer);
-
-  const button = new Graphics();
-  button.pivot.set(buttonSize / 2, buttonSize / 2);
-  button.rect(0, 0, buttonSize, buttonSize);
-  button.fill({ color: 0x666666 });
-  button.interactive = true;
-  button.on("pointerdown", () => {
-    button.scale.set(1.2);
-  });
-  // button.on("pointermove", () => {
-  //   button.scale.set(1.0);
-  // });
-  button.on("pointerup", () => {
-    const muted = callback();
-    if (muted) { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x666666 }); }
-    else { button.clear().rect(0, 0, buttonSize, buttonSize).fill({ color: 0x00FF00 }); }
-
-    button.scale.set(1.0);
-  });
-  buttonContainer.addChild(button);
-
-  return buttonContainer;
-}
-
-function createDebugToggleBareButton(parent: Container, buttonSize: number, callback: () => void): Container {
-  const buttonContainer = new Container();
-  buttonContainer.label = "bare";
-  parent.addChild(buttonContainer);
-
-  const button = new Graphics();
-  button.pivot.set(buttonSize / 2, buttonSize / 2);
-  button.rect(0, 0, buttonSize, buttonSize);
-  button.fill({ color: 0x3333CC });
-  button.interactive = true;
-  button.on("pointerdown", () => {
-    button.scale.set(1.2);
-  });
-  // button.on("pointermove", () => {
-  //   button.scale.set(1.0);
-  // });
-  button.on("pointerup", () => {
-    callback();
-    button.scale.set(1.0);
-  });
-  buttonContainer.addChild(button);
-
-  return buttonContainer;
-}
-
-export function layoutDebugSoundOnOffButton(buttonContainer: Container, buttonSize: number) {
-  const horizontalMargin = Math.floor(window.innerWidth / 15);
-  const verticalMargin = Math.floor(window.innerHeight / 15);
-  buttonContainer.position.set(
-    horizontalMargin + Math.floor(buttonSize / 2),
-    verticalMargin + Math.floor(buttonSize / 2));
-}
-
-export function layoutDebugToggleBareButton(buttonContainer: Container, buttonSize: number) {
-  const horizontalMargin = Math.floor(window.innerWidth / 15);
-  const verticalMargin = Math.floor(window.innerHeight / 15);
-  buttonContainer.position.set(
-    horizontalMargin + Math.floor(buttonSize * 1.5) + Math.floor(buttonSize / 2),
-    verticalMargin + Math.floor(buttonSize / 2));
-}
-
-function buildAppContext(parent: Container, debugCallback: () => boolean, debugCallback2: () => void): AppContext {
+function buildAppContext(parent: Container): AppContext {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);
@@ -216,15 +148,13 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   const deviceLayer = new Container();
   root.addChild(deviceLayer);
 
+  // ベアモード用UIのレイヤー
+  const bareUiLayer = new Container();
+  root.addChild(bareUiLayer);
+
   // ゲーム画面外のUI 用
   const appUiLayer = new Container();
   root.addChild(appUiLayer);
-  // 暫定的デバッグミュートボタン配置
-  const button = createDebugSoundOnOffButton(appUiLayer, 48, debugCallback);
-  layoutDebugSoundOnOffButton(button, 48);
-  // 暫定的ベアモード切替ボタン配置
-  const bare = createDebugToggleBareButton(appUiLayer, 48, debugCallback2);
-  layoutDebugToggleBareButton(bare, 48);
 
   // 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー
   const frameLayer = new Container();
@@ -264,6 +194,7 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
     gameContentLayer,
     gameLayerMask,
     overlayLayer,
+    bareUiLayer,
     appUiLayer,
     viewportMetrics,
   };
@@ -304,13 +235,21 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   const gameScreenSpec = new GameScreenSpec();
   const inputState = new InputState();
   const skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
-  const context = buildAppContext(app.stage,
-    () => {
-      // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
-      audioPort.setMuted(!audioPort.isMuted);
-      return audioPort.isMuted;
-    },
-    () => toggleMode());
+  const context = buildAppContext(app.stage);
+
+  // サウンドのミュートON/OFFボタン
+  const soundMuteToggleButton = new ToggleButton({ on: "soundon64.png", off: "soundoff64.png" }, false, () => {
+    // Mute/Mute 解除はすぐに反映されないので直前の状態から結果を送る
+    audioPort.setMuted(!audioPort.isMuted);
+    return audioPort.isMuted;
+  });
+  context.appUiLayer.addChild(soundMuteToggleButton);
+  soundMuteToggleButton.position.set(soundMuteToggleButton.width / 2, soundMuteToggleButton.height / 2);
+
+  // ベアモードON/OFFボタン
+  const bareModeToggleButton = new ToggleButton({ on: "fullscreenon64.png", off: "fullscreenoff64.png" }, false, () => toggleMode());
+  context.appUiLayer.addChild(bareModeToggleButton);
+  bareModeToggleButton.position.set(soundMuteToggleButton.width + bareModeToggleButton.width / 2 + 24, bareModeToggleButton.height / 2);
 
   // ポート・ゲーム側システムの作成
   const renderPort = new PixiRenderAdapter(context.gameLayer);
@@ -324,8 +263,8 @@ function buildAppContext(parent: Container, debugCallback: () => boolean, debugC
   let padUI: VirtualPadUI | null = null;
   const bareUI = new VirtualPadUIForBare(inputState, { width: window.innerWidth, height: window.innerHeight });
   const bareUIShower = new ScreenTouchHandler(() => bareUI.show());
-  context.appUiLayer.addChild(bareUIShower);
-  context.appUiLayer.addChild(bareUI);
+  context.bareUiLayer.addChild(bareUIShower);
+  context.bareUiLayer.addChild(bareUI);
 
   if (mode === UIMODE.PAD) {
     padUI = VirtualPadUI.attach(context, skins.current, inputState);
