@@ -1,18 +1,19 @@
-import { Application, Container } from "pixi.js";
+import { Application } from "pixi.js";
 import { computeViewMetrics, DefaultScreen, GameScreenSpec } from "..";
 import { AppContext } from "@app/config";
-import { relayoutViewport, relayoutViewportBare, SkinResolver, UIMODE, UIMode, VirtualPadUI } from "@app/features";
-import { layoutDebugSoundOnOffButton, layoutDebugToggleBareButton } from "../../../main";
+import { relayoutViewport, relayoutViewportBare, SkinResolver, UIMODE, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
 
 export type ResizeOptions = {
   mode: UIMode;
   forceApplySkin?: boolean;
   padUI: VirtualPadUI | null;
+  bareUI: VirtualPadUIForBare | null;
 }
 
 export type ViewState = {
   mode: UIMode,
   padUI: VirtualPadUI | null;
+  bareUI: VirtualPadUIForBare;
 }
 
 // TODO: main.ts 側に移したい
@@ -60,8 +61,8 @@ export function createResizeHandler(app: Application, ctx: AppContext, gameScree
 
       lastW = w;
       lastH = h;
-      const { mode, padUI } = getViewState();
-      onResize(app, ctx, gameScreenSpec, skins, w, h, { mode, forceApplySkin: false, padUI } );
+      const { mode, padUI, bareUI } = getViewState();
+      onResize(app, ctx, gameScreenSpec, skins, w, h, { mode, forceApplySkin: false, padUI, bareUI } );
     });
   };
 }
@@ -69,7 +70,7 @@ export function createResizeHandler(app: Application, ctx: AppContext, gameScree
 /**
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
-export function onResize(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, w: number, h: number, { mode, forceApplySkin = false, padUI = null }: ResizeOptions): void {
+export function onResize(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skins: SkinResolver, w: number, h: number, { mode, forceApplySkin = false, padUI = null, bareUI = null }: ResizeOptions): void {
   const skinChanged = skins.update(w, h);
 
   if (mode === UIMODE.PAD) {
@@ -103,9 +104,6 @@ export function onResize(app: Application, ctx: AppContext, gameScreenSpec: Game
       mode === UIMODE.PAD ? skins.current : undefined));
 
   app.render();
+  bareUI?.onResize(w, h);
 
-  // TODO: ちゃんとする
-  // デバッグボタンの位置調整(適当)
-  layoutDebugSoundOnOffButton(ctx.appUiLayer.children.find(c => c.label === "mute")! as Container, 48);
-  layoutDebugToggleBareButton(ctx.appUiLayer.children.find(c => c.label === "bare")! as Container, 48);
 }

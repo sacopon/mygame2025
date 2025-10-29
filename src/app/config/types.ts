@@ -8,6 +8,8 @@ export interface AppContext {
   background: Sprite;
   /** バーチャルキーUI/仮想ゲーム画面共通の親 */
   deviceLayer: Container;
+  /** ベアモードUI */
+  bareUiLayer: Container;
   /** 仮想のゲーム機本体(仮想ゲーム画面の背面に置かれる画像)用のレイヤー */
   frameLayer: Container;
   /** 仮想ゲーム画面(中身 + マスク) */
