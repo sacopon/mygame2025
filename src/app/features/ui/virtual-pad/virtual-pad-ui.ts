@@ -348,13 +348,6 @@ export class VirtualPadUIForBare extends Container {
     const left = horizontalMargin;
     const right = width - horizontalMargin;
     const bottom = height - verticalMargin;
-    console.log({
-      horizontalMargin,
-      verticalMargin,
-      left,
-      right,
-      bottom,
-    });
 
     this.#dpad.scale.set(scale);
     this.#dpad.position.set(

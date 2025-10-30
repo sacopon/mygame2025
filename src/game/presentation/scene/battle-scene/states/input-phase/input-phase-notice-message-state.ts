@@ -25,6 +25,7 @@ export class InputPhaseNoticeMessageState extends BaseBattleSceneState {
     this.#locked = false;
     this.#noticeWindow = this.scene.spawn(new NoticeMessageWindow(this.context.ui, this.#noticeText));
     const { width, height } = context.ui.screen.getGameSize();
+    // TODO: UILayoutCoordinator に持たせて、画面サイズ変化時に再センタリングする
     this.#noticeWindow.setPosition(
       Math.floor((width - this.#noticeWindow.width) / 2),
       Math.floor((height - this.#noticeWindow.height) / 2));

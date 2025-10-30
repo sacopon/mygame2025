@@ -3,7 +3,7 @@ import { GameObject } from "../../core/game-object";
 import { EnemyView } from "./enemy-view";
 import { DEFAULT_WINDOW_SETTINGS } from ".";
 import { GamePorts, NineSliceSpriteComponent, ScreenSizeAware, SpriteComponent } from "../..";
-import { GAME_SCREEN } from "@app";
+import { GAME_SCREEN } from "../../../../app/config/constants";
 
 const enemyBottomY = 32;
 
