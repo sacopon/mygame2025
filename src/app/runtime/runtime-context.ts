@@ -7,21 +7,22 @@ import { InputState } from "@shared/input";
 import { Application } from "pixi.js";
 
 export type RuntimeContext = {
-  abortController: AbortController,
+  abortController: AbortController;
+  app: Application;
+  audio: WebAudioAdapter;
+  mode: UIMode;
 
-  app: Application,
-  audio: WebAudioAdapter,
+  // 画面・UI関係
+  layers: AppLayers;
+  skins: SkinResolver;
+  gameScreenSpec: GameScreenSpec;
+  inputState: InputState;
 
-  gameRoot: GameRoot,
-  gameScreenSpec: GameScreenSpec,
+  // UIウィジェット類
+  padUI: VirtualPadUI;
+  bareUI: VirtualPadUIForBare;
+  bareUIShower: ScreenTouchHandler;
 
-  layers: AppLayers,
-  skins: SkinResolver,
-
-  inputState: InputState,
-  mode: UIMode,
-
-  padUI: VirtualPadUI,  // TODO: bare モード時は null ?
-  bareUI: VirtualPadUIForBare,
-  bareUIShower: ScreenTouchHandler,
+  // ゲーム本体
+  gameRoot: GameRoot;
 };

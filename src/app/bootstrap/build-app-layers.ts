@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { AppLayers, ViewportMetrics } from "..";
 
 export function buildAppLayers(parent: Container): AppLayers {
@@ -7,8 +7,7 @@ export function buildAppLayers(parent: Container): AppLayers {
   parent.addChild(root);
 
   // 背景
-  const background = Sprite.from("screen_bg.png");
-  background.anchor.set(0.5);
+  const background = new Container();
   root.addChild(background);
 
   // バーチャルパッドUIとゲーム画面の共通の親

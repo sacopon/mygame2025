@@ -2,16 +2,7 @@ import { makePath } from "@core";
 import { WebAudioAdapter } from "..";
 import { Assets, BitmapFont, Spritesheet } from "pixi.js";
 
-export function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
-  const resources = [
-    // 全体背景
-    { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
-    // バーチャルパッドUI
-    { alias: "virtualui.json", src: makePath("textures/virtualui.json") },
-    // ゲーム本編系画像(SAMPLE)
-    { alias: "game.json", src: makePath("textures/game.json") },
-  ];
-
+export async function loadInitialSoundAssetsAsync(webAudioAdapter: WebAudioAdapter): Promise<void> {
   // BGM
   const bgmResources = [
     { alias: "battle", src: makePath("sounds/bgm/battle.mp3") },
@@ -27,6 +18,40 @@ export function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
     { alias: "enemy_damage", src: makePath("sounds/se/enemy_damage.mp3") },
   ];
 
+  const promises = Assets
+    .load([...bgmResources, ...seResources])
+    .then(() => {
+      // サウンドの登録
+      for (const { alias } of bgmResources) {
+        const buffer = Assets.get<AudioBuffer>(alias);
+
+        if (buffer) {
+          webAudioAdapter.registerBgmBuffer(alias, buffer);
+        }
+      }
+
+      for (const { alias } of seResources) {
+        const buffer = Assets.get<AudioBuffer>(alias);
+
+        if (buffer) {
+          webAudioAdapter.registerSeBuffer(alias, buffer);
+        }
+      }
+    });
+
+  return promises;
+}
+
+export async function loadInitialImageAssetsAsync(): Promise<void> {
+  const resources = [
+    // 全体背景
+    { alias: "screen_bg.png", src: makePath("textures/screen_bg.png") },
+    // バーチャルパッドUI
+    { alias: "virtualui.json", src: makePath("textures/virtualui.json") },
+    // ゲーム本編系画像(SAMPLE)
+    { alias: "game.json", src: makePath("textures/game.json") },
+  ];
+
   const nearestSpriteSheets = new Set([
     "game.json",
   ]);
@@ -35,7 +60,7 @@ export function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
   ]);
 
   const promises = Assets
-    .load([...resources, ...bgmResources, ...seResources])
+    .load([...resources])
     .then(() => {
       // アセットの種類別に、紐づいているテクスチャのスケールモードを nearest に設定する
       // スプライトシート
@@ -64,24 +89,8 @@ export function loadInitialAssetsAsync(webAudioAdapter: WebAudioAdapter) {
         }
       });
     })
-    .then(() => document.fonts.load("20px \"BestTen\""))
     .then(() => {
-      // サウンドの登録
-      for (const { alias } of bgmResources) {
-        const buffer = Assets.get<AudioBuffer>(alias);
-
-        if (buffer) {
-          webAudioAdapter.registerBgmBuffer(alias, buffer);
-        }
-      }
-
-      for (const { alias } of seResources) {
-        const buffer = Assets.get<AudioBuffer>(alias);
-
-        if (buffer) {
-          webAudioAdapter.registerSeBuffer(alias, buffer);
-        }
-      }
+      document.fonts.load("20px \"BestTen\"");
     });
 
   return promises;

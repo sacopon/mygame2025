@@ -4,8 +4,8 @@ import { ViewportMetrics } from "@app/services";
 export interface AppLayers {
   /** ルートコンテナ */
   root: Container;
-  /** 背景 */
-  background: Sprite;
+  /** 背景用レイヤ */
+  background: Container;
   /** バーチャルキーUI/仮想ゲーム画面共通の親 */
   deviceLayer: Container;
   /** ベアモードUI */
