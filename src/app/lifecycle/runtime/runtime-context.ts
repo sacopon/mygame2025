@@ -1,6 +1,6 @@
 import { WebAudioAdapter } from "@app/adapters";
 import { AppLayers } from "@app/config";
-import { ScreenTouchHandler, SkinResolver, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
+import { ScreenTouchHandler, SkinResolver, ToggleButton, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
 import { GameScreenSpec } from "@app/services";
 import { GameRoot } from "@game/presentation";
 import { InputState } from "@shared/input";
@@ -22,6 +22,10 @@ export type RuntimeContext = {
   padUI: VirtualPadUI;
   bareUI: VirtualPadUIForBare;
   bareUIShower: ScreenTouchHandler;
+  // サウンドミュートON/OFFボタン
+  muteButton: ToggleButton;
+  // ベアモード切替ボタン
+  bareButton: ToggleButton;
 
   // ゲーム本体
   gameRoot: GameRoot;

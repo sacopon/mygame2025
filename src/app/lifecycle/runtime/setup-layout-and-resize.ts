@@ -9,11 +9,11 @@ export function setupLayoutAndResize(rc: RuntimeContext): () => void {
   }
 
   // 初回再描画
-  onResize(rc.app, rc.layers, rc.gameScreenSpec, rc.skins, window.innerWidth, window.innerHeight, { mode: rc.mode, forceApplySkin: true, padUI: rc.padUI, bareUI: rc.bareUI });
+  onResize(rc, window.innerWidth, window.innerHeight, true);
 
   // リサイズハンドラの登録
   const opts = { signal: rc.abortController.signal } as AddEventListenerOptions;
-  const handleResize = createResizeHandler(rc.app, rc.layers, rc.gameScreenSpec, rc.skins, () => ({ mode: rc.mode, padUI: rc.padUI, bareUI: rc.bareUI }));
+  const handleResize = createResizeHandler(rc);
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);

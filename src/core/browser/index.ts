@@ -5,6 +5,7 @@
  * - App/Shared/Game の型に依存しない.
  */
 export * from "./disable-browser-gestures";
+export * from "./get-safe-area-insets";
 export * from "./is-ios";
 export * from "./is-safari";
 export * from "./make-path";
