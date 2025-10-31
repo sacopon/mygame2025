@@ -1,5 +1,5 @@
 import { Container, Graphics } from "pixi.js";
-import { AppLayers, ViewportMetrics } from "..";
+import { AppLayers, ViewportMetrics } from "../..";
 
 export function buildAppLayers(parent: Container): AppLayers {
   // コンテナ作成

@@ -1,5 +1,6 @@
 import { RuntimeContext } from "./runtime-context";
-import { buildAppLayers, GameScreenSpec, SkinResolver } from "..";
+import { buildAppLayers } from "..";
+import { GameScreenSpec, SkinResolver } from "../..";
 import { InputState } from "@shared";
 
 export function setupStageAndUiFrame(rc: RuntimeContext): void {

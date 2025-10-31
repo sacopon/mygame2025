@@ -1,5 +1,5 @@
 import "./index.css";
-import { startApp } from "@app/bootstrap/start-app";
+import { startApp } from "@app";
 
 (async () => {
 

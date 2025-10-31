@@ -1,5 +1,7 @@
 import { Sprite } from "pixi.js";
-import { RuntimeContext, ScreenTouchHandler, ToggleButton, toggleMode, UIMODE, VirtualPadUI, VirtualPadUIForBare } from "..";
+import { toggleMode } from "./runtime-actions";
+import { RuntimeContext } from "./runtime-context";
+import { ScreenTouchHandler, ToggleButton, UIMODE, VirtualPadUI, VirtualPadUIForBare } from "../..";
 
 export function setupUiLayersAndControls(rc: RuntimeContext): void {
   // 背景作成

@@ -1,5 +1,5 @@
 import { makePath } from "@core";
-import { WebAudioAdapter } from "..";
+import { WebAudioAdapter } from "../..";
 import { Assets, BitmapFont, Spritesheet } from "pixi.js";
 
 export async function loadInitialSoundAssetsAsync(webAudioAdapter: WebAudioAdapter): Promise<void> {

@@ -1,4 +1,4 @@
-import { bindKeyboard, createResizeHandler, onResize, relayoutViewport, relayoutViewportBare, RuntimeContext, UIMODE } from "..";
+import { bindKeyboard, createResizeHandler, onResize, relayoutViewport, relayoutViewportBare, RuntimeContext, UIMODE } from "../..";
 
 export function setupLayoutAndResize(rc: RuntimeContext): () => void {
   if (rc.mode === UIMODE.PAD) {

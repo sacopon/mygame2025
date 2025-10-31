@@ -1,4 +1,5 @@
-import { InputPortAdapter, PixiRenderAdapter, RuntimeContext, ScreenPortAdapter, XorShiftRandomAdapter } from "..";
+import { RuntimeContext } from "./runtime-context";
+import { InputPortAdapter, PixiRenderAdapter, ScreenPortAdapter, XorShiftRandomAdapter } from "../..";
 import { GameRoot } from "@game";
 
 export function setupGamePortsAndRoot(rc: RuntimeContext): void {

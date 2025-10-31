@@ -1,5 +1,5 @@
 import { RuntimeContext } from "./runtime-context";
-import { isUIMode, UIMODE, } from "..";
+import { isUIMode, UIMODE, } from "../..";
 import { loadInitialImageAssetsAsync, loadInitialSoundAssetsAsync } from "./load-initial-assets";
 import { setupAudio } from "./setup-audio";
 import { setupGamePortsAndRoot } from "./setup-game-ports-and-root";

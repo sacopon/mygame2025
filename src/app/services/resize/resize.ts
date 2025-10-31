@@ -2,7 +2,7 @@ import { Application } from "pixi.js";
 import { GameScreenSpec } from "..";
 import { AppLayers } from "@app/config";
 import { SkinResolver, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
-import { onResize } from "@app/runtime";
+import { onResize } from "../..";
 
 export type ResizeOptions = {
   mode: UIMode;

@@ -1,5 +1,5 @@
 import { extensions, ExtensionType } from "pixi.js";
-import { RuntimeContext, WebAudioAdapter } from "..";
+import { RuntimeContext, WebAudioAdapter } from "../..";
 import { setFirstTouchCallback } from "@core";
 
 function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer>): void {

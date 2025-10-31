@@ -1,5 +1,5 @@
 import { Application } from "pixi.js";
-import { AppLayers, computeViewMetrics, DefaultScreen, GameScreenSpec, relayoutViewport, relayoutViewportBare, ResizeOptions, SkinResolver, UIMODE, VirtualPadUI } from "..";
+import { AppLayers, computeViewMetrics, DefaultScreen, GameScreenSpec, relayoutViewport, relayoutViewportBare, ResizeOptions, SkinResolver, UIMODE, VirtualPadUI } from "../..";
 import { RuntimeContext } from "./runtime-context";
 
 export function toggleMode(rc: RuntimeContext): void {
