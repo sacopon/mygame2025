@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite } from "pixi.js";
-import { AppContext, ViewportMetrics } from "..";
+import { AppLayers, ViewportMetrics } from "..";
 
-export function buildAppContext(parent: Container): AppContext {
+export function buildAppLayers(parent: Container): AppLayers {
   // コンテナ作成
   const root = new Container();
   parent.addChild(root);

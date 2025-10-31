@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite } from "pixi.js";
 import { ViewportMetrics } from "@app/services";
 
-export interface AppContext {
+export interface AppLayers {
   /** ルートコンテナ */
   root: Container;
   /** 背景 */
@@ -23,6 +23,7 @@ export interface AppContext {
   /** アプリUI用のレイヤー */
   appUiLayer: Container;
   /** ビューポート管理 */
+  // TODO: RuntimeContext に移動？
   viewportMetrics: ViewportMetrics;
 }
 

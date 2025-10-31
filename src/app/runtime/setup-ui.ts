@@ -1,39 +1,41 @@
-import { bindKeyboard, buildAppContext, createResizeHandler, GameScreenSpec, InputPortAdapter, onResize, PixiRenderAdapter, relayoutViewport, relayoutViewportBare, ScreenPortAdapter, ScreenTouchHandler, SkinResolver, ToggleButton, UIMODE, VirtualPadUI, VirtualPadUIForBare, XorShiftRandomAdapter } from "..";
+import { onResize, toggleMode } from "./runtime-actions";
+import { RuntimeContext } from "./runtime-context";
+import { bindKeyboard, buildAppLayers, createResizeHandler, GameScreenSpec, InputPortAdapter, isUIMode, PixiRenderAdapter, relayoutViewport, relayoutViewportBare, ScreenPortAdapter, ScreenTouchHandler, SkinResolver, ToggleButton, UIMODE, VirtualPadUI, VirtualPadUIForBare, WebAudioAdapter, XorShiftRandomAdapter } from "..";
 import { setFirstTouchCallback } from "@core";
 import { GameRoot } from "@game";
 import { InputState } from "@shared";
-import { RuntimeContext } from "./runtime-context";
+import { extensions, ExtensionType } from "pixi.js";
+import { loadInitialAssetsAsync } from "./load-initial-assets";
 
-export function toggleMode(rc: RuntimeContext): void {
-  if (rc.mode === UIMODE.PAD) {
-    rc.padUI.detach();
-    rc.bareUI.onResize(window.innerWidth, window.innerHeight);
-    rc.bareUI.show();
-    rc.bareUIShower.setEnable(true);
-    rc.mode = UIMODE.BARE;
-  }
-  else {
-    rc.bareUI.hide();
-    rc.bareUIShower.setEnable(false);
-
-    if (!rc.padUI) {
-      rc.padUI = VirtualPadUI.attach(rc.pixiLayers, rc.skins.current, rc.inputState);
-    } else {
-      rc.padUI.reattach();
-    }
-
-    rc.mode = UIMODE.PAD;
-  }
-
-  onResize(rc.app, rc.pixiLayers, rc.gameScreenSpec, rc.skins, window.innerWidth, window.innerHeight, { mode: rc.mode, forceApplySkin: true, padUI: rc.padUI, bareUI: rc.bareUI });
+function registerWebAudioLoader(loaderFunc: (url: string) => Promise<AudioBuffer>): void {
+  extensions.add({
+    name: "web-audio-loader",
+    extension: ExtensionType.LoadParser,
+    test: (url: string, options: { format?: string }) => {
+      const audioExtensions = ["mp3", "ogg", "wav"];
+      const ext = options.format ?? (url.split("?")[0].split(".").pop() ?? "").toLowerCase();
+      return audioExtensions.includes(ext);
+    },
+    load: loaderFunc,
+    unload: async (_buffer: AudioBuffer) => { /* 特になし */ },
+  });
 }
 
-export function setUpUiAndResize(rc: RuntimeContext): { unbindKeyboard: () => void } {
+export async function setupUi(rc: RuntimeContext): Promise<{ unbindKeyboard: () => void }> {
+  // オーディオ周り(Pixi Loader への登録も含む)
+  rc.audio = new WebAudioAdapter();
+  registerWebAudioLoader((url: string) => rc.audio!.load(url));
+  await loadInitialAssetsAsync(rc.audio!);
+
+  // UIモード
+  const modeQuery = new URLSearchParams(location.search).get("mode");
+  rc.mode = isUIMode(modeQuery) ? modeQuery : UIMODE.PAD;
+
   // 画面上のUI要素の構築
   rc.gameScreenSpec = new GameScreenSpec();
   rc.inputState = new InputState();
   rc.skins = new SkinResolver(window.innerWidth < window.innerHeight ? "portrait" : "landscape");
-  rc.pixiLayers = buildAppContext(rc.app.stage);
+  rc.layers = buildAppLayers(rc.app.stage);
 
   // サウンドのミュートON/OFFボタン
   const soundMuteToggleButton = new ToggleButton({ on: "soundon64.png", off: "soundoff64.png" }, false, () => {
@@ -41,16 +43,17 @@ export function setUpUiAndResize(rc: RuntimeContext): { unbindKeyboard: () => vo
     rc.audio.setMuted(!rc.audio.isMuted);
     return rc.audio.isMuted;
   });
-  rc.pixiLayers.appUiLayer.addChild(soundMuteToggleButton);
+  rc.layers.appUiLayer.addChild(soundMuteToggleButton);
   soundMuteToggleButton.position.set(soundMuteToggleButton.width / 2, soundMuteToggleButton.height / 2);
 
   // ベアモードON/OFFボタン
+  // TODO: 最初のモードを反映する
   const bareModeToggleButton = new ToggleButton({ on: "fullscreenon64.png", off: "fullscreenoff64.png" }, false, () => toggleMode(rc));
-  rc.pixiLayers.appUiLayer.addChild(bareModeToggleButton);
+  rc.layers.appUiLayer.addChild(bareModeToggleButton);
   bareModeToggleButton.position.set(soundMuteToggleButton.width + bareModeToggleButton.width / 2 + 24, bareModeToggleButton.height / 2);
 
   // ポート・ゲーム側システムの作成
-  const renderPort = new PixiRenderAdapter(rc.pixiLayers.gameLayer);
+  const renderPort = new PixiRenderAdapter(rc.layers.gameLayer);
   const screenPort = new ScreenPortAdapter(rc.gameScreenSpec);
   const inputPort = new InputPortAdapter(rc.inputState);
   const randomPort = XorShiftRandomAdapter.create();  // TODO: セーブデータがある場合はシードを指定する
@@ -58,34 +61,28 @@ export function setUpUiAndResize(rc: RuntimeContext): { unbindKeyboard: () => vo
   setFirstTouchCallback(() => { rc.audio.unlock(); });
   rc.gameRoot = new GameRoot({ render: renderPort, screen: screenPort, input: inputPort, audio: rc.audio, random: randomPort });
 
-  rc.padUI = VirtualPadUI.attach(rc.pixiLayers, rc.skins.current, rc.inputState);
+  rc.padUI = VirtualPadUI.attach(rc.layers, rc.skins.current, rc.inputState);
   rc.bareUI = new VirtualPadUIForBare(rc.inputState, { width: window.innerWidth, height: window.innerHeight });
   rc.bareUIShower = new ScreenTouchHandler(() => rc.bareUI.show());
-  rc.pixiLayers.bareUiLayer.addChild(rc.bareUIShower);
-  rc.pixiLayers.bareUiLayer.addChild(rc.bareUI);
+  rc.layers.bareUiLayer.addChild(rc.bareUIShower);
+  rc.layers.bareUiLayer.addChild(rc.bareUI);
 
   // 初期レイアウト
   if (rc.mode === UIMODE.PAD) {
     rc.bareUIShower.setEnable(false);
     rc.bareUI.hide();
-    relayoutViewport(rc.app, rc.pixiLayers, rc.gameScreenSpec, rc.skins.current, window.innerWidth, window.innerHeight);
+    relayoutViewport(rc.app, rc.layers, rc.gameScreenSpec, rc.skins.current, window.innerWidth, window.innerHeight);
   }
   else {
     rc.padUI.detach();
-    relayoutViewportBare(rc.app, rc.pixiLayers, rc.gameScreenSpec, window.innerWidth, window.innerHeight);
+    relayoutViewportBare(rc.app, rc.layers, rc.gameScreenSpec, window.innerWidth, window.innerHeight);
   }
-
-  // キーボード入力イベント
-  /**
-   * 登録したキーボードイベントリスナをすべて解除する。
-   * AbortController.abort() から呼ばれる。
-   */
-  const unbindKeyboard = bindKeyboard(window, rc.inputState);
 
   // 画面再構築が必要なイベントを登録
   // 回転・アドレスバー変動・PWA復帰など広めにカバー
+  const unbindKeyboard = bindKeyboard(window, rc.inputState);
   const opts = { signal: rc.abortController.signal } as AddEventListenerOptions;
-  const handleResize = createResizeHandler(rc.app, rc.pixiLayers, rc.gameScreenSpec, rc.skins, () => ({ mode: rc.mode, padUI: rc.padUI, bareUI: rc.bareUI }));
+  const handleResize = createResizeHandler(rc.app, rc.layers, rc.gameScreenSpec, rc.skins, () => ({ mode: rc.mode, padUI: rc.padUI, bareUI: rc.bareUI }));
   window.addEventListener("resize", handleResize, opts);
   window.visualViewport?.addEventListener("resize", handleResize, opts);
   window.addEventListener("orientationchange", handleResize, opts);
@@ -96,7 +93,9 @@ export function setUpUiAndResize(rc: RuntimeContext): { unbindKeyboard: () => vo
   // }, { signal: ac.signal });
 
   // 初回再描画
-  onResize(rc.app, rc.pixiLayers, rc.gameScreenSpec, rc.skins, window.innerWidth, window.innerHeight, { mode: rc.mode, forceApplySkin: true, padUI: rc.padUI, bareUI: rc.bareUI });
+  onResize(rc.app, rc.layers, rc.gameScreenSpec, rc.skins, window.innerWidth, window.innerHeight, { mode: rc.mode, forceApplySkin: true, padUI: rc.padUI, bareUI: rc.bareUI });
 
-  return { unbindKeyboard };
+  return {
+    unbindKeyboard,
+  };
 }

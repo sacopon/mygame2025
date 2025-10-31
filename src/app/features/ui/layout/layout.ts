@@ -1,9 +1,9 @@
 import { Application } from "pixi.js";
 import { Skin } from "../";
-import { AppContext } from "@app/config";
+import { AppLayers } from "@app/config";
 import { GameScreenSpec } from "@app/services";
 
-export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
+export function relayoutViewport(app: Application, ctx: AppLayers, gameScreenSpec: GameScreenSpec, skin: Skin, w: number, h: number) {
   const cw = (app.renderer.canvas as HTMLCanvasElement).width;
   const ch = (app.renderer.canvas as HTMLCanvasElement).height;
 
@@ -29,7 +29,7 @@ export function relayoutViewport(app: Application, ctx: AppContext, gameScreenSp
 }
 
 export function relayoutViewportBare(
-  app: Application, ctx: AppContext,
+  app: Application, ctx: AppLayers,
   gameScreenSpec: GameScreenSpec,
   w: number,
   h: number,

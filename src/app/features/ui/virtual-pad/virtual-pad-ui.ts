@@ -1,7 +1,7 @@
 import { Circle, Container, FederatedPointerEvent, Sprite, Texture } from "pixi.js";
 import { Skin } from "../skin";
 import { InputState, PAD_BIT } from "@shared";
-import { AppContext, VirtualPadSlots } from "@app/config";
+import { AppLayers, VirtualPadSlots } from "@app/config";
 
 function applyBody(skin: Skin, body: Sprite[]): void {
   // 本体画像は左上、右上、左下、右下に4分割されている
@@ -178,12 +178,12 @@ function enableButtonTouch(state: InputState, sprite: Sprite, bit: number, optio
 }
 
 export class VirtualPadUI {
-  readonly #app: AppContext;
+  readonly #app: AppLayers;
   readonly #inputState: InputState;
   #skin: Skin;
   #slots!: VirtualPadSlots;
 
-  private constructor(app: AppContext, skin: Skin, inputState: InputState) {
+  private constructor(app: AppLayers, skin: Skin, inputState: InputState) {
     this.#app = app;
     this.#inputState = inputState;
     this.#skin = skin;
@@ -192,7 +192,7 @@ export class VirtualPadUI {
   /**
    * AppContext の上に「バーチャルUI枠」を作って返す
    */
-  static attach(app: AppContext, skin: Skin, inputState: InputState): VirtualPadUI {
+  static attach(app: AppLayers, skin: Skin, inputState: InputState): VirtualPadUI {
     const ui = new VirtualPadUI(app, skin, inputState);
 
     const { frameLayer, overlayLayer } = app;
