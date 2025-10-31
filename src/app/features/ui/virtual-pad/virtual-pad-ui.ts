@@ -339,6 +339,7 @@ export class VirtualPadUIForBare extends Container {
   }
 
   #resize(width: number, height: number, safeAreaInsets: Insets = { left: 0, top: 0, right: 0, bottom: 0 }): void {
+    alert(`left:${safeAreaInsets.left},top:${safeAreaInsets.top},right:${safeAreaInsets.right},bottom:${safeAreaInsets.bottom},`);
     // 方向キーは左下へ配置、最低でも画面端から1/10離す、画面サイズ長辺の1/3以下の大きさになるようにする
     const longSide = Math.max(width, height);
     const maximumSize = Math.floor(longSide / 3);
