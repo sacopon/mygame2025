@@ -30,6 +30,9 @@ export function resolveActions(state: Readonly<BattleDomainState>, actions: Read
 
   let currentState = state;
 
+  // 先に防御行動のフラグだけ立てる
+  currentState = resolveSelfDefenceActions(currentState, actions);
+
   for (const action of actions) {
     // 死んでいるキャラクターの Action は無視
     if (currentState.isDead(action.actorId)) {
@@ -41,7 +44,26 @@ export function resolveActions(state: Readonly<BattleDomainState>, actions: Read
     resultEffects.push(...effects);
   }
 
+  // そのターンの一時状態を解除する
+  currentState = clearTempraryStatus(currentState);
+
   return { state: currentState, effects: resultEffects };
+}
+
+function clearTempraryStatus(state: Readonly<BattleDomainState>): Readonly<BattleDomainState> {
+  return state.clearDefending();
+}
+
+function resolveSelfDefenceActions(state: Readonly<BattleDomainState>, actions: ReadonlyArray<PlannedAction>): Readonly<BattleDomainState> {
+  let currentState = state;
+
+  actions
+    .filter(action => !currentState.isDead(action.actorId) && action.actionType === "SelfDefence")
+    .forEach(action => {
+      currentState = currentState.apply({ type: "SelfDefence", sourceId: action.actorId });
+    });
+
+  return currentState;
 }
 
 /**

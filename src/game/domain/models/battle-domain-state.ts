@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
-import { DamageApplied, DomainEvent } from "./domain-event";
+import { DamageApplied, DomainEvent, SelfDefence } from "./domain-event";
 import { Attack, Damage, Defence, Hp } from "./status-value-objects";
 
 export type ActorStateBase = {
@@ -8,6 +8,7 @@ export type ActorStateBase = {
   currentHp: Readonly<Hp>;
   currentAttack: Readonly<Attack>;
   currentDefence: Readonly<Defence>;
+  defending: Readonly<boolean>;
 }
 
 export type AllyActorState = ActorStateBase & {
@@ -43,6 +44,7 @@ export class BattleDomainState {
         currentHp: Hp.of(ally.hp),
         currentAttack: Attack.of(ally.attack),
         currentDefence: Defence.of(ally.defence),
+        defending: false,
       });
     }
 
@@ -54,6 +56,7 @@ export class BattleDomainState {
         currentHp: Hp.of(enemy.hp),
         currentAttack: Attack.of(enemy.attack),
         currentDefence: Defence.of(enemy.defence),
+        defending: false,
       });
     }
 
@@ -70,12 +73,21 @@ export class BattleDomainState {
         return this.#applyDamage(event);
 
       case "SelfDefence":
-        // TODO: 未実装
-        return new BattleDomainState(this.#actorStateByActorId);
+        return this.#applySelfDefence(event);
 
       default:
         return assertNever(event);
     }
+  }
+
+  clearDefending(): Readonly<BattleDomainState> {
+    const nextStateMap = new Map(this.#actorStateByActorId);
+
+    for (const state of this.getActorStates()) {
+      nextStateMap.set(state.actorId, { ...state, defending: false });
+    }
+
+    return new BattleDomainState(nextStateMap);
   }
 
   /**
@@ -153,6 +165,18 @@ export class BattleDomainState {
 
     const nextStateMap = new Map(this.#actorStateByActorId);
     nextStateMap.set(actorState.actorId, { ...actorState, currentHp: actorState.currentHp.takeDamage(Damage.of(damageEvent.amount)) });
+    return new BattleDomainState(nextStateMap);
+  }
+
+  #applySelfDefence(defenceEvent: SelfDefence): Readonly<BattleDomainState> {
+    const actorState = this.#actorStateByActorId.get(defenceEvent.sourceId);
+
+    if (!actorState) {
+      throw new Error(`invalid sourceId: ${defenceEvent.sourceId}`);
+    }
+
+    const nextStateMap = new Map(this.#actorStateByActorId);
+    nextStateMap.set(actorState.actorId, { ...actorState, defending: true });
     return new BattleDomainState(nextStateMap);
   }
 
