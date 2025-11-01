@@ -9,8 +9,12 @@ export class Level {
     this.#value = value;
   }
 
-  static of(value: number): Level {
-    return new Level(value);
+  static of(value: number | Readonly<Level>): Readonly<Level> {
+    if (typeof value === "number") {
+      return new Level(value);
+    }
+
+    return new Level(value.value);
   }
 
   get value(): number {
@@ -28,8 +32,12 @@ export class Hp {
     this.#value = value;
   }
 
-  static of(value: number): Hp {
-    return new Hp(value);
+  static of(value: number | Readonly<Hp>): Readonly<Hp> {
+    if (typeof value === "number") {
+      return new Hp(value);
+    }
+
+    return new Hp(value.value);
   }
 
   get value(): number {
@@ -59,8 +67,58 @@ export class Damage {
     this.#value = value;
   }
 
-  static of(value: number): Damage {
-    return new Damage(value);
+  static of(value: number | Damage): Damage {
+    if (typeof value === "number") {
+      return new Damage(value);
+    }
+
+    return new Damage(value.#value);
+  }
+
+  get value(): number {
+    return this.#value;
+  }
+}
+
+/**
+ * 攻撃力
+ */
+export class Attack {
+  readonly #value: number;
+
+  private constructor(value: number) {
+    this.#value = value;
+  }
+
+  static of(value: number | Readonly<Attack>): Readonly<Attack> {
+    if (typeof value === "number") {
+      return new Attack(value);
+    }
+
+    return new Attack(value.value);
+  }
+
+  get value(): number {
+    return this.#value;
+  }
+}
+
+/**
+ * 攻撃力
+ */
+export class Defence {
+  readonly #value: number;
+
+  private constructor(value: number) {
+    this.#value = value;
+  }
+
+  static of(value: number | Readonly<Defence>): Readonly<Defence> {
+    if (typeof value === "number") {
+      return new Defence(value);
+    }
+
+    return new Defence(value.value);
   }
 
   get value(): number {

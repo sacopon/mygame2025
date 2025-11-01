@@ -1,6 +1,6 @@
 import { assertNever } from "@shared/utils";
 import { PresentationEffect } from "..";
-import { ActionType, ActorId, BattleDomainState, DamageApplied, EnemyGroupId, isAlive, PlannedAction, SelfDefence } from "@game/domain";
+import { ActionType, ActorId, BattleDomainState, calcBaseDamage, DamageApplied, EnemyGroupId, isAlive, PlannedAction, SelfDefence } from "@game/domain";
 import { RandomPort } from "@game/presentation";
 
 /**
@@ -182,11 +182,19 @@ function createAttackResolution(currentState: Readonly<BattleDomainState>, actio
   );
 
   for (const targetId of targets) {
+    const baseDamage = calcBaseDamage(
+      currentState.getActorState(action.actorId),
+      currentState.getActorState(targetId));
+
+    // ブレ(一律+-10%固定)
+    const varianceRatio = 0.9 + deps.random.range(0, 20) / 100; // 0.9〜1.1
+    const amount = Math.floor(baseDamage.value * varianceRatio);
+
     const event: DamageApplied = {
       type: "DamageApplied",
       sourceId,
       targetId,
-      amount: deps.random.range(10, 30),
+      amount,
       critical: false,
     };
 
@@ -239,42 +247,69 @@ function createEffectsFromSelfDefence(currentState: Readonly<BattleDomainState>,
  */
 function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState>, event: DamageApplied, deps: ResolveDeps): ReadonlyArray<PresentationEffect> {
   const isPlayerAttack = deps.isAlly(event.sourceId);
+  const isNoDamage = event.amount === 0;
   const effects: PresentationEffect[] = [];
 
   if (isPlayerAttack) {
     effects.push(
       // ダメージ後の状態を適用
       { kind: "ApplyState", state: appliedState },
-      // SE再生
-      { kind: "PlaySe", seId: "enemy_damage" },
-      // 「${actorId}は　${amount}の　ダメージ！
-      { kind: "ShowEnemyDamageText", actorId: event.targetId, amount: event.amount },
-      // ダメージを受けた敵の点滅
-      { kind: "EnemyDamageBlink", actorId: event.targetId },
     );
 
-    if (appliedState.isDead(event.targetId)) {
-      // 敵消去
-      effects.push({ kind: "EnemyHideByDefeat", actorId: event.targetId });
-      // 「${actor.name}を　たおした！」
-      effects.push({ kind: "ShowDefeatText", actorId: event.targetId });
+    if (isNoDamage) {
+      effects.push(
+        // SE再生
+        { kind: "PlaySe", seId: "miss" },
+        // 「ミス！　${actorId}にダメージを与えられない！」
+        { kind: "ShowNoDamageText", actorId: event.targetId },
+      );
+    }
+    else {
+      effects.push(
+        // SE再生
+        { kind: "PlaySe", seId: "enemy_damage" },
+        // 「${actorId}は　${amount}の　ダメージ！
+        { kind: "ShowEnemyDamageText", actorId: event.targetId, amount: event.amount },
+        // ダメージを受けた敵の点滅
+        { kind: "EnemyDamageBlink", actorId: event.targetId },
+      );
+
+      if (appliedState.isDead(event.targetId)) {
+        // 敵消去
+        effects.push({ kind: "EnemyHideByDefeat", actorId: event.targetId });
+        // 「${actor.name}を　たおした！」
+        effects.push({ kind: "ShowDefeatText", actorId: event.targetId });
+      }
     }
   }
   else {
     effects.push(
       // ダメージ後の状態を適用
       { kind: "ApplyState", state: appliedState },
-      // SE再生
-      { kind: "PlaySe", seId: "player_damage" },
-      // 「${actor.name}は　${amount}の　ダメージを　うけた！」
-      { kind: "ShowPlayerDamageText", actorId: event.targetId, amount: event.amount },
-      // 画面の揺れ
-      { kind: "PlayerDamageShake", actorId: event.targetId },
     );
 
-    if (appliedState.isDead(event.targetId)) {
-      // 「${actor.name}は　しんでしまった！」
-      effects.push({ kind: "ShowDeadText", actorId: event.targetId });
+    if (isNoDamage) {
+      effects.push(
+        // SE再生
+        { kind: "PlaySe", seId: "miss" },
+        // 「ミス！　${actorId}にダメージを与えられない！」
+        { kind: "ShowNoDamageText", actorId: event.targetId },
+      );
+    }
+    else {
+      effects.push(
+        // SE再生
+        { kind: "PlaySe", seId: "player_damage" },
+        // 「${actor.name}は　${amount}の　ダメージを　うけた！」
+        { kind: "ShowPlayerDamageText", actorId: event.targetId, amount: event.amount },
+        // 画面の揺れ
+        { kind: "PlayerDamageShake", actorId: event.targetId },
+      );
+
+      if (appliedState.isDead(event.targetId)) {
+        // 「${actor.name}は　しんでしまった！」
+        effects.push({ kind: "ShowDeadText", actorId: event.targetId });
+      }
     }
   }
 

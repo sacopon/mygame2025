@@ -1,11 +1,13 @@
 import { assertNever } from "@shared/utils";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
 import { DamageApplied, DomainEvent } from "./domain-event";
-import { Damage, Hp } from "./status-value-objects";
+import { Attack, Damage, Defence, Hp } from "./status-value-objects";
 
 export type ActorStateBase = {
   actorId: ActorId;
-  hp: Hp;
+  currentHp: Readonly<Hp>;
+  currentAttack: Readonly<Attack>;
+  currentDefence: Readonly<Defence>;
 }
 
 export type AllyActorState = ActorStateBase & {
@@ -20,7 +22,7 @@ export type EnemyActorState = ActorStateBase & {
 
 export type ActorState = AllyActorState | EnemyActorState;
 
-export const isAlive = (s: ActorState): boolean => s.hp.isAlive;
+export const isAlive = (s: ActorState): boolean => s.currentHp.isAlive;
 const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
 
 export class BattleDomainState {
@@ -38,7 +40,9 @@ export class BattleDomainState {
         actorId: ally.actorId,
         originId: ally.originId,
         actorType: ActorType.Ally,
-        hp: Hp.of(ally.currentHp.value),
+        currentHp: Hp.of(ally.hp),
+        currentAttack: Attack.of(ally.attack),
+        currentDefence: Defence.of(ally.defence),
       });
     }
 
@@ -47,7 +51,9 @@ export class BattleDomainState {
         actorId: enemy.actorId,
         originId: enemy.originId,
         actorType: ActorType.Enemy,
-        hp: Hp.of(enemy.baseHp.value),
+        currentHp: Hp.of(enemy.hp),
+        currentAttack: Attack.of(enemy.attack),
+        currentDefence: Defence.of(enemy.defence),
       });
     }
 
@@ -146,14 +152,16 @@ export class BattleDomainState {
     }
 
     const nextStateMap = new Map(this.#actorStateByActorId);
-    nextStateMap.set(actorState.actorId, { ...actorState, hp: actorState.hp.takeDamage(Damage.of(damageEvent.amount)) });
+    nextStateMap.set(actorState.actorId, { ...actorState, currentHp: actorState.currentHp.takeDamage(Damage.of(damageEvent.amount)) });
     return new BattleDomainState(nextStateMap);
   }
 
   debugDump(): void {
     const data = Array.from(this.#actorStateByActorId.values()).map(actor => ({
       ...actor,
-      hp: actor.hp.value,
+      currentHp: actor.currentHp.value,
+      currentAttack: actor.currentAttack.value,
+      currentDefence: actor.currentDefence.value,
     }));
 
     console.table(data);

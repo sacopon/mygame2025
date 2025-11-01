@@ -60,6 +60,12 @@ export type ShowPlayerDamageText = {
   amount: number;
 };
 
+// 「ミス！　${actor.name}にダメージを与えられない！」(敵/味方共通)
+export type ShowNoDamageText = {
+  kind: "ShowNoDamageText";
+  actorId: ActorId;
+};
+
 // 「${actor.name}は　みをまもっている！」(敵/味方共通）
 export type ShowSelfDefenceText = {
   kind: "ShowSelfDefenceText";
@@ -87,6 +93,7 @@ export type PresentationEffect = ApplyState
   | ShowEnemyDamageText
   | PlayerDamageShake
   | ShowPlayerDamageText
+  | ShowNoDamageText
   | ShowSelfDefenceText
   | ShowDeadText
   | ShowDefeatText;
