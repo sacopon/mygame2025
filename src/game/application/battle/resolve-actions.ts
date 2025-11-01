@@ -260,7 +260,9 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       effects.push(
         // SE再生
         { kind: "PlaySe", seId: "miss" },
-        // 「ミス！　${actorId}にダメージを与えられない！」
+        // 「ミス！
+        //   ${actorId}に　ダメージを　与えられない！」
+        { kind: "ShowMissText" },
         { kind: "ShowNoDamageText", actorId: event.targetId },
       );
     }
@@ -292,7 +294,9 @@ function createEffectsFromDamageApplied(appliedState: Readonly<BattleDomainState
       effects.push(
         // SE再生
         { kind: "PlaySe", seId: "miss" },
-        // 「ミス！　${actorId}にダメージを与えられない！」
+        // 「ミス！
+        //   ${actorId}に　ダメージを　与えられない！」
+        { kind: "ShowMissText" },
         { kind: "ShowNoDamageText", actorId: event.targetId },
       );
     }
