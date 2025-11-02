@@ -2,6 +2,7 @@ import { Circle, Container, FederatedPointerEvent, Sprite, Texture } from "pixi.
 import { Skin } from "../skin";
 import { InputState, PAD_BIT } from "@shared";
 import { AppLayers, VirtualPadSlots } from "@app/config";
+import { getSafeAreaInsets, Insets } from "@core/browser";
 
 function applyBody(skin: Skin, body: Sprite[]): void {
   // 本体画像は左上、右上、左下、右下に4分割されている
@@ -329,15 +330,15 @@ export class VirtualPadUIForBare extends Container {
 
     this.#dpad = dpad;
     this.#buttons = buttons;
-    this.#resize(screenSize.width, screenSize.height);
+    this.#resize(screenSize.width, screenSize.height, getSafeAreaInsets());
     this.show();
   }
 
-  onResize(width: number, height: number): void {
-    this.#resize(width, height);
+  onResize(width: number, height: number, safeAreaInsets?: Insets): void {
+    this.#resize(width, height, safeAreaInsets || getSafeAreaInsets());
   }
 
-  #resize(width: number, height: number): void {
+  #resize(width: number, height: number, safeAreaInsets: Insets = { left: 0, top: 0, right: 0, bottom: 0 }): void {
     // 方向キーは左下へ配置、最低でも画面端から1/10離す、画面サイズ長辺の1/3以下の大きさになるようにする
     const longSide = Math.max(width, height);
     const maximumSize = Math.floor(longSide / 3);
@@ -345,8 +346,8 @@ export class VirtualPadUIForBare extends Container {
     const scale = Math.max(this.#dpad.width, this.#dpad.height) < maximumSize ? 1.0 : maximumSize / Math.max(this.#dpad.width, this.#dpad.height);
     const horizontalMargin = Math.floor(width / 15);
     const verticalMargin = Math.floor(height / 15);
-    const left = horizontalMargin;
-    const right = width - horizontalMargin;
+    const left = safeAreaInsets.left + horizontalMargin;
+    const right = width - safeAreaInsets.right - horizontalMargin;
     const bottom = height - verticalMargin;
 
     this.#dpad.scale.set(scale);

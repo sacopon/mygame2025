@@ -13,8 +13,8 @@ const STATUS_WIDTH = 54;  // 5文字用
 const DEAD_COLOR = 0xFF6666;
 
 export type StatusWindowResolver = {
-  resolveName: (actorId: ActorId) => string,
-  resolveLevel: (actorId: ActorId) => Level,
+  resolveName: (actorId: ActorId) => Readonly<string>,
+  resolveLevel: (actorId: ActorId) => Readonly<Level>,
 }
 
 /**
@@ -164,12 +164,12 @@ class CharacterStatus extends GroupGameObject {
 
   updateStatus(actorState: ActorState): void {
     this.#status.updateStatus({
-      hp: actorState.hp.value,
+      hp: actorState.currentHp.value,
       mp: 0,
       lv: this.#resolver.resolveLevel(actorState.actorId).value,
     });
 
-    if (actorState.hp.isDead) {
+    if (actorState.currentHp.isDead) {
       this.#name.setToDeadColor();
       this.#status.setToDeadColor();
     }

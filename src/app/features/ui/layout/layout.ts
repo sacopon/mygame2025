@@ -23,9 +23,6 @@ export function relayoutViewport(app: Application, ctx: AppLayers, gameScreenSpe
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
-
-  // アプリUI用ボタンの位置
-  ctx.appUiLayer.position.set(24, 24);
 }
 
 export function relayoutViewportBare(
@@ -77,7 +74,4 @@ export function relayoutViewportBare(
 
   // 背景を中央に
   ctx.background.position.set(w / 2, h / 2);
-
-  // アプリUI用ボタンの位置
-  ctx.appUiLayer.position.set(24, 24);
 }

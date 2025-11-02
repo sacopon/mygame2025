@@ -7,6 +7,10 @@ import { ActorId, BattleDomainState } from "@game/domain";
 const ALLY_SHAKE_BY_DAMAGE_DURATION_MS = 650;
 // 敵がダメージ時に点滅している時間(ms)
 const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 550;
+// ミス！表示の時間(ms)
+const MISS_TEXT_DURATION_MS = 50;
+// 後続のダメージなし表示の時間(ms)
+const NO_DAMAGE_TEXT_DURATION_MS = 500;
 
 /**
  * ランナー側で使用する依存部分
@@ -35,6 +39,8 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
     case "ShowEnemyDamageText": return 0;
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
+    case "ShowMissText": return MISS_TEXT_DURATION_MS;
+    case "ShowNoDamageText": return NO_DAMAGE_TEXT_DURATION_MS;
     case "EnemyHideByDefeat": return 0;
     case "ShowSelfDefenceText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     case "ShowDeadText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
@@ -136,6 +142,16 @@ export class PresentationEffectRunner {
       case "ShowPlayerDamageText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
+        break;
+
+      case "ShowMissText":
+        if (__DEV__) console.log("📝 ミス！");
+        this.#deps.print("ミス！");
+        break;
+
+      case "ShowNoDamageText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}に　ダメージを　与えられない！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}に　ダメージを　与えられない！`);
         break;
 
       case "ShowSelfDefenceText":

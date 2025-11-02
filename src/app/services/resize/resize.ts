@@ -1,15 +1,5 @@
-import { Application } from "pixi.js";
-import { GameScreenSpec } from "..";
-import { AppLayers } from "@app/config";
-import { SkinResolver, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
-import { onResize } from "../..";
-
-export type ResizeOptions = {
-  mode: UIMode;
-  forceApplySkin?: boolean;
-  padUI: VirtualPadUI | null;
-  bareUI: VirtualPadUIForBare | null;
-}
+import { UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
+import { onResize, RuntimeContext } from "../..";
 
 export type ViewState = {
   mode: UIMode,
@@ -34,7 +24,7 @@ function readViewportSize() {
  * リサイズを要求するイベントが一度に複数発火した際に
  * RequestAnimationFrame を活用して1フレームに1回までの処理にまとめるためのヘルパー
  */
-export function createResizeHandler(app: Application, ctx: AppLayers, gameScreenSpec: GameScreenSpec, skins: SkinResolver, getViewState: () => ViewState) {
+export function createResizeHandler(rc: RuntimeContext) {
   let scheduled = false;
   let lastW = 0, lastH = 0;
 
@@ -55,8 +45,7 @@ export function createResizeHandler(app: Application, ctx: AppLayers, gameScreen
 
       lastW = w;
       lastH = h;
-      const { mode, padUI, bareUI } = getViewState();
-      onResize(app, ctx, gameScreenSpec, skins, w, h, { mode, forceApplySkin: false, padUI, bareUI } );
+      onResize(rc, w, h, false);
     });
   };
 }

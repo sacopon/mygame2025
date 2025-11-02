@@ -2,23 +2,31 @@ import { GameObjectAccess, UiPorts } from "../scene/core/scene";
 import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
-import { Ally, AllyId, DomainPorts, Enemy, EnemyId, Hp, Level } from "@game/domain";
+import { Ally, AllyId, Attack, Defence, DomainPorts, Enemy, EnemyId, Hp, Level } from "@game/domain";
 import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastructure";
 import { EncounterRepositoryInMemory } from "@game/infrastructure/repository/encounter";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "あああああ", level: Level.of(3),  maxHp: Hp.of(80),  currentHp: Hp.of(80) },
-    { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), maxHp: Hp.of(130), currentHp: Hp.of(130) },
-    { allyId: AllyId(3), name: "ううううう", level: Level.of(6),  maxHp: Hp.of(60),  currentHp: Hp.of(60) },
-    { allyId: AllyId(4), name: "えええええ", level: Level.of(2),  maxHp: Hp.of(35),  currentHp: Hp.of(35) },
+    { allyId: AllyId(1), name: "あああああ", level: Level.of(3), maxHp: Hp.of(80), currentHp: Hp.of(80),
+      attack: Attack.of(20), defence: Defence.of(10), },
+    { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), maxHp: Hp.of(130), currentHp: Hp.of(130),
+      attack: Attack.of(30), defence: Defence.of(10), },
+    { allyId: AllyId(3), name: "ううううう", level: Level.of(6),  maxHp: Hp.of(60),  currentHp: Hp.of(60),
+      attack: Attack.of(10), defence: Defence.of(10), },
+    { allyId: AllyId(4), name: "えええええ", level: Level.of(2),  maxHp: Hp.of(35),  currentHp: Hp.of(35),
+      attack: Attack.of(5), defence: Defence.of(10), },
   ] as const;
 
   const allEnemies: Enemy[] = [
-    { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20) },
-    { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35) },
-    { enemyId: EnemyId(3), name: "ビッグベアー", baseHp: Hp.of(80) },
-    { enemyId: EnemyId(4), name: "パンプキン", baseHp: Hp.of(30) },
+    { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20),
+      attack: Attack.of(10), defence: Defence.of(10), },
+    { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35),
+      attack: Attack.of(15), defence: Defence.of(10), },
+    { enemyId: EnemyId(3), name: "ビッグベアー", baseHp: Hp.of(80),
+      attack: Attack.of(50), defence: Defence.of(50), },
+    { enemyId: EnemyId(4), name: "パンプキン", baseHp: Hp.of(30),
+      attack: Attack.of(40), defence: Defence.of(8), },
   ] as const;
 
   return {

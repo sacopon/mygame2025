@@ -1,6 +1,6 @@
-import { Application } from "pixi.js";
-import { AppLayers, computeViewMetrics, DefaultScreen, GameScreenSpec, relayoutViewport, relayoutViewportBare, ResizeOptions, SkinResolver, UIMODE, VirtualPadUI } from "../..";
+import { computeViewMetrics, DefaultScreen, GameScreenSpec, relayoutViewport, relayoutViewportBare, UIMODE, VirtualPadUI } from "../..";
 import { RuntimeContext } from "./runtime-context";
+import { getSafeAreaInsets } from "@core";
 
 export function toggleMode(rc: RuntimeContext): void {
   if (rc.mode === UIMODE.PAD) {
@@ -23,47 +23,59 @@ export function toggleMode(rc: RuntimeContext): void {
     rc.mode = UIMODE.PAD;
   }
 
-  onResize(rc.app, rc.layers, rc.gameScreenSpec, rc.skins, window.innerWidth, window.innerHeight, { mode: rc.mode, forceApplySkin: true, padUI: rc.padUI, bareUI: rc.bareUI });
+  onResize(rc, window.innerWidth, window.innerHeight, true);
 }
 
 /**
  * サイズ(w,h)を受け取り、必要なら Skin を切替＆レイアウト反映
  */
-export function onResize(app: Application, ctx: AppLayers, gameScreenSpec: GameScreenSpec, skins: SkinResolver, w: number, h: number, { mode, forceApplySkin = false, padUI = null, bareUI = null }: ResizeOptions): void {
-  const skinChanged = skins.update(w, h);
+export function onResize(rc: RuntimeContext, w: number, h: number, forceApplySkin: boolean = false): void {
+  const safeAreaInsets = getSafeAreaInsets();
+  const margin = 12;
+  rc.muteButton.position.set(
+    safeAreaInsets.left + margin + rc.muteButton.width / 2,
+    safeAreaInsets.top +  margin + rc.muteButton.height / 2);
+  rc.bareButton.position.set(
+    rc.muteButton.x + Math.floor(rc.muteButton.width / 2) + margin + rc.bareButton.width / 2,
+    rc.muteButton.y - Math.floor(rc.muteButton.height / 2) + Math.floor(rc.bareButton.height / 2));
 
-  if (mode === UIMODE.PAD) {
+  const skinChanged = rc.skins.update(w, h);
+
+  if (rc.mode === UIMODE.PAD) {
     // バーチャルキーUIの場合は従来の仮想解像度へ戻す
-    gameScreenSpec.update(DefaultScreen);
+    rc.gameScreenSpec.update(DefaultScreen);
 
     // スキンが変わった時だけテクスチャの張り替えを行う
-    if (padUI && (skinChanged || forceApplySkin)) {
-      padUI.applySkin(skins.current);
+    if (rc.padUI && (skinChanged || forceApplySkin)) {
+      rc.padUI.applySkin(rc.skins.current);
     }
 
     // ビューポートの更新は常に行う
-    relayoutViewport(app, ctx, gameScreenSpec, skins.current, w, h);
+    relayoutViewport(rc.app, rc.layers, rc.gameScreenSpec, rc.skins.current, w, h);
   }
   else {
     // バーチャルキーUIなしの場合は仮想解像度を再計算する
-    gameScreenSpec.update(GameScreenSpec.computeBareVirtualScreen(w, h));
-    relayoutViewportBare(app, ctx, gameScreenSpec, w, h);
+    rc.gameScreenSpec.update(GameScreenSpec.computeBareVirtualScreen(w, h));
+    relayoutViewportBare(rc.app, rc.layers, rc.gameScreenSpec, w, h);
   }
 
-  const { width: vw, height: vh } = gameScreenSpec.current;
+  const { width: vw, height: vh } = rc.gameScreenSpec.current;
   // ゲーム画面のマスク領域を更新
   // 透過でもOK. 色は何でも構わない
-  ctx.gameLayerMask.clear();
-  ctx.gameLayerMask.rect(0, 0, vw, vh).fill({ color: 0xffffff, alpha: 1 });
+  rc.layers.gameLayerMask.clear();
+  rc.layers.gameLayerMask.rect(0, 0, vw, vh).fill({ color: 0xffffff, alpha: 1 });
 
-  ctx.viewportMetrics.update(
+  rc.layers.viewportMetrics.update(
     computeViewMetrics(
-      mode,
+      rc.mode,
       w,
       h,
-      gameScreenSpec.current,
-      mode === UIMODE.PAD ? skins.current : undefined));
+      rc.gameScreenSpec.current,
+      rc.mode === UIMODE.PAD ? rc.skins.current : undefined));
 
-  app.render();
-  bareUI?.onResize(w, h);
+  rc.app.render();
+  rc.bareUI.onResize(w, h);
+  rc.bareUIShower.onResize(w, h);
+  rc.bareUIShower.position.set(0, 0);
+  rc.buildVersion.layoutToRightTop(w, h, safeAreaInsets);
 }

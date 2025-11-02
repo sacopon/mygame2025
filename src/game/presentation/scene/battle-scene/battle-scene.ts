@@ -303,7 +303,7 @@ export class BattleScene implements Scene {
     return actor.name;
   }
 
-  getAllyLevelById(actorId: ActorId): Level {
+  getAllyLevelById(actorId: ActorId): Readonly<Level> {
     const actor = this.getActorById(actorId);
     if (!isAllyActor(actor)) { throw new Error(`It's not Ally(actorId:${actorId})`); }
 

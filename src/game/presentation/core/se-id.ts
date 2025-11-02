@@ -6,4 +6,5 @@ export type SeId =
   | "player_critical"
   | "enemy_critical"
   | "player_damage"
-  | "enemy_damage";
+  | "enemy_damage"
+  | "miss";

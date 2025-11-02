@@ -1,4 +1,4 @@
-import { Hp, Level } from "./status-value-objects";
+import { Attack, Defence, Hp, Level } from "./status-value-objects";
 
 type Brand<T, B extends string> = T & { readonly __brand: B };
 
@@ -24,6 +24,19 @@ export const ActorType = {
 } as const;
 export type ActorType = typeof ActorType[keyof typeof ActorType];
 
+/**
+ * 味方のキャラクター情報
+ */
+export type Ally = {
+  allyId: AllyId;
+  name: Readonly<string>;
+  level: Readonly<Level>;
+  maxHp: Readonly<Hp>;
+  currentHp: Readonly<Hp>;
+  attack: Readonly<Attack>;
+  defence: Readonly<Defence>;
+}
+
 // Actor(味方キャラクター)の定義
 // バトル中のパラメータを持つ
 export type AllyActor = {
@@ -32,19 +45,20 @@ export type AllyActor = {
   originId: AllyId;
   name: Readonly<string>;
   level: Readonly<Level>;
-  maxHp: Readonly<Hp>;
-  currentHp: Hp;
+  hp: Readonly<Hp>;
+  attack: Readonly<Attack>;
+  defence: Readonly<Defence>;
 };
 
 /**
- * 味方のキャラクター情報
+ * 敵モンスターの情報
  */
-export type Ally = {
-  allyId: AllyId;
+export type Enemy = {
+  enemyId: EnemyId;
   name: Readonly<string>;
-  level: Level;
-  maxHp: Hp;
-  currentHp: Hp;
+  baseHp: Readonly<Hp>;
+  attack: Readonly<Attack>;
+  defence: Readonly<Defence>;
 }
 
 // Actor(敵キャラクター)の定義
@@ -54,17 +68,10 @@ export type EnemyActor = {
   actorType: typeof ActorType.Enemy;
   originId: EnemyId;
   name: Readonly<string>;
-  baseHp: Hp;
+  hp: Readonly<Hp>;
+  attack: Readonly<Attack>;
+  defence: Readonly<Defence>;
 };
-
-/**
- * 敵モンスターの情報
- */
-export type Enemy = {
-  enemyId: EnemyId;
-  name: string;
-  baseHp: Hp;
-}
 
 export type Actor = AllyActor | EnemyActor;
 
@@ -74,9 +81,10 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     actorType: ActorType.Ally,
     originId: ally.allyId,
     name: ally.name,
-    level: Level.of(ally.level.value),
-    maxHp: Hp.of(ally.maxHp.value),
-    currentHp: Hp.of(ally.currentHp.value),
+    level: Level.of(ally.level),
+    hp: Hp.of(ally.currentHp),
+    attack: Attack.of(ally.attack),
+    defence: Defence.of(ally.defence),
   };
 }
 
@@ -87,6 +95,8 @@ export function createEnemyActor(enemy: Enemy, actorId: ActorId, groupId: EnemyG
     originId: enemy.enemyId,
     enemyGroupId: groupId,
     name: enemy.name,
-    baseHp: Hp.of(enemy.baseHp.value),
+    hp: Hp.of(enemy.baseHp),
+    attack: Attack.of(enemy.attack),
+    defence: Defence.of(enemy.defence),
   };
 }
