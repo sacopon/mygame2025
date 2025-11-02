@@ -6,7 +6,7 @@ export class ScreenTouchHandler extends Container {
 
     const rect = new Graphics();
     rect.rect(0, 0, window.innerWidth, window.innerHeight);
-    rect.fill({ color: 0xFFFFFF, alpha: 0.0 });
+    rect.fill({ color: 0xFFFFFF, alpha: 0.5 });
     rect.interactive = true;
     rect.on("pointerdown", () => {
       onTouch();
