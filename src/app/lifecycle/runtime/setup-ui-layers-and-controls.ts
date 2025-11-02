@@ -2,6 +2,7 @@ import { Sprite } from "pixi.js";
 import { toggleMode } from "./runtime-actions";
 import { RuntimeContext } from "./runtime-context";
 import { ScreenTouchHandler, ToggleButton, UIMODE, VirtualPadUI, VirtualPadUIForBare } from "../..";
+import { BuildVersionText } from "@app/features/ui/elements/build-version-text";
 
 export function setupUiLayersAndControls(rc: RuntimeContext): void {
   // 背景作成
@@ -26,6 +27,10 @@ export function setupUiLayersAndControls(rc: RuntimeContext): void {
   rc.bareUIShower = new ScreenTouchHandler(() => rc.bareUI.show());
   rc.layers.bareUiLayer.addChild(rc.bareUIShower);
   rc.layers.bareUiLayer.addChild(rc.bareUI);
+
+  // ビルドバージョン表示
+  rc.buildVersion = new BuildVersionText();
+  rc.layers.appUiLayer.addChild(rc.buildVersion);
 
   // 初期レイアウト
   if (rc.mode === UIMODE.PAD) {

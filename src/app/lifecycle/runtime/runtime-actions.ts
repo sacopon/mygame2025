@@ -73,4 +73,5 @@ export function onResize(rc: RuntimeContext, w: number, h: number, forceApplySki
   rc.app.render();
   rc.bareUI.onResize(w, h);
   rc.bareUIShower.position.set(0, 0);
+  rc.buildVersion.layoutToRightTop(w, h, safeAreaInsets);
 }

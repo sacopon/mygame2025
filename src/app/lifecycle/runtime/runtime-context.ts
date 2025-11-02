@@ -1,6 +1,7 @@
 import { WebAudioAdapter } from "@app/adapters";
 import { AppLayers } from "@app/config";
 import { ScreenTouchHandler, SkinResolver, ToggleButton, UIMode, VirtualPadUI, VirtualPadUIForBare } from "@app/features";
+import { BuildVersionText } from "@app/features/ui/elements/build-version-text";
 import { GameScreenSpec } from "@app/services";
 import { GameRoot } from "@game/presentation";
 import { InputState } from "@shared/input";
@@ -26,6 +27,8 @@ export type RuntimeContext = {
   muteButton: ToggleButton;
   // ベアモード切替ボタン
   bareButton: ToggleButton;
+  // バージョン表示
+  buildVersion: BuildVersionText;
 
   // ゲーム本体
   gameRoot: GameRoot;

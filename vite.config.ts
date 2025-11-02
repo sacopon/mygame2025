@@ -4,6 +4,9 @@ import checker from 'vite-plugin-checker';
 
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
+  const buildTime = new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+  const gitHash = process.env.GITHUB_SHA?.slice(0, 7) ?? "dev";
+
   return {
     base: isProd ? '/mygame2025/' : '/', // GitHub Pages にアップロードする場合はサブディレクトリ指定
     root: path.resolve(__dirname, 'src'),
@@ -23,6 +26,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __DEV__: mode !== 'production',
       __PROD__: mode === 'production',
+      __BUILD_VERSION__: JSON.stringify(`${gitHash} (${buildTime})`),
     },
     // 依存最適化で pixi.js をひとつにまとめる
     optimizeDeps: {
