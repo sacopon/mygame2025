@@ -1,20 +1,20 @@
 /**
- * レベル
- * (本来経験値から計算で導き出されるものかもしれない)
+ * キャラクターのパラメータ共通基底クラス
  */
-export class Level {
+abstract class CharacterParameter {
   readonly #value: number;
 
-  private constructor(value: number) {
-    this.#value = value;
+  protected constructor(value: number, max: number) {
+    this.#value = Math.min(Math.max(0, value), max);
   }
 
-  static of(value: number | Readonly<Level>): Readonly<Level> {
-    if (typeof value === "number") {
-      return new Level(value);
-    }
+  protected static makeOf<T extends CharacterParameter>(ctor: (value: number) => T) {
+    return function of(value: number | T): T {
+      const v = typeof value === "number" ? value : value.value;
 
-    return new Level(value.value);
+      // protected のコンストラクタが使えるように、ctor を一旦 any にキャストして使う
+      return ctor(v) as T;
+    };
   }
 
   get value(): number {
@@ -25,27 +25,15 @@ export class Level {
 /**
  * ヒットポイント
  */
-export class Hp {
-  readonly #value: number;
+export class Hp extends CharacterParameter {
+  static readonly MAX = 999;
 
-  private constructor(value: number) {
-    this.#value = value;
-  }
-
-  static of(value: number | Readonly<Hp>): Readonly<Hp> {
-    if (typeof value === "number") {
-      return new Hp(value);
-    }
-
-    return new Hp(value.value);
-  }
-
-  get value(): number {
-    return this.#value;
+  protected constructor(value: number) {
+    super(value, Hp.MAX);
   }
 
   get isAlive(): boolean {
-    return 0 < this.#value;
+    return 0 < this.value;
   }
 
   get isDead(): boolean {
@@ -53,75 +41,74 @@ export class Hp {
   }
 
   takeDamage(damage: Damage): Hp {
-    return new Hp(Math.max(0, this.#value - damage.value));
+    return Hp.of(Math.max(0, this.value - damage.value));
   }
+
+  static of = CharacterParameter.makeOf<Hp>(value => new Hp(value));
+}
+
+/**
+ * レベル
+ * (本来経験値から計算で導き出されるものかもしれない)
+ */
+export class Level extends CharacterParameter {
+  static readonly MAX = 99;
+
+  protected constructor(value: number) {
+    super(value, Level.MAX);
+  }
+
+  static of = CharacterParameter.makeOf<Level>(value => new Level(value));
 }
 
 /**
  * ダメージ
  */
-export class Damage {
-  readonly #value: number;
+export class Damage extends CharacterParameter {
+  static readonly MAX = 9999;
 
-  private constructor(value: number) {
-    this.#value = value;
+  protected constructor(value: number) {
+    super(value, Damage.MAX);
   }
 
-  static of(value: number | Damage): Damage {
-    if (typeof value === "number") {
-      return new Damage(value);
-    }
-
-    return new Damage(value.#value);
-  }
-
-  get value(): number {
-    return this.#value;
-  }
+  static of = CharacterParameter.makeOf<Damage>(value => new Damage(value));
 }
 
 /**
  * 攻撃力
  */
-export class Attack {
-  readonly #value: number;
+export class Attack extends CharacterParameter {
+  static readonly MAX = 999;
 
-  private constructor(value: number) {
-    this.#value = value;
+  protected constructor(value: number) {
+    super(value, Attack.MAX);
   }
 
-  static of(value: number | Readonly<Attack>): Readonly<Attack> {
-    if (typeof value === "number") {
-      return new Attack(value);
-    }
-
-    return new Attack(value.value);
-  }
-
-  get value(): number {
-    return this.#value;
-  }
+  static of = CharacterParameter.makeOf<Attack>(value => new Attack(value));
 }
 
 /**
- * 攻撃力
+ * 防御力
  */
-export class Defence {
-  readonly #value: number;
+export class Defence extends CharacterParameter {
+  static readonly MAX = 999;
 
-  private constructor(value: number) {
-    this.#value = value;
+  protected constructor(value: number) {
+    super(value, Defence.MAX);
   }
 
-  static of(value: number | Readonly<Defence>): Readonly<Defence> {
-    if (typeof value === "number") {
-      return new Defence(value);
-    }
+  static of = CharacterParameter.makeOf<Defence>(value => new Defence(value));
+}
 
-    return new Defence(value.value);
+/**
+ * 素早さ
+ */
+export class Agility extends CharacterParameter {
+  static readonly MAX = 999;
+
+  protected constructor(value: number) {
+    super(value, Agility.MAX);
   }
 
-  get value(): number {
-    return this.#value;
-  }
+  static of = CharacterParameter.makeOf<Agility>(value => new Agility(value));
 }
