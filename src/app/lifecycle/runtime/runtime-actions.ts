@@ -31,7 +31,9 @@ export function toggleMode(rc: RuntimeContext): void {
  */
 export function onResize(rc: RuntimeContext, w: number, h: number, forceApplySkin: boolean = false): void {
   const safeAreaInsets = getSafeAreaInsets();
-  rc.muteButton.position.set(safeAreaInsets.left + rc.muteButton.width / 2, safeAreaInsets.top + rc.muteButton.height / 2);
+  rc.muteButton.position.set(
+    safeAreaInsets.left + 24 + rc.muteButton.width / 2,
+    safeAreaInsets.top +  24 + rc.muteButton.height / 2);
   rc.bareButton.position.set(
     rc.muteButton.x + Math.floor(rc.muteButton.width / 2) + 24 + rc.bareButton.width / 2,
     rc.muteButton.y - Math.floor(rc.muteButton.height / 2) + Math.floor(rc.bareButton.height / 2));
