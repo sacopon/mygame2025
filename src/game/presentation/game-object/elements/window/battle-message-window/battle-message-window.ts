@@ -43,6 +43,11 @@ export class BattleMessageWindow extends GroupGameObject {
     this.#content.clearText();
   }
 
+  // 最後の1行をクリアする
+  removeLastText(): void {
+    this.#content.removeLastText();
+  }
+
   addText(text: string): void {
     this.#content.addText(text);
   }

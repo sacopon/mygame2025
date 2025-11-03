@@ -1,4 +1,4 @@
-import { Attack, Defence, Hp, Level } from "./status-value-objects";
+import { Agility, Attack, Defence, Hp, Level } from "./status-value-objects";
 
 type Brand<T, B extends string> = T & { readonly __brand: B };
 
@@ -30,11 +30,12 @@ export type ActorType = typeof ActorType[keyof typeof ActorType];
 export type Ally = {
   allyId: AllyId;
   name: Readonly<string>;
-  level: Readonly<Level>;
-  maxHp: Readonly<Hp>;
-  currentHp: Readonly<Hp>;
-  attack: Readonly<Attack>;
-  defence: Readonly<Defence>;
+  level: Level;
+  maxHp: Hp;
+  currentHp: Hp;
+  attack: Attack;
+  defence: Defence;
+  agility: Agility;
 }
 
 // Actor(味方キャラクター)の定義
@@ -44,10 +45,11 @@ export type AllyActor = {
   actorType: typeof ActorType.Ally;
   originId: AllyId;
   name: Readonly<string>;
-  level: Readonly<Level>;
-  hp: Readonly<Hp>;
-  attack: Readonly<Attack>;
-  defence: Readonly<Defence>;
+  level: Level;
+  hp: Hp;
+  attack: Attack;
+  defence: Defence;
+  agility: Agility;
 };
 
 /**
@@ -56,9 +58,10 @@ export type AllyActor = {
 export type Enemy = {
   enemyId: EnemyId;
   name: Readonly<string>;
-  baseHp: Readonly<Hp>;
-  attack: Readonly<Attack>;
-  defence: Readonly<Defence>;
+  baseHp: Hp;
+  attack: Attack;
+  defence: Defence;
+  agility: Agility;
 }
 
 // Actor(敵キャラクター)の定義
@@ -68,9 +71,10 @@ export type EnemyActor = {
   actorType: typeof ActorType.Enemy;
   originId: EnemyId;
   name: Readonly<string>;
-  hp: Readonly<Hp>;
-  attack: Readonly<Attack>;
-  defence: Readonly<Defence>;
+  hp: Hp;
+  attack: Attack;
+  defence: Defence;
+  agility: Agility;
 };
 
 export type Actor = AllyActor | EnemyActor;
@@ -85,6 +89,7 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     hp: Hp.of(ally.currentHp),
     attack: Attack.of(ally.attack),
     defence: Defence.of(ally.defence),
+    agility: Agility.of(ally.agility),
   };
 }
 
@@ -98,5 +103,6 @@ export function createEnemyActor(enemy: Enemy, actorId: ActorId, groupId: EnemyG
     hp: Hp.of(enemy.baseHp),
     attack: Attack.of(enemy.attack),
     defence: Defence.of(enemy.defence),
+    agility: Agility.of(enemy.agility),
   };
 }

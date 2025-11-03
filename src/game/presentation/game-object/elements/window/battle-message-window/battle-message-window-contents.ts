@@ -40,4 +40,15 @@ export class BattleMessageWindowContents extends GameObject {
     this.#textList.setLine(this.#index, text);
     ++this.#index;
   }
+
+  // 最後の1行を削除する
+  removeLastText(): void {
+    // まだ最終行に達していない
+    if (this.#index < this.#textList.lines.length) {
+      return;
+    }
+
+    --this.#index;
+    this.#textList.setLine(this.#index, "");
+  }
 }

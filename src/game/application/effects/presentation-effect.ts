@@ -16,6 +16,11 @@ export type ClearMessageWindowText = {
   kind: "ClearMessageWindowText";
 };
 
+// 最終行のクリア(次のメッセージで上書きのような形になる)
+export type ClearLastText = {
+  kind: "ClearLastText";
+};
+
 // 「${actor.name}の　こうげき！」を表示
 export type ShowAttackStartedText = {
   kind: "ShowAttackStartedText";
@@ -60,6 +65,16 @@ export type ShowPlayerDamageText = {
   amount: number;
 };
 
+// 「会心の　いちげき！」(味方→敵）
+export type ShowPlayerCriticalText = {
+  kind: "ShowPlayerCriticalText";
+};
+
+// 「痛恨の　いちげき！」(敵→味方）
+export type ShowEnemyCriticalText = {
+  kind: "ShowEnemyCriticalText";
+};
+
 // 「ミス！」(敵/味方共通)
 export type ShowMissText = {
   kind: "ShowMissText";
@@ -91,6 +106,7 @@ export type ShowDefeatText = {
 
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
+  | ClearLastText
   | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink
@@ -99,6 +115,8 @@ export type PresentationEffect = ApplyState
   | PlayerDamageShake
   | ShowPlayerDamageText
   | ShowMissText
+  | ShowPlayerCriticalText
+  | ShowEnemyCriticalText
   | ShowNoDamageText
   | ShowSelfDefenceText
   | ShowDeadText

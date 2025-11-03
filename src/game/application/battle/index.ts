@@ -1,3 +1,4 @@
+export * from "./build-turn-snapshot";
 export * from "./convert-command-choice-to-action";
 export * from "./create-actors";
 export * from "./plan-action";
@@ -5,3 +6,4 @@ export * from "./plan-enemy-actions";
 export * from "./plan-turn-order";
 export * from "./planned-action-factory";
 export * from "./resolve-actions";
+export * from "./roll-critical";

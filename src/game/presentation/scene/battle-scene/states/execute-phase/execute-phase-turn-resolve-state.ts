@@ -2,7 +2,7 @@ import { BattleScene } from "../../battle-scene";
 import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
 import { BattleSceneContext } from "../..";
-import { planTurnOrder, resolveActions } from "@game/application";
+import { buildTurnSnapshot, planTurnOrder, resolveActions } from "@game/application";
 import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
 
 /**
@@ -22,12 +22,20 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       throw new Error("onEnter: BattleSceneContext.turnPlan is null");
     }
 
+    // ターンのスナップショットを作成
+    // このターンでの素早さを確定
+    const turnSnapshot = buildTurnSnapshot(
+      context.domainState,
+      context.turnPlan.plannedAllActions,
+      { random: context.ui.random });
+
     // 行動順の確定
-    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions, context.ui.random);
+    const orderedActions = planTurnOrder(context.turnPlan.plannedAllActions, turnSnapshot);
 
     // バトル処理
-    const { state, effects } = resolveActions(context.domainState, orderedActions, {
+    const { state, effects } = resolveActions(context.domainState, turnSnapshot, orderedActions, {
       random: this.context.ui.random,
+      getActor: (actorId: ActorId) => this.scene.getActorById(actorId),
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
       aliveAllEnemies: () => this.scene.getAliveEnemies(),
