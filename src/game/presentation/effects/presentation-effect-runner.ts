@@ -11,6 +11,8 @@ const ENEMY_BLINK_BY_DAMAGE_DURATION_MS = 550;
 const MISS_TEXT_DURATION_MS = 50;
 // 後続のダメージなし表示の時間(ms)
 const NO_DAMAGE_TEXT_DURATION_MS = 500;
+// クリティカル(会心/痛恨)表示の時間(ms)
+const CRITICAL_TEXT_DURATION_MS = 400;
 
 /**
  * ランナー側で使用する依存部分
@@ -19,6 +21,7 @@ type EffectDeps = {
   applyState: (state: Readonly<BattleDomainState>) => void,
   clear: () => void,
   print: (text: string) => void,
+  removeLast: () => void,
   bilkEnemyByDamage: (id: ActorId, durationMs: number) => void,
   hideEnemyByDefeat: (id: ActorId) => void,
   shake: () => void,
@@ -33,6 +36,7 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
   switch (effect.kind) {
     case "ApplyState": return 0;
     case "ClearMessageWindowText": return 50; // 同じメッセージが連続する場合に消えている状態が少しだけ見えるように
+    case "ClearLastText": return 50;
     case "ShowAttackStartedText": return 420;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
@@ -41,6 +45,8 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "EnemyDamageBlink": return ENEMY_BLINK_BY_DAMAGE_DURATION_MS;
     case "ShowMissText": return MISS_TEXT_DURATION_MS;
     case "ShowNoDamageText": return NO_DAMAGE_TEXT_DURATION_MS;
+    case "ShowPlayerCriticalText": return CRITICAL_TEXT_DURATION_MS;
+    case "ShowEnemyCriticalText": return CRITICAL_TEXT_DURATION_MS;
     case "EnemyHideByDefeat": return 0;
     case "ShowSelfDefenceText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
     case "ShowDeadText": return 630; // ダメージ分が続かない分、攻撃メッセージより1.5倍ほど長めに
@@ -109,6 +115,12 @@ export class PresentationEffectRunner {
         this.#deps.clear();
         break;
 
+      case "ClearLastText":
+        if (__DEV__) console.log("最後の1行を消去(次のメッセージが上書き表示");
+        // TODO: 最終行の場合のみ消去 or 強制的に末尾消去の判定
+        this.#deps.removeLast();
+        break;
+
       case "ShowAttackStartedText":
         if (__DEV__) console.log(`🗡️ ${this.#deps.resolveName(effect.actorId)}の こうげき！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}の　こうげき！`);
@@ -142,6 +154,16 @@ export class PresentationEffectRunner {
       case "ShowPlayerDamageText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}は ${toZenkaku(effect.amount)}の ダメージをうけた！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${toZenkaku(effect.amount)}の　ダメージをうけた！`);
+        break;
+
+      case "ShowPlayerCriticalText":
+        if (__DEV__) console.log("📝 会心の　いちげき！");
+        this.#deps.print("会心の　いちげき！");
+        break;
+
+      case "ShowEnemyCriticalText":
+        if (__DEV__) console.log("📝 痛恨の　いちげき！");
+        this.#deps.print("痛恨の　いちげき！");
         break;
 
       case "ShowMissText":

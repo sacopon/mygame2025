@@ -17,6 +17,7 @@ export async function loadInitialSoundAssetsAsync(webAudioAdapter: WebAudioAdapt
     { alias: "player_damage", src: makePath("sounds/se/player_damage.mp3") },
     { alias: "enemy_damage", src: makePath("sounds/se/enemy_damage.mp3") },
     { alias: "miss", src: makePath("sounds/se/miss.mp3") },
+    { alias: "critical", src: makePath("sounds/se/critical.mp3") },
   ];
 
   const promises = Assets

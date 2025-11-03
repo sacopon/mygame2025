@@ -1,25 +1,18 @@
+import { CharacterParameter } from "./character-parameter";
+import { Damage } from "./damage";
+
 /**
- * キャラクターのパラメータ共通基底クラス
+ * レベル
+ * (本来経験値から計算で導き出されるものかもしれない)
  */
-abstract class CharacterParameter {
-  readonly #value: number;
+export class Level extends CharacterParameter {
+  static readonly MAX = 99;
 
-  protected constructor(value: number, max: number) {
-    this.#value = Math.min(Math.max(0, value), max);
+  protected constructor(value: number) {
+    super(value, Level.MAX);
   }
 
-  protected static makeOf<T extends CharacterParameter>(ctor: (value: number) => T) {
-    return function of(value: number | T): T {
-      const v = typeof value === "number" ? value : value.value;
-
-      // protected のコンストラクタが使えるように、ctor を一旦 any にキャストして使う
-      return ctor(v) as T;
-    };
-  }
-
-  get value(): number {
-    return this.#value;
-  }
+  static of = CharacterParameter.makeOf<Level>(value => new Level(value));
 }
 
 /**
@@ -45,33 +38,6 @@ export class Hp extends CharacterParameter {
   }
 
   static of = CharacterParameter.makeOf<Hp>(value => new Hp(value));
-}
-
-/**
- * レベル
- * (本来経験値から計算で導き出されるものかもしれない)
- */
-export class Level extends CharacterParameter {
-  static readonly MAX = 99;
-
-  protected constructor(value: number) {
-    super(value, Level.MAX);
-  }
-
-  static of = CharacterParameter.makeOf<Level>(value => new Level(value));
-}
-
-/**
- * ダメージ
- */
-export class Damage extends CharacterParameter {
-  static readonly MAX = 9999;
-
-  protected constructor(value: number) {
-    super(value, Damage.MAX);
-  }
-
-  static of = CharacterParameter.makeOf<Damage>(value => new Damage(value));
 }
 
 /**
@@ -104,7 +70,7 @@ export class Defence extends CharacterParameter {
  * 素早さ
  */
 export class Agility extends CharacterParameter {
-  static readonly MAX = 999;
+  static readonly MAX = 99;
 
   protected constructor(value: number) {
     super(value, Agility.MAX);

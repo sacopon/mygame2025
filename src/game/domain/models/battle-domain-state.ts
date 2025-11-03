@@ -1,14 +1,15 @@
 import { assertNever } from "@shared/utils";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
-import { DamageApplied, DomainEvent, SelfDefence } from "./domain-event";
-import { Attack, Damage, Defence, Hp } from "./status-value-objects";
+import { DamageApplied, DomainEvent } from "./domain-event";
+import { Agility, Attack, Defence, Hp } from "./status-value-objects";
+import { Damage } from "./damage";
 
 export type ActorStateBase = {
   actorId: ActorId;
-  currentHp: Readonly<Hp>;
-  currentAttack: Readonly<Attack>;
-  currentDefence: Readonly<Defence>;
-  defending: Readonly<boolean>;
+  currentHp: Hp;
+  currentAttack: Attack;
+  currentDefence: Defence;
+  currentAgility: Agility;
 }
 
 export type AllyActorState = ActorStateBase & {
@@ -44,7 +45,7 @@ export class BattleDomainState {
         currentHp: Hp.of(ally.hp),
         currentAttack: Attack.of(ally.attack),
         currentDefence: Defence.of(ally.defence),
-        defending: false,
+        currentAgility: Agility.of(ally.agility),
       });
     }
 
@@ -56,7 +57,7 @@ export class BattleDomainState {
         currentHp: Hp.of(enemy.hp),
         currentAttack: Attack.of(enemy.attack),
         currentDefence: Defence.of(enemy.defence),
-        defending: false,
+        currentAgility: Agility.of(enemy.agility),
       });
     }
 
@@ -73,21 +74,12 @@ export class BattleDomainState {
         return this.#applyDamage(event);
 
       case "SelfDefence":
-        return this.#applySelfDefence(event);
+        // ターンの先頭で TurnSnapshot として防御フラグを立てているので、特に適用する状態はなし
+        return this;
 
       default:
         return assertNever(event);
     }
-  }
-
-  clearDefending(): Readonly<BattleDomainState> {
-    const nextStateMap = new Map(this.#actorStateByActorId);
-
-    for (const state of this.getActorStates()) {
-      nextStateMap.set(state.actorId, { ...state, defending: false });
-    }
-
-    return new BattleDomainState(nextStateMap);
   }
 
   /**
@@ -164,19 +156,13 @@ export class BattleDomainState {
     }
 
     const nextStateMap = new Map(this.#actorStateByActorId);
-    nextStateMap.set(actorState.actorId, { ...actorState, currentHp: actorState.currentHp.takeDamage(Damage.of(damageEvent.amount)) });
-    return new BattleDomainState(nextStateMap);
-  }
-
-  #applySelfDefence(defenceEvent: SelfDefence): Readonly<BattleDomainState> {
-    const actorState = this.#actorStateByActorId.get(defenceEvent.sourceId);
-
-    if (!actorState) {
-      throw new Error(`invalid sourceId: ${defenceEvent.sourceId}`);
-    }
-
-    const nextStateMap = new Map(this.#actorStateByActorId);
-    nextStateMap.set(actorState.actorId, { ...actorState, defending: true });
+    nextStateMap.set(
+      actorState.actorId,
+      {
+        ...actorState,
+        currentHp: actorState.currentHp.takeDamage(Damage.of(damageEvent.amount)),
+      }
+    );
     return new BattleDomainState(nextStateMap);
   }
 
