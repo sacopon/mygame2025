@@ -41,6 +41,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         clear: () => this.context.executeUi?.messageWindow.clearText(),
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
         removeLast: () => this.context.executeUi?.messageWindow.removeLastText(),
+        removeExceptFirst: () => this.context.executeUi?.messageWindow.removeExceptFirstText(),
         bilkEnemyByDamage: (id: ActorId, durationMs: number) => this.scene.getEnemyViewByActorId(id).blinkByDamage(durationMs),
         hideEnemyByDefeat: (id: ActorId) => this.scene.getEnemyViewByActorId(id).hideByDefeat(),
         shake: () => {

@@ -32,6 +32,7 @@ const createDomainPorts = function(): DomainPorts {
 
   const allSpells: Spell[] = [
     { spellId: SpellId(1), name: "メラメラ", power: SpellPower.of(1),target: { kind: "single", side: "them", } },
+    { spellId: SpellId(2), name: "ギラギラ", power: SpellPower.of(1),target: { kind: "group", side: "them", } },
   ] as const;
 
   return {

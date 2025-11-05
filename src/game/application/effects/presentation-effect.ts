@@ -21,6 +21,11 @@ export type ClearLastText = {
   kind: "ClearLastText";
 };
 
+// 2行目以降のクリア(先頭行を残し、以降のメッセージは上書き、グループ/全体攻撃時)
+export type ClearMessageWindowExceptFirst = {
+  kind: "ClearMessageWindowExceptFirst";
+};
+
 // 「${actor.name}の　こうげき！」を表示
 export type ShowAttackStartedText = {
   kind: "ShowAttackStartedText";
@@ -114,6 +119,7 @@ export type ShowCastSpellText = {
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ClearLastText
+  | ClearMessageWindowExceptFirst
   | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink

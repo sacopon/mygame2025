@@ -2,7 +2,7 @@ import { BattleScene } from "../../battle-scene";
 import { BaseBattleSceneState } from "..";
 import { BattleSceneContext } from "../..";
 import { convertCommandChoiceToAction, createEnemyActions, planAction } from "@game/application";
-import { ActorId, ActorType } from "@game/domain";
+import { ActorId, ActorType, SpellId } from "@game/domain";
 import { ExecutePhaseTurnResolveState } from "./execute-phase-turn-resolve-state";
 
 /**
@@ -31,7 +31,8 @@ export class ExecutePhaseTurnPlanningState extends BaseBattleSceneState {
     const plannedAllActions = allActions
       .map(action => planAction(
         action,
-        (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally));
+        (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
+        (spellId: SpellId) => this.context.domain.spellRepository.findSpell(spellId)));
 
     context.turnPlan = {
       allyActions,

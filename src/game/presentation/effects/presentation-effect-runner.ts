@@ -22,6 +22,7 @@ type EffectDeps = {
   clear: () => void,
   print: (text: string) => void,
   removeLast: () => void,
+  removeExceptFirst: () => void,
   bilkEnemyByDamage: (id: ActorId, durationMs: number) => void,
   hideEnemyByDefeat: (id: ActorId) => void,
   shake: () => void,
@@ -38,6 +39,7 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "ApplyState": return 0;
     case "ClearMessageWindowText": return 50; // 同じメッセージが連続する場合に消えている状態が少しだけ見えるように
     case "ClearLastText": return 50;
+    case "ClearMessageWindowExceptFirst": return 100;
     case "ShowAttackStartedText": return 420;
     case "ShowCastSpellText": return 500;
     case "PlaySe": return 0;
@@ -121,6 +123,11 @@ export class PresentationEffectRunner {
         if (__DEV__) console.log("最後の1行を消去(次のメッセージが上書き表示");
         // TODO: 最終行の場合のみ消去 or 強制的に末尾消去の判定
         this.#deps.removeLast();
+        break;
+
+      case "ClearMessageWindowExceptFirst":
+        if (__DEV__) console.log("最後の1行を消去(次のメッセージが上書き表示");
+        this.#deps.removeExceptFirst();
         break;
 
       case "ShowAttackStartedText":

@@ -1,8 +1,8 @@
 import { plannedActionFactory } from "./planned-action-factory";
-import { Action, ActionType, ActorId, PlannedAction } from "@game/domain";
+import { Action, ActionType, ActorId, PlannedAction, Spell, SpellId } from "@game/domain";
 import { assertNever } from "@shared/utils";
 
-export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) => boolean): Readonly<PlannedAction> {
+export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) => boolean, getSpell: (id: SpellId) => Readonly<Spell>): Readonly<PlannedAction> {
   const isAllyAction = isAlly(action.actorId);
 
   switch (action.actionType) {
@@ -24,13 +24,27 @@ export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) 
       return plannedActionFactory.defence(action.actorId);
 
     case ActionType.Spell:
-      // TODO: 一旦単体攻撃に限定
       if (isAllyAction) {
         if (action.selection.kind !== "group") {
           throw new Error("Ally offensive spell requires group target selection.");
         }
 
-        return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
+        const spell = getSpell(action.spellId);
+
+        if (spell.target.side === "them") {
+          if (spell.target.kind === "single") {
+            return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
+          }
+          else if (spell.target.kind === "group") {
+            return plannedActionFactory.ally.spell.them.group(action.actorId, action.spellId, action.selection.groupId);
+          }
+          else {
+            throw new Error("Not Implement");
+          }
+        }
+        else {
+          throw new Error("Not Implement");
+        }
       }
       else {
         return plannedActionFactory.enemy.spell.them.single(action.actorId, action.spellId);

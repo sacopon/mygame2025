@@ -48,6 +48,11 @@ export class BattleMessageWindow extends GroupGameObject {
     this.#content.removeLastText();
   }
 
+  // 先頭行を残し、それ以降をクリアする
+  removeExceptFirstText(): void {
+    this.#content.removeExceptFirstText();
+  }
+
   addText(text: string): void {
     this.#content.addText(text);
   }

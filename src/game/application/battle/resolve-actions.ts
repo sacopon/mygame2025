@@ -282,7 +282,7 @@ function createSpellResolution(currentState: Readonly<BattleDomainState>, turn: 
     { kind: "ShowCastSpellText", actorId: sourceId, spellId: action.spellId },
   );
 
-  for (const targetId of targets) {
+  targets.forEach((targetId, index) => {
     // 基礎ダメージ計算
     const baseDamage = 10;
 
@@ -300,8 +300,14 @@ function createSpellResolution(currentState: Readonly<BattleDomainState>, turn: 
     };
 
     currentState = currentState.apply(event);
+
+    // 2体目以降なら呪文を唱えたメッセージより先を消去
+    if (0 < index) {
+      effects.push({ kind: "ClearMessageWindowExceptFirst" });
+    }
+
     effects.push(...createEffectsFromDamageApplied(currentState, event, deps));
-  }
+  });
 
   return { state: currentState.clone(), effects };
 }

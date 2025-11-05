@@ -157,7 +157,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
                 const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
                   actorId: this.#actor.actorId,
                   command,
-                  spellId: SpellId(1),
+                  spellId: SpellId(1 + this.#actor.actorId % 2),  // 1 = メラ、2 = ギラ
                   target: {
                     kind: "enemyGroup",
                     groupId: targetGroupId,
