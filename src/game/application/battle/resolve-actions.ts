@@ -10,6 +10,7 @@ import {
   EnemyGroupId,
   isAlive,
   PlannedAction,
+  SpellPlannedAction,
   TurnSnapshot
 } from "@game/domain";
 import { RandomPort } from "@game/presentation";
@@ -89,6 +90,11 @@ function resolveAction(currentState: Readonly<BattleDomainState>, turn: Readonly
       break;
 
     case ActionType.Spell:
+        const { state, effects } = createSpellResolution(currentState, turn, action, deps);
+        nextState = state;
+        resultEffects.push(...effects);
+      break;
+
     case ActionType.Item:
       // TODO
       break;
@@ -252,6 +258,52 @@ function createEffectsFromSelfDefence(currentState: Readonly<BattleDomainState>,
   );
 
   return { state: currentState, effects };
+}
+
+/**
+ * actionType: Spell の行動について、DomainEvent と PresentationEffect に解決する
+ *
+ * @param action 行動内容(actionType: Spell)
+ * @returns 最新の state と、演出用 effects
+ */
+function createSpellResolution(currentState: Readonly<BattleDomainState>, turn: Readonly<TurnSnapshot>, action: Readonly<SpellPlannedAction>, deps: ResolveDeps)
+  : {
+    state: Readonly<BattleDomainState>,
+    effects: ReadonlyArray<PresentationEffect>,
+  } {
+  const effects: PresentationEffect[] = [];
+  const sourceId = action.actorId;
+  const targets = resolveTargets(currentState, action, deps);
+
+  // 呪文ヘッダ共通部分
+  effects.push(
+    { kind: "ClearMessageWindowText" },
+    { kind: "PlaySe", seId: "spell" },
+    { kind: "ShowCastSpellText", actorId: sourceId, spellId: action.spellId },
+  );
+
+  for (const targetId of targets) {
+    // 基礎ダメージ計算
+    const baseDamage = 10;
+
+    // ブレ(一律+-10%固定)
+    // TODO: 器用さが高いとブレが少ない、とかにするか？
+    const varianceRatio = 0.9 + deps.random.range(0, 20) / 100; // 0.9〜1.1
+    const amount = Math.floor(baseDamage * varianceRatio);
+
+    const event: DamageApplied = {
+      type: "DamageApplied",
+      sourceId,
+      targetId,
+      amount,
+      critical: false,
+    };
+
+    currentState = currentState.apply(event);
+    effects.push(...createEffectsFromDamageApplied(currentState, event, deps));
+  }
+
+  return { state: currentState.clone(), effects };
 }
 
 /**

@@ -1,7 +1,7 @@
 import { SeId } from "..";
 import { assertNever, toZenkaku } from "@shared";
 import { PresentationEffect } from "@game/application";
-import { ActorId, BattleDomainState } from "@game/domain";
+import { ActorId, BattleDomainState, SpellId } from "@game/domain";
 
 // 味方のダメージ時にウィンドウが揺れている時間(ms)
 const ALLY_SHAKE_BY_DAMAGE_DURATION_MS = 650;
@@ -27,6 +27,7 @@ type EffectDeps = {
   shake: () => void,
   playSe: (id: SeId) => void,
   resolveName: (actorId: ActorId) => string,
+  resolveSpell: (spellId: SpellId) => string,
 };
 
 /**
@@ -38,6 +39,7 @@ function durationOf(effect: Readonly<PresentationEffect>): number {
     case "ClearMessageWindowText": return 50; // 同じメッセージが連続する場合に消えている状態が少しだけ見えるように
     case "ClearLastText": return 50;
     case "ShowAttackStartedText": return 420;
+    case "ShowCastSpellText": return 500;
     case "PlaySe": return 0;
     case "ShowPlayerDamageText": return 0;
     case "PlayerDamageShake": return ALLY_SHAKE_BY_DAMAGE_DURATION_MS;
@@ -189,6 +191,11 @@ export class PresentationEffectRunner {
       case "ShowDefeatText":
         if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}を たおした！`);
         this.#deps.print(`${this.#deps.resolveName(effect.actorId)}を　たおした！`);
+        break;
+
+      case "ShowCastSpellText":
+        if (__DEV__) console.log(`📝 ${this.#deps.resolveName(effect.actorId)}を たおした！`);
+        this.#deps.print(`${this.#deps.resolveName(effect.actorId)}は　${this.#deps.resolveSpell(effect.spellId)}を　となえた！`);
         break;
 
       default:

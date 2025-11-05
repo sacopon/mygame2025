@@ -24,7 +24,7 @@ import {
   EnemyGroupId,
   isAlive,
   Level,
-  pickEncountTable
+  pickEncountTable,
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";

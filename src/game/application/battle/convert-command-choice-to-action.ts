@@ -23,11 +23,22 @@ export function convertCommandChoiceToAction(choice: CommandChoice): Action {
       };
 
     case BattleCommand.Spell:
+      if (choice.target!.kind !== "enemyGroup") {
+        throw new Error("Not implement");
+      }
+
+      return {
+        actorId: choice.actorId,
+        actionType: ActionType.Spell,
+        spellId: choice.spellId,
+        selection: TargetSelections.group(choice.target!.groupId),
+      };
+
     case BattleCommand.Item:
       // 未実装のため actionType 以外は適当
       return {
         actorId: choice.actorId,
-        actionType: choice.command === BattleCommand.Spell ? ActionType.Spell : ActionType.Item,
+        actionType: ActionType.Item,
         selection: TargetSelections.none(),
       };
 

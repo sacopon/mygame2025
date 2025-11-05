@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
-import { ActorId, BattleDomainState, Level } from "@game/domain";
+import { ActorId, BattleDomainState, Level, SpellId } from "@game/domain";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
@@ -55,6 +55,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         },
         playSe: (id: SeId): void => this.context.ui.audio.playSe(id),
         resolveName,
+        resolveSpell: (id: SpellId) => this.context.domain.spellRepository.findSpell(id).name,
       });
 
     // メッセージウィンドウを作成

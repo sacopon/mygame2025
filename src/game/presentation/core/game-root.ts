@@ -2,9 +2,10 @@ import { GameObjectAccess, UiPorts } from "../scene/core/scene";
 import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
-import { Agility, Ally, AllyId, Attack, Defence, DomainPorts, Enemy, EnemyId, Hp, Level } from "@game/domain";
+import { Agility, Ally, AllyId, Attack, Defence, DomainPorts, Enemy, EnemyId, Hp, Level, Spell, SpellId, SpellPower } from "@game/domain";
 import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastructure";
 import { EncounterRepositoryInMemory } from "@game/infrastructure/repository/encounter";
+import { SpellRepositoryInMemory } from "@game/infrastructure/repository/spell";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
@@ -29,9 +30,14 @@ const createDomainPorts = function(): DomainPorts {
       attack: Attack.of(40), defence: Defence.of(8), agility: Agility.of(20) },
   ] as const;
 
+  const allSpells: Spell[] = [
+    { spellId: SpellId(1), name: "メラメラ", power: SpellPower.of(1),target: { kind: "single", side: "them", } },
+  ] as const;
+
   return {
     allyRepository: new AllyRepositoryInMemory(allAllyCharacters),
     enemyRepository: new EnemyRepositoryInMemory(allEnemies),
+    spellRepository: new SpellRepositoryInMemory(allSpells),
     encounterRepository: new EncounterRepositoryInMemory(),
   };
 };

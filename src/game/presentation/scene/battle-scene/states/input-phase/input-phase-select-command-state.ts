@@ -2,7 +2,7 @@ import { BaseBattleSceneState } from "../battle-scene-state";
 import { InputPhaseSelectTargetEnemyState } from "./input-phase-select-target-enemy-state";
 import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, BattleSceneContext, CommandChoice } from "../..";
 import { assertNever } from "@shared";
-import { AllyActor } from "@game/domain";
+import { AllyActor, SpellId } from "@game/domain";
 import { GameButton } from "@game/presentation/ports";
 import { CommandSelectWindow, EnemySelectWindow } from "@game/presentation/game-object";
 import { InputPhaseNoticeMessageState } from "./input-phase-notice-message-state";
@@ -138,6 +138,26 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
                 const choice: Extract<CommandChoice, { command: typeof BattleCommand.Attack }> = {
                   actorId: this.#actor.actorId,
                   command,
+                  target: {
+                    kind: "enemyGroup",
+                    groupId: targetGroupId,
+                  },
+                };
+
+                // 妥当性チェック(選択できない相手を選んでいないか)
+                if (!this.#callbacks.canDecide(choice)) {
+                  // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+                }
+
+                // 確定処理
+                this.#onConfirmCommand(choice, mark);
+              }
+              else if (command === BattleCommand.Spell) {
+                // TODO: 本来このケースは存在しないので、呪文選択ウィンドウを実装するまでの一時的な処理
+                const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
+                  actorId: this.#actor.actorId,
+                  command,
+                  spellId: SpellId(1),
                   target: {
                     kind: "enemyGroup",
                     groupId: targetGroupId,

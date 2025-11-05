@@ -29,6 +29,9 @@ export class BattleCommandDecider {
         return { kind: BattleCommandDecider.FlowType.Immediate };
 
       case BattleCommand.Spell:
+        // TODO: 呪文選択ウィンドウを作り、FlotType.NeedSpellSelect を設ける
+        return { kind: BattleCommandDecider.FlowType.NeedEnemyTarget };
+
       case BattleCommand.Item:
         return { kind: BattleCommandDecider.FlowType.NotImplement };
 

@@ -1,4 +1,5 @@
 import { ActorId, EnemyGroupId } from "..";
+import { SpellId } from "./spell";
 
 /**
  * アクションタイプ
@@ -29,76 +30,102 @@ export type TargetMode =
   | { kind: "all"; }
   | { kind: "none"; };
 
-export type Action = {
+type BaseAction = Readonly<{
   /** 誰が */
   actorId: ActorId;
-  /** 何をした */
-  actionType: ActionType;
   /** 選択された対象 */
   selection: TargetSelection;
-};
+}>;
+
+type AttackAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Attack;
+}>;
+
+type SelfDefenceAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.SelfDefence;
+}>;
+
+type SpellAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Spell;
+  /** 使った呪文 */
+  spellId: SpellId;
+}>;
+
+type ItemAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Item;
+}>;
+
+export type Action =
+  | AttackAction
+  | SelfDefenceAction
+  | SpellAction
+  | ItemAction;
 
 // 味方キャラクタ用単体攻撃
-type AttackActionSingleForAlly = {
+type AttackActionSingleForAlly = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "group"; groupId: EnemyGroupId; };
   mode: { kind: "single"; targetId?: ActorId; };
-};
+}>;
 
 // 敵キャラクタ用単体攻撃
-type AttackActionSingleForEnemy = {
+type AttackActionSingleForEnemy = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "single"; targetId?: ActorId; };
-};
+}>;
 
 // グループ攻撃(味方キャラクタ専用)
-type AttackActionGroup = {
+type AttackActionGroup = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "group"; groupId: EnemyGroupId; };
   mode: { kind: "group"; groupId: EnemyGroupId; };
-};
+}>;
 
 // 全体攻撃
-type AttackActionAll = {
+type AttackActionAll = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "all"; };
-};
+}>;
 
 // ターゲットなし
-type AttackActionNone = {
+type AttackActionNone = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "none"; };
-};
+}>;
 
-type SelfDefenceActionNone = {
+type SelfDefenceActionNone = Readonly<{
   actionType: typeof ActionType.SelfDefence;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "none"; };
-};
+}>;
 
-// TODO: 未実装のため NONE だけ用意
-type SpellActionNone = {
+export type SpellPlannedAction = Readonly<{
   actionType: typeof ActionType.Spell;
   actorId: ActorId;
-  selection: { kind: "none"; };
-  mode: { kind: "none"; };
-};
+  spellId: SpellId;
+  selection: TargetSelection;
+  mode: TargetMode;
+}>;
 
-type ItemActionNone = {
+type ItemActionNone = Readonly<{
   actionType: typeof ActionType.Item;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "none"; };
-};
+}>;
 
 export type PlannedAction =
   | AttackActionSingleForAlly
@@ -107,7 +134,7 @@ export type PlannedAction =
   | AttackActionAll
   | AttackActionNone
   | SelfDefenceActionNone
-  | SpellActionNone
+  | SpellPlannedAction
   | ItemActionNone;
 
 // creators

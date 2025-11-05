@@ -18,3 +18,9 @@ export const PAD_BIT = {
   BUTTON3: 6,
   BUTTON4: 7,
 };
+
+// Type Branding パターン（擬似 Nominal Type）.
+// ブランド型.
+// 構造は number だが、型レベルでは別のID と区別される.
+// 識別子など、Map のキーとして使用するようなものはこれを使用する.
+export type Brand<T, B extends string> = T & { readonly __brand: B };

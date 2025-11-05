@@ -1,6 +1,5 @@
 import { Agility, Attack, Defence, Hp, Level } from "./status-value-objects";
-
-type Brand<T, B extends string> = T & { readonly __brand: B };
+import { Brand } from "@shared";
 
 // 味方キャラクター内での一意なID
 export type AllyId = Brand<number, "AllyId">;

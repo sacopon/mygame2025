@@ -1,4 +1,4 @@
-import { ActorId, BattleDomainState } from "@game/domain";
+import { ActorId, BattleDomainState, SpellId } from "@game/domain";
 import { SeId } from "@game/presentation";
 
 /**
@@ -104,6 +104,13 @@ export type ShowDefeatText = {
   actorId: ActorId;
 };
 
+// 「${actor.name}は　${spell.name}を　となえた！」(敵/味方共通）
+export type ShowCastSpellText = {
+  kind: "ShowCastSpellText";
+  actorId: ActorId;
+  spellId: SpellId;
+};
+
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ClearLastText
@@ -120,4 +127,5 @@ export type PresentationEffect = ApplyState
   | ShowNoDamageText
   | ShowSelfDefenceText
   | ShowDeadText
-  | ShowDefeatText;
+  | ShowDefeatText
+  | ShowCastSpellText;

@@ -24,14 +24,23 @@ export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) 
       return plannedActionFactory.defence(action.actorId);
 
     case ActionType.Spell:
-      // TODO: 未実装なので形だけ
-      return plannedActionFactory.spell(action.actorId);
+      // TODO: 一旦単体攻撃に限定
+      if (isAllyAction) {
+        if (action.selection.kind !== "group") {
+          throw new Error("Ally offensive spell requires group target selection.");
+        }
+
+        return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
+      }
+      else {
+        return plannedActionFactory.enemy.spell.them.single(action.actorId, action.spellId);
+      }
 
     case ActionType.Item:
       // TODO: 未実装なので形だけ
       return plannedActionFactory.item(action.actorId);
 
     default:
-      assertNever(action.actionType);
+      assertNever(action);
   }
 }
