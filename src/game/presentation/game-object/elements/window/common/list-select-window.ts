@@ -1,7 +1,7 @@
 import { GroupGameObject } from "@game/presentation/core/group-game-object";
 import { ListWindowContents } from "./list-window-contents";
 import { WindowBase } from "./window-base";
-import { wrapIndex } from "@shared/utils";
+import { wrapIndex } from "@shared";
 import { GamePorts } from "@game/presentation";
 import { WindowCoverRect } from "./window-cover-rect";
 

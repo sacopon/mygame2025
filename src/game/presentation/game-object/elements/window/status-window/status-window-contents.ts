@@ -3,7 +3,7 @@ import { GameObject, GamePorts, NineSliceSpriteComponent, TextComponent, TextLis
 import { STATUS_WINDOW_SETTINGS } from "./status-winodw-constants";
 import { StatusWindow } from "./status-window";
 import { ActorId, ActorState, BattleDomainState, Level } from "@game/domain";
-import { toZenkaku } from "@shared/utils";
+import { toZenkaku } from "@shared";
 
 // キャラクターひとり分あたりの幅
 // const STATUS_WIDTH = 46;  // 4文字用

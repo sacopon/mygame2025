@@ -46,6 +46,7 @@ export type AllyActor = {
   name: Readonly<string>;
   level: Level;
   hp: Hp;
+  maxHp: Hp;
   attack: Attack;
   defence: Defence;
   agility: Agility;
@@ -86,6 +87,7 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     name: ally.name,
     level: Level.of(ally.level),
     hp: Hp.of(ally.currentHp),
+    maxHp: Hp.of(ally.maxHp),
     attack: Attack.of(ally.attack),
     defence: Defence.of(ally.defence),
     agility: Agility.of(ally.agility),

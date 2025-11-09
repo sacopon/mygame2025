@@ -116,6 +116,12 @@ export type ShowCastSpellText = {
   spellId: SpellId;
 };
 
+// 「${actor.name}の　キズが　回復した！」(敵/味方共通）
+export type ShowHealText = {
+  kind: "ShowHealText";
+  actorId: ActorId;
+};
+
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ClearLastText
@@ -134,4 +140,5 @@ export type PresentationEffect = ApplyState
   | ShowSelfDefenceText
   | ShowDeadText
   | ShowDefeatText
-  | ShowCastSpellText;
+  | ShowCastSpellText
+  | ShowHealText;

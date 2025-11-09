@@ -325,6 +325,10 @@ export class BattleScene implements Scene {
     return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
   }
 
+  getEnemyGroupIds(): ReadonlyArray<EnemyGroupId> {
+    return [...this.#enemyActorsByGroupId.keys()];
+  }
+
   getActorIdsByEnemyGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {
     if (!this.#enemyActorsByGroupId.has(groupId)) {
       return [];

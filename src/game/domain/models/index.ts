@@ -5,6 +5,7 @@ export * from "./character-parameter";
 export * from "./damage";
 export * from "./domain-event";
 export * from "./encounter";
+export * from "./heal-amount";
 export * from "./spell";
 export * from "./status-value-objects";
 export * from "./turn-agility";

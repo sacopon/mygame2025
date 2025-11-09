@@ -3,7 +3,7 @@ import { ExecutePhasePlayActionState } from "./execute-phase-play-action-state";
 import { BaseBattleSceneState } from "..";
 import { BattleSceneContext } from "../..";
 import { buildTurnSnapshot, planTurnOrder, resolveActions } from "@game/application";
-import { ActorId, ActorType, EnemyGroupId } from "@game/domain";
+import { ActorId, ActorType, EnemyGroupId, SpellId } from "@game/domain";
 
 /**
  * バトルシーン状態: ターン解決
@@ -36,10 +36,12 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
     const { state, effects } = resolveActions(context.domainState, turnSnapshot, orderedActions, {
       random: this.context.ui.random,
       getActor: (actorId: ActorId) => this.scene.getActorById(actorId),
+      getSpell: (spellId: SpellId) => context.domain.spellRepository.findSpell(spellId),
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       aliveAllAllies: () => this.scene.getAliveAllies(),
       aliveAllEnemies: () => this.scene.getAliveEnemies(),
       getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => this.scene.getActorIdsByEnemyGroup(groupId),
+      enemyGroupIds: this.scene.getEnemyGroupIds(),
       aliveAllActors: () => this.scene.getAliveAllActors(),
     });
 

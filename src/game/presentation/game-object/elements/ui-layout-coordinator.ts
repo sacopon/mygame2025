@@ -70,7 +70,6 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     const patterns = DEFAULT_SHAKE_PATTERNS;
     const runner = new ShakeRunner(patterns);
     runner.start();
-    console.log(window);
     this.#shakeRunners.set(window, runner);
   }
 

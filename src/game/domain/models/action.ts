@@ -21,7 +21,8 @@ export type ActionType = typeof ActionType[keyof typeof ActionType];
  * この値と Action の内容から実際の攻撃対象(単体/グループ/全体)を設定することになる
  */
 export type TargetSelection =
-  | { kind: "group"; groupId: EnemyGroupId; }
+  | { kind: "group"; groupId: EnemyGroupId; } // 敵グループを選択
+  | { kind: "ally"; actorId: ActorId; }       // 味方ひとりを選択
   | { kind: "none"; };
 
 export type TargetMode =
@@ -105,6 +106,13 @@ type AttackActionNone = Readonly<{
   mode: { kind: "none"; };
 }>;
 
+export type AttackPlannedAction =
+  | AttackActionSingleForAlly
+  | AttackActionSingleForEnemy
+  | AttackActionGroup
+  | AttackActionAll
+  | AttackActionNone;
+
 type SelfDefenceActionNone = Readonly<{
   actionType: typeof ActionType.SelfDefence;
   actorId: ActorId;
@@ -128,11 +136,7 @@ type ItemActionNone = Readonly<{
 }>;
 
 export type PlannedAction =
-  | AttackActionSingleForAlly
-  | AttackActionSingleForEnemy
-  | AttackActionGroup
-  | AttackActionAll
-  | AttackActionNone
+  | AttackPlannedAction
   | SelfDefenceActionNone
   | SpellPlannedAction
   | ItemActionNone;
@@ -141,6 +145,7 @@ export type PlannedAction =
 export const TargetSelections = {
   none: (): TargetSelection => ({ kind: "none" } as const),
   group: (gid: EnemyGroupId): TargetSelection => ({ kind: "group", groupId: gid } as const),
+  ally: (id: ActorId): TargetSelection => ({ kind: "ally", actorId: id } as const),
 } as const;
 
 // type guards

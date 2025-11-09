@@ -9,6 +9,8 @@ export type SpellTarget = {
   side: "us" | "them";
 };
 
+export type SpellEffectType = "damage" | "heal";
+
 export class SpellPower extends ValueObject {
   protected constructor(value: number) {
     super(value, 0);
@@ -22,4 +24,5 @@ export type Spell = Readonly<{
   name: string;
   power: SpellPower;
   target: SpellTarget;
+  type: SpellEffectType;
 }>;

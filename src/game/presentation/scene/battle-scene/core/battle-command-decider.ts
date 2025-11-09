@@ -20,7 +20,7 @@ export class BattleCommandDecider {
     NotImplement: "notImplement",
   } as const;
 
-  static next(actorId: ActorId, command: BattleCommand): BattleCommandNextFlow {
+  static next(_: ActorId, command: BattleCommand): BattleCommandNextFlow {
     switch (command) {
       case BattleCommand.Attack:
         return { kind: BattleCommandDecider.FlowType.NeedEnemyTarget };

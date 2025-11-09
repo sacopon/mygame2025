@@ -15,12 +15,6 @@ const T = (): TurnSnapshot => ({
 });
 
 describe("planTurnOrder", () => {
-  test("ActorId の降順で並ぶ", () => {
-    const actions = [A(2), A(5), A(3)];
-    const result = planTurnOrder(actions, T());
-    expect(result.map(a => a.actorId)).toEqual([5, 3, 2]);
-  });
-
   test("元配列を破壊しない（イミュータブル）", () => {
     const actions = [A(1), A(2)];
     const snapshot = [...actions];

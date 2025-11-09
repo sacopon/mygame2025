@@ -1,12 +1,14 @@
-import { assertNever } from "@shared/utils";
+import { assertNever } from "@shared";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
-import { DamageApplied, DomainEvent } from "./domain-event";
+import { DamageApplied, DomainEvent, HealApplied } from "./domain-event";
 import { Agility, Attack, Defence, Hp } from "./status-value-objects";
 import { Damage } from "./damage";
+import { HealAmount } from "./heal-amount";
 
 export type ActorStateBase = {
   actorId: ActorId;
   currentHp: Hp;
+  maxHp: Hp;
   currentAttack: Attack;
   currentDefence: Defence;
   currentAgility: Agility;
@@ -43,6 +45,7 @@ export class BattleDomainState {
         originId: ally.originId,
         actorType: ActorType.Ally,
         currentHp: Hp.of(ally.hp),
+        maxHp: Hp.of(ally.maxHp),
         currentAttack: Attack.of(ally.attack),
         currentDefence: Defence.of(ally.defence),
         currentAgility: Agility.of(ally.agility),
@@ -55,6 +58,7 @@ export class BattleDomainState {
         originId: enemy.originId,
         actorType: ActorType.Enemy,
         currentHp: Hp.of(enemy.hp),
+        maxHp: Hp.of(enemy.hp), // 敵のHPは常に最大状態から始まるので
         currentAttack: Attack.of(enemy.attack),
         currentDefence: Defence.of(enemy.defence),
         currentAgility: Agility.of(enemy.agility),
@@ -72,6 +76,9 @@ export class BattleDomainState {
     switch (event.type) {
       case "DamageApplied":
         return this.#applyDamage(event);
+
+      case "HealApplied":
+        return this.#applyHeal(event);
 
       case "SelfDefence":
         // ターンの先頭で TurnSnapshot として防御フラグを立てているので、特に適用する状態はなし
@@ -161,6 +168,24 @@ export class BattleDomainState {
       {
         ...actorState,
         currentHp: actorState.currentHp.takeDamage(Damage.of(damageEvent.amount)),
+      }
+    );
+    return new BattleDomainState(nextStateMap);
+  }
+
+  #applyHeal(recoverEvent: HealApplied): Readonly<BattleDomainState> {
+    const actorState = this.#actorStateByActorId.get(recoverEvent.targetId);
+
+    if (!actorState) {
+      throw new Error(`invalid targetId: ${recoverEvent.targetId}`);
+    }
+
+    const nextStateMap = new Map(this.#actorStateByActorId);
+    nextStateMap.set(
+      actorState.actorId,
+      {
+        ...actorState,
+        currentHp: actorState.currentHp.heal(HealAmount.of(recoverEvent.amount), actorState.maxHp),
       }
     );
     return new BattleDomainState(nextStateMap);

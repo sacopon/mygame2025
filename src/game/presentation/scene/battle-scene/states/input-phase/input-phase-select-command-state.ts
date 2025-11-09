@@ -2,7 +2,7 @@ import { BaseBattleSceneState } from "../battle-scene-state";
 import { InputPhaseSelectTargetEnemyState } from "./input-phase-select-target-enemy-state";
 import { BattleCommand, BattleCommandDecider, BattleCommandNextFlow, BattleScene, BattleSceneContext, CommandChoice } from "../..";
 import { assertNever } from "@shared";
-import { AllyActor, SpellId } from "@game/domain";
+import { ActorId, AllyActor, SpellId } from "@game/domain";
 import { GameButton } from "@game/presentation/ports";
 import { CommandSelectWindow, EnemySelectWindow } from "@game/presentation/game-object";
 import { InputPhaseNoticeMessageState } from "./input-phase-notice-message-state";
@@ -154,13 +154,17 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
               }
               else if (command === BattleCommand.Spell) {
                 // TODO: 本来このケースは存在しないので、呪文選択ウィンドウを実装するまでの一時的な処理
+                const spellId = SpellId(1 + ((this.#actor.actorId - 1) % 3)); // 1 = メラ、2 = ギラ、3 = ホイミ
                 const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
                   actorId: this.#actor.actorId,
                   command,
-                  spellId: SpellId(1 + this.#actor.actorId % 2),  // 1 = メラ、2 = ギラ
-                  target: {
+                  spellId,
+                  target: spellId === 1 || spellId === 2 ? {
                     kind: "enemyGroup",
                     groupId: targetGroupId,
+                  } : {
+                    kind: "ally",
+                    actorId: ActorId(4),//this.scene.getAliveAllies()[0],
                   },
                 };
 

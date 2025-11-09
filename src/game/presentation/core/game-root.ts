@@ -31,8 +31,30 @@ const createDomainPorts = function(): DomainPorts {
   ] as const;
 
   const allSpells: Spell[] = [
-    { spellId: SpellId(1), name: "メラメラ", power: SpellPower.of(1),target: { kind: "single", side: "them", } },
-    { spellId: SpellId(2), name: "ギラギラ", power: SpellPower.of(1),target: { kind: "group", side: "them", } },
+    // 単体攻撃呪文
+    {
+      spellId: SpellId(1),
+      name: "メラメラ",
+      power: SpellPower.of(1),
+      target: { kind: "single", side: "them", },
+      type: "damage",
+    },
+    // グループ攻撃呪文
+    {
+      spellId: SpellId(2),
+      name: "ギラギラ",
+      power: SpellPower.of(1),
+      target: { kind: "group", side: "them", },
+      type: "damage",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(3),
+      name: "ホイホイ",
+      power: SpellPower.of(1),
+      target: { kind: "single", side: "us", },
+      type: "heal",
+    },
   ] as const;
 
   return {
