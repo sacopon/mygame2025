@@ -1,25 +1,9 @@
-import { resolveAttackTargets } from "@game/application/battle/resolve-common";
 import { ResolveDeps } from "@game/application/battle/resolve-types";
-import {
-  BattleDomainState,
-  ActorId,
-  AllyActor,
-  EnemyActor,
-  EnemyGroupId,
-  AttackPlannedAction,
-  ActionType,
-  Level,
-  Hp,
-  Attack,
-  Defence,
-  Agility,
-  AllyId,
-  EnemyId,
-} from "@game/domain";
+import { ActorId, Agility, AllyActor, AllyId, Attack, BattleDomainState, Defence, EnemyActor, EnemyGroupId, EnemyId, Hp, Level } from "@game/domain";
 
 // 型短縮用
-const aid = (n: number) => n as ActorId;
-const gid = (n: number) => n as EnemyGroupId;
+export const aid = (n: number) => n as ActorId;
+export const gid = (n: number) => n as EnemyGroupId;
 
 // テスト用の単純な RandomPort
 const dummyRandom = {
@@ -40,9 +24,9 @@ const dummyRandom = {
 };
 
 // シンプルな state + deps をまとめて作るヘルパ
-function createStateAndDeps(opts: {
-  allies: { id: number; groupId?: number }[];
-  enemies: { id: number; groupId: number }[];
+export function createStateAndDeps(opts: {
+  allies: { id: number; groupId?: number, hp?: number }[];
+  enemies: { id: number; groupId: number, hp?: number }[];
 }) {
   const allies: AllyActor[] = opts.allies.map(a => ({
     actorId: aid(a.id),
@@ -50,7 +34,7 @@ function createStateAndDeps(opts: {
     actorType: "Ally",
     name: `Ally${a.id}`,
     level: Level.of(1),
-    hp: Hp.of(10),
+    hp: Hp.of(a.hp ?? 10),
     maxHp: Hp.of(10),
     attack: Attack.of(5),
     defence: Defence.of(3),
@@ -63,7 +47,7 @@ function createStateAndDeps(opts: {
     actorType: "Enemy",
     enemyGroupId: gid(e.groupId),
     name: `Enemy${e.id}`,
-    hp: Hp.of(10),
+    hp: Hp.of(e.hp ?? 10),
     maxHp: Hp.of(10),
     attack: Attack.of(5),
     defence: Defence.of(3),
@@ -106,30 +90,3 @@ function createStateAndDeps(opts: {
 
   return { state, deps, allies, enemies };
 }
-
-describe("resolveAttackTargets (ally single attack → enemy group)", () => {
-  test("明示的 targetId が生存していればそれを返す", () => {
-    const { state, deps, allies, enemies } = createStateAndDeps({
-      allies: [{ id: 1 }],
-      enemies: [
-        { id: 10, groupId: 1 },
-        { id: 11, groupId: 1 },
-      ],
-    });
-
-    const attacker = allies[0];
-    const target = enemies[0];
-
-    const action: AttackPlannedAction = {
-      actionType: ActionType.Attack,
-      actorId: attacker.actorId,
-      // UI でグループ1を選択した想定
-      selection: { kind: "group", groupId: target.enemyGroupId },
-      // 計画フェーズで targetId まで指定されている場合を想定
-      mode: { kind: "single", targetId: target.actorId },
-    };
-
-    const result = resolveAttackTargets(state, action, deps);
-    expect(result).toEqual([target.actorId]);
-  });
-});

@@ -5,7 +5,7 @@ export type SpellId = Brand<number, "SpellId">;
 export const SpellId = (n: number) => n as SpellId;
 
 export type SpellTarget = {
-  kind: "single" | "group" | "all";
+  scope: "single" | "group" | "all";
   side: "us" | "them";
 };
 

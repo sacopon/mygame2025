@@ -36,7 +36,7 @@ const createDomainPorts = function(): DomainPorts {
       spellId: SpellId(1),
       name: "メラメラ",
       power: SpellPower.of(1),
-      target: { kind: "single", side: "them", },
+      target: { scope: "single", side: "them", },
       type: "damage",
     },
     // グループ攻撃呪文
@@ -44,7 +44,7 @@ const createDomainPorts = function(): DomainPorts {
       spellId: SpellId(2),
       name: "ギラギラ",
       power: SpellPower.of(1),
-      target: { kind: "group", side: "them", },
+      target: { scope: "group", side: "them", },
       type: "damage",
     },
     // 単体回復呪文
@@ -52,7 +52,7 @@ const createDomainPorts = function(): DomainPorts {
       spellId: SpellId(3),
       name: "ホイホイ",
       power: SpellPower.of(1),
-      target: { kind: "single", side: "us", },
+      target: { scope: "single", side: "us", },
       type: "heal",
     },
   ] as const;

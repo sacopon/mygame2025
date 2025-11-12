@@ -12,46 +12,34 @@ import { assertNever } from "@shared";
 export function resolveAttackTargets(state: Readonly<BattleDomainState>, action: Readonly<AttackPlannedAction>, deps: ResolveDeps): ReadonlyArray<ActorId> {
   switch (action.mode.kind) {
     case "single": {
-      // すでに決まっていたらその内容で確定する
-      if (action.mode.targetId) {
-        if (state.isAlive(action.mode.targetId)) {
-          // 生きていればそれで確定
-          return [ action.mode.targetId ];
-        }
-        else if (deps.isAlly(action.actorId)) {
-          // 味方の攻撃、生存している敵をひとり選択
-          const list = state.getAliveEnemyActorIds();
-          return 0 < list.length ? [deps.random.choice(list)] : [];
-        }
-        else {
-          // 敵の攻撃、生存している味方をひとり選択
-          const list = state.getAliveAllyActorIds();
-          return 0 < list.length ? [deps.random.choice(list)] : [];
-        }
+      // targetId が指定されていて、生存していればそれで確定
+      if (action.mode.targetId && state.isAlive(action.mode.targetId)) {
+        return [ action.mode.targetId ];
       }
 
+      // ここまで来たら
+      // - targetId が指定されていない
+      // - targetId が指定されているがすでに死んでいる
+      // なので改めてターゲットを選び直す
       if (action.selection.kind === "group") {
-        // グループ選択 で 対象は1人(= 味方の行動であることが型から確定している)
-        const list = deps
-          .getActorIdsByEnemyGroup(action.selection.groupId)
-          .filter(id => state.isAlive(id));
+        // 味方 → 敵への単体攻撃
+        // まずは指定グループ内の生存者を優先
+        const groupId = action.selection.groupId;
+        const aliveInGroup = deps.getActorIdsByEnemyGroup(groupId).filter(id => state.isAlive(id));
 
-        if (0 < list.length) {
+        if (0 < aliveInGroup.length) {
           // グループ内に生存者がいればその中からランダム
-          return [deps.random.choice(list)];
+          return [deps.random.choice(aliveInGroup)];
         }
-        else {
-          // そのグループが全滅している
-          const list = state.getAliveEnemyActorIds();
-          // 全体からランダム、全体がそもそも全滅している場合は空の配列
-          return 0 < list.length ? [deps.random.choice(list)] : [];
-        }
+
+        // グループが全滅しているので全体の生存者からランダム
+        const allAliveEnemies = state.getAliveEnemyActorIds();
+        return 0 < allAliveEnemies.length ? [deps.random.choice(allAliveEnemies)] : [];
       }
-      else {
-        // 敵の場合
-        const allies = state.getAliveAllyActorIds();
-        return 0 < allies.length ? [deps.random.choice(allies)] : [];
-      }
+
+      // ここに来るのは敵の単体攻撃の場合のみ
+      const allies = state.getAliveAllyActorIds();
+      return 0 < allies.length ? [deps.random.choice(allies)] : [];
     }
 
     case "group": {
@@ -103,7 +91,7 @@ export function resolveSpellTargets(
   const isAllyCaster = deps.isAlly(action.actorId);
   const isTargetAllies = spell.target.side === "us" ? isAllyCaster : !isAllyCaster;
 
-  switch (spell.target.kind) {
+  switch (spell.target.scope) {
     case "all":
       // 敵(or味方)全体が対象の呪文
       // 指定サイドの生き残り全員が対象
@@ -116,23 +104,60 @@ export function resolveSpellTargets(
       }
 
       // 敵(or味方)単体が対象の呪文
-      // 指定ターゲット優先
-      if (action.mode.targetId) {
-        // 生きていればそれで確定
-        if (state.isAlive(action.mode.targetId)) {
-          return [action.mode.targetId];
-        }
+      // targetId が指定されていて、生存していればそれで確定
+      if (action.mode.targetId && state.isAlive(action.mode.targetId)) {
+        return [action.mode.targetId];
       }
 
-      // 指定がない、またはターゲットが死んでいる場合は side に応じてランダム
-      const candidates = isTargetAllies
-        ? state.getAliveAllyActorIds()
-        : state.getAliveEnemyActorIds();
+      if (isTargetAllies) {
+        // プレイヤー側を対象とする呪文
+        // 味方の単体回復/敵の単体攻撃など
 
-      return 0 < candidates.length ? [deps.random.choice(candidates)] : [];
+        // 味方の単体回復など
+        if (isAllyCaster && action.selection.kind === "ally") {
+          const uiTarget = action.selection.actorId;
+
+          if (state.isAlive(uiTarget)) {
+            return [uiTarget];
+          }
+
+          // 死んでいたら下の選び直しにフォールバック
+        }
+
+        // 味方の単体回復だが対象が死亡/敵の単体攻撃など
+        const aliveAllies = state.getAliveAllyActorIds();
+        return 0 < aliveAllies.length ? [deps.random.choice(aliveAllies)] : [];
+      }
+      else {
+        // (プレイヤー視点で)敵側を対象とする呪文
+        // 味方の単体攻撃/敵の単体回復など
+
+        // 味方の「敵単体」呪文で group が指定されているなら、まずそのグループを優先
+        if (isAllyCaster && action.selection.kind === "group") {
+          const groupId = action.selection.groupId;
+          const aliveInGroup = deps.getActorIdsByEnemyGroup(groupId).filter(id => state.isAlive(id));
+
+          if (0 < aliveInGroup.length) {
+            // グループ内に生存者がいればその中からランダム
+            return [deps.random.choice(aliveInGroup)];
+          }
+
+          // グループが全滅しているので全体の生存者からランダム
+          const allAliveEnemies = state.getAliveEnemyActorIds();
+          return 0 < allAliveEnemies.length ? [deps.random.choice(allAliveEnemies)] : [];
+        }
+
+        // (主に敵の単体呪文: 敵側の誰か1体を選ぶ)
+        const allAliveEnemies = state.getAliveEnemyActorIds();
+        return 0 < allAliveEnemies.length ? [deps.random.choice(allAliveEnemies)] : [];
+      }
     }
 
     case "group": {
+      if (spell.target.side === "us") {
+        throw new Error("group-scope spell with side 'us' is not supported");
+      }
+
       // 敵(or味方)グループが対象の呪文、敵側が使う場合は味方全体
       if (action.selection.kind === "group") {
         // UI選択もグループ = 味方側が使用する場合
@@ -164,7 +189,7 @@ export function resolveSpellTargets(
     }
 
     default:
-      return assertNever(spell.target.kind);
+      return assertNever(spell.target.scope);
   }
 }
 

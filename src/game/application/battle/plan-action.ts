@@ -34,10 +34,10 @@ export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) 
             throw new Error("Ally offensive spell requires group target selection.");
           }
 
-          if (spell.target.kind === "single") {
+          if (spell.target.scope === "single") {
             return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
           }
-          else if (spell.target.kind === "group") {
+          else if (spell.target.scope === "group") {
             return plannedActionFactory.ally.spell.them.group(action.actorId, action.spellId, action.selection.groupId);
           }
           else {
