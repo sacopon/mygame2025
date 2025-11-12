@@ -1,4 +1,4 @@
-import { ActorId, EnemyGroupId } from "@game/domain";
+import { ActorId, EnemyGroupId, SpellId } from "@game/domain";
 import { BattleCommand } from "./battle-command";
 
 export type AllyTarget       = { kind: "ally";       actorId: ActorId };
@@ -20,8 +20,15 @@ export type CommandChoice =
       target?: never;
     }
   | {
-      // 呪文時/アイテム時の型
-      actorId: ActorId;                                                // 誰が
-      command: typeof BattleCommand.Spell | typeof BattleCommand.Item; // どのコマンド(呪文 or 道具)
-      target?: CommandTarget;                                          // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
+      // 呪文時の型
+      actorId: ActorId;                    // 誰が
+      command: typeof BattleCommand.Spell; // どのコマンド(呪文)
+      spellId: SpellId;                    // どの呪文
+      target?: CommandTarget;              // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
+    }
+  | {
+      // アイテム時の型
+      actorId: ActorId;                    // 誰が
+      command: typeof BattleCommand.Item; // どのコマンド(道具)
+      target?: CommandTarget;              // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
     };

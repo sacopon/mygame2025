@@ -1,4 +1,4 @@
-import { ActorId, BattleDomainState } from "@game/domain";
+import { ActorId, BattleDomainState, SpellId } from "@game/domain";
 import { SeId } from "@game/presentation";
 
 /**
@@ -19,6 +19,11 @@ export type ClearMessageWindowText = {
 // 最終行のクリア(次のメッセージで上書きのような形になる)
 export type ClearLastText = {
   kind: "ClearLastText";
+};
+
+// 2行目以降のクリア(先頭行を残し、以降のメッセージは上書き、グループ/全体攻撃時)
+export type ClearMessageWindowExceptFirst = {
+  kind: "ClearMessageWindowExceptFirst";
 };
 
 // 「${actor.name}の　こうげき！」を表示
@@ -104,9 +109,23 @@ export type ShowDefeatText = {
   actorId: ActorId;
 };
 
+// 「${actor.name}は　${spell.name}を　となえた！」(敵/味方共通）
+export type ShowCastSpellText = {
+  kind: "ShowCastSpellText";
+  actorId: ActorId;
+  spellId: SpellId;
+};
+
+// 「${actor.name}の　キズが　回復した！」(敵/味方共通）
+export type ShowHealText = {
+  kind: "ShowHealText";
+  actorId: ActorId;
+};
+
 export type PresentationEffect = ApplyState
   | ClearMessageWindowText
   | ClearLastText
+  | ClearMessageWindowExceptFirst
   | ShowAttackStartedText
   | PlaySe
   | EnemyDamageBlink
@@ -120,4 +139,6 @@ export type PresentationEffect = ApplyState
   | ShowNoDamageText
   | ShowSelfDefenceText
   | ShowDeadText
-  | ShowDefeatText;
+  | ShowDefeatText
+  | ShowCastSpellText
+  | ShowHealText;

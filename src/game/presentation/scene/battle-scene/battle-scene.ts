@@ -24,7 +24,7 @@ import {
   EnemyGroupId,
   isAlive,
   Level,
-  pickEncountTable
+  pickEncountTable,
 } from "@game/domain";
 import { StateStack } from "@game/shared";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
@@ -323,6 +323,10 @@ export class BattleScene implements Scene {
   getAliveAllActors(): ReadonlyArray<ActorId> {
     // TODO: 生死判定
     return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
+  }
+
+  getEnemyGroupIds(): ReadonlyArray<EnemyGroupId> {
+    return [...this.#enemyActorsByGroupId.keys()];
   }
 
   getActorIdsByEnemyGroup(groupId: EnemyGroupId): ReadonlyArray<ActorId> {

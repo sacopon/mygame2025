@@ -1,4 +1,5 @@
 import { ActorId, EnemyGroupId } from "..";
+import { SpellId } from "./spell";
 
 /**
  * アクションタイプ
@@ -20,7 +21,8 @@ export type ActionType = typeof ActionType[keyof typeof ActionType];
  * この値と Action の内容から実際の攻撃対象(単体/グループ/全体)を設定することになる
  */
 export type TargetSelection =
-  | { kind: "group"; groupId: EnemyGroupId; }
+  | { kind: "group"; groupId: EnemyGroupId; } // 敵グループを選択
+  | { kind: "ally"; actorId: ActorId; }       // 味方ひとりを選択
   | { kind: "none"; };
 
 export type TargetMode =
@@ -29,91 +31,121 @@ export type TargetMode =
   | { kind: "all"; }
   | { kind: "none"; };
 
-export type Action = {
+type BaseAction = Readonly<{
   /** 誰が */
   actorId: ActorId;
-  /** 何をした */
-  actionType: ActionType;
   /** 選択された対象 */
   selection: TargetSelection;
-};
+}>;
+
+type AttackAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Attack;
+}>;
+
+type SelfDefenceAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.SelfDefence;
+}>;
+
+type SpellAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Spell;
+  /** 使った呪文 */
+  spellId: SpellId;
+}>;
+
+type ItemAction = BaseAction & Readonly<{
+  /** 何をした */
+  actionType: typeof ActionType.Item;
+}>;
+
+export type Action =
+  | AttackAction
+  | SelfDefenceAction
+  | SpellAction
+  | ItemAction;
 
 // 味方キャラクタ用単体攻撃
-type AttackActionSingleForAlly = {
+type AttackActionSingleForAlly = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "group"; groupId: EnemyGroupId; };
   mode: { kind: "single"; targetId?: ActorId; };
-};
+}>;
 
 // 敵キャラクタ用単体攻撃
-type AttackActionSingleForEnemy = {
+type AttackActionSingleForEnemy = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "single"; targetId?: ActorId; };
-};
+}>;
 
 // グループ攻撃(味方キャラクタ専用)
-type AttackActionGroup = {
+type AttackActionGroup = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "group"; groupId: EnemyGroupId; };
   mode: { kind: "group"; groupId: EnemyGroupId; };
-};
+}>;
 
 // 全体攻撃
-type AttackActionAll = {
+type AttackActionAll = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "all"; };
-};
+}>;
 
 // ターゲットなし
-type AttackActionNone = {
+type AttackActionNone = Readonly<{
   actionType: typeof ActionType.Attack;
   actorId: ActorId;
   selection: { kind: "none"; };
   mode: { kind: "none"; };
-};
+}>;
 
-type SelfDefenceActionNone = {
-  actionType: typeof ActionType.SelfDefence;
-  actorId: ActorId;
-  selection: { kind: "none"; };
-  mode: { kind: "none"; };
-};
-
-// TODO: 未実装のため NONE だけ用意
-type SpellActionNone = {
-  actionType: typeof ActionType.Spell;
-  actorId: ActorId;
-  selection: { kind: "none"; };
-  mode: { kind: "none"; };
-};
-
-type ItemActionNone = {
-  actionType: typeof ActionType.Item;
-  actorId: ActorId;
-  selection: { kind: "none"; };
-  mode: { kind: "none"; };
-};
-
-export type PlannedAction =
+export type AttackPlannedAction =
   | AttackActionSingleForAlly
   | AttackActionSingleForEnemy
   | AttackActionGroup
   | AttackActionAll
-  | AttackActionNone
+  | AttackActionNone;
+
+type SelfDefenceActionNone = Readonly<{
+  actionType: typeof ActionType.SelfDefence;
+  actorId: ActorId;
+  selection: { kind: "none"; };
+  mode: { kind: "none"; };
+}>;
+
+export type SpellPlannedAction = Readonly<{
+  actionType: typeof ActionType.Spell;
+  actorId: ActorId;
+  spellId: SpellId;
+  selection: TargetSelection;
+  mode: TargetMode;
+}>;
+
+type ItemActionNone = Readonly<{
+  actionType: typeof ActionType.Item;
+  actorId: ActorId;
+  selection: { kind: "none"; };
+  mode: { kind: "none"; };
+}>;
+
+export type PlannedAction =
+  | AttackPlannedAction
   | SelfDefenceActionNone
-  | SpellActionNone
+  | SpellPlannedAction
   | ItemActionNone;
 
 // creators
 export const TargetSelections = {
   none: (): TargetSelection => ({ kind: "none" } as const),
   group: (gid: EnemyGroupId): TargetSelection => ({ kind: "group", groupId: gid } as const),
+  ally: (id: ActorId): TargetSelection => ({ kind: "ally", actorId: id } as const),
 } as const;
 
 // type guards

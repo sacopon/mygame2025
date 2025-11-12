@@ -51,4 +51,18 @@ export class BattleMessageWindowContents extends GameObject {
     --this.#index;
     this.#textList.setLine(this.#index, "");
   }
+
+  // 先頭行を残し、それ以降をクリアする
+  removeExceptFirstText(): void {
+    // まだ1行目までしか出力していない
+    if (this.#index < 1) {
+      return;
+    }
+
+    for (let i = 1; i < this.#textList.lines.length; ++i) {
+      this.#textList.setLine(i, "");
+    }
+
+    this.#index = 1;
+  }
 }

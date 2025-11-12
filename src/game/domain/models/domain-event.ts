@@ -13,4 +13,11 @@ export type SelfDefence = {
   sourceId: ActorId;
 };
 
-export type DomainEvent = DamageApplied | SelfDefence;
+export type HealApplied = {
+  type: "HealApplied";
+  sourceId: ActorId;
+  targetId: ActorId;
+  amount: number;
+};
+
+export type DomainEvent = DamageApplied | SelfDefence | HealApplied;

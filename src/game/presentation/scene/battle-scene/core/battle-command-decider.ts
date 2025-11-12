@@ -20,7 +20,7 @@ export class BattleCommandDecider {
     NotImplement: "notImplement",
   } as const;
 
-  static next(actorId: ActorId, command: BattleCommand): BattleCommandNextFlow {
+  static next(_: ActorId, command: BattleCommand): BattleCommandNextFlow {
     switch (command) {
       case BattleCommand.Attack:
         return { kind: BattleCommandDecider.FlowType.NeedEnemyTarget };
@@ -29,6 +29,9 @@ export class BattleCommandDecider {
         return { kind: BattleCommandDecider.FlowType.Immediate };
 
       case BattleCommand.Spell:
+        // TODO: 呪文選択ウィンドウを作り、FlotType.NeedSpellSelect を設ける
+        return { kind: BattleCommandDecider.FlowType.NeedEnemyTarget };
+
       case BattleCommand.Item:
         return { kind: BattleCommandDecider.FlowType.NotImplement };
 

@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, TurnResolution } from "../battle-scene-state";
 import { BattleScene, BattleSceneContext } from "../..";
 import { BattleMessageWindow, UILayoutCoordinator, SeId, PresentationEffectRunner } from "../../../../";
-import { ActorId, BattleDomainState, Level } from "@game/domain";
+import { ActorId, BattleDomainState, Level, SpellId } from "@game/domain";
 import { StatusWindow } from "@game/presentation/game-object/elements/window/status-window";
 
 /**
@@ -41,6 +41,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         clear: () => this.context.executeUi?.messageWindow.clearText(),
         print: (text: string) => this.context.executeUi?.messageWindow.addText(text),
         removeLast: () => this.context.executeUi?.messageWindow.removeLastText(),
+        removeExceptFirst: () => this.context.executeUi?.messageWindow.removeExceptFirstText(),
         bilkEnemyByDamage: (id: ActorId, durationMs: number) => this.scene.getEnemyViewByActorId(id).blinkByDamage(durationMs),
         hideEnemyByDefeat: (id: ActorId) => this.scene.getEnemyViewByActorId(id).hideByDefeat(),
         shake: () => {
@@ -55,6 +56,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
         },
         playSe: (id: SeId): void => this.context.ui.audio.playSe(id),
         resolveName,
+        resolveSpell: (id: SpellId) => this.context.domain.spellRepository.findSpell(id).name,
       });
 
     // メッセージウィンドウを作成

@@ -1,5 +1,6 @@
 import { CharacterParameter } from "./character-parameter";
 import { Damage } from "./damage";
+import { HealAmount } from "./heal-amount";
 
 /**
  * レベル
@@ -35,6 +36,10 @@ export class Hp extends CharacterParameter {
 
   takeDamage(damage: Damage): Hp {
     return Hp.of(Math.max(0, this.value - damage.value));
+  }
+
+  heal(healAmount: HealAmount, maxHp: Hp): Hp {
+    return Hp.of(Math.min(maxHp.value, this.value + healAmount.value));
   }
 
   static of = CharacterParameter.makeOf<Hp>(value => new Hp(value));
