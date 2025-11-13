@@ -34,6 +34,7 @@ export function createStateAndDeps(opts: {
     actorType: "Ally",
     name: `Ally${a.id}`,
     level: Level.of(1),
+    spellIds: [],
     hp: Hp.of(a.hp ?? 10),
     maxHp: Hp.of(10),
     attack: Attack.of(5),

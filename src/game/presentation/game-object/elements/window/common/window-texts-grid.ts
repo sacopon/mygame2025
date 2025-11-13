@@ -1,0 +1,103 @@
+import { GroupGameObject } from "../../../../core/group-game-object";
+import { GameObject, TextComponent } from "../../../..";
+import { GamePorts } from "@game/presentation";
+import { Position } from "@shared";
+
+type WindowTextsGridStyle = {
+  fontFamily: string;
+  fontSize: number;
+  /** 1マスの縦幅（行間を含む） */
+  cellHeight: number;
+  /** 1マスの横幅 */
+  cellWidth: number;
+  /** 列数 */
+  columns: number;
+  /** 列間のスペース（オプション） */
+  columnGap?: number;
+  /** 行間の追加オフセット（オプション） */
+  rowGap?: number;
+};
+
+export class WindowTextsGrid extends GroupGameObject {
+  #texts: ReadonlyArray<string> = [];
+  #labels: GameObject[] = [];
+  #style: Required<WindowTextsGridStyle>;
+
+  constructor(ports: GamePorts, texts: ReadonlyArray<string>, style: WindowTextsGridStyle) {
+    super(ports);
+
+    this.#style = {
+      ...style,
+      columnGap: style.columnGap ?? 0,
+      rowGap: style.rowGap ?? 0,
+    };
+
+    this.setPosition(0, 0);
+    this.#createLabels(texts);
+  }
+
+  get textLines(): ReadonlyArray<string> {
+    return this.#texts;
+  }
+
+  getCellMidY(index: number): Position {
+    const pos = this.#getCellTopLeft(index);
+    return {
+      x: pos.x,
+      y: pos.y + Math.floor(this.#style.cellHeight / 2),
+    };
+  }
+
+  setTexts(texts: ReadonlyArray<string>): void {
+    this.#texts = texts.slice();
+    const n = this.#texts.length;
+
+    // 足りない分を追加
+    while (this.#labels.length < n) {
+      const label = this.addChild(new GameObject(this.ports));
+      label.addComponent(new TextComponent(
+        "",
+        {
+          style: {
+            fontFamily: this.#style.fontFamily,
+            fontSize: this.#style.fontSize,
+          },
+        }))!;
+      this.#labels.push(label);
+    }
+
+    // ラベル設定
+    for (let i = 0; i < this.#labels.length; ++i) {
+      const label = this.#labels[i];
+      const textComp = label.getComponent(TextComponent.typeId)!;
+
+      // 使用しない分は非表示(削除まではしない)
+      if (n <= i) {
+        textComp.text = "";
+        label.visible = false;
+        continue;
+      }
+
+      textComp.text = this.#texts[i];
+      const pos = this.#getCellTopLeft(i);
+      label.setPosition(this.transform.x + pos.x, this.transform.y + pos.y);
+    }
+  }
+
+  #createLabels(texts: ReadonlyArray<string>): void {
+    this.setTexts(texts);
+  }
+
+  #getCellTopLeft(index: number): Position {
+    const col = index % this.#style.columns;
+    const row = Math.floor(index / this.#style.columns);
+
+    const left = (this.#style.cellWidth + this.#style.columnGap) * col;
+    const top  = (this.#style.cellHeight + this.#style.rowGap) * row;
+
+    return {
+      x: left,
+      y: top,
+    };
+  }
+}

@@ -14,10 +14,12 @@ export class GameObject {
   #components: GameComponents;
   #alive: boolean;
   #disposed: boolean;
+  #visible: boolean;
 
   constructor(ports: GamePorts) {
     this.#alive = true;
     this.#disposed = false;
+    this.#visible = true;
     this.#ports = ports;
     this.#components = new GameComponents();
     this.addComponent(new TransformComponent());
@@ -81,6 +83,15 @@ export class GameObject {
     return this.transform.y;
   }
 
+  get visible(): boolean {
+    return this.#visible;
+  }
+
+  set visible(value: boolean) {
+    this.#visible = value;
+    this.#components.visible = value;
+  }
+
   get #transform(): TransformComponent {
     return this.#components.getComponent(TransformComponent.typeId)!;
   }
@@ -92,6 +103,7 @@ export class GameObject {
     }
 
     component.onAttach?.(this);
+    component.visible = this.#visible;
     return component;
   }
 

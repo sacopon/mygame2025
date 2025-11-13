@@ -4,6 +4,7 @@ import { GamePorts } from "./game-ports";
 
 export class GroupGameObject extends GameObject implements ScreenSizeAware {
   #children: GameObject[] = [];
+  #visible: boolean = true;
 
   constructor(ports: GamePorts) {
     super(ports);
@@ -22,6 +23,7 @@ export class GroupGameObject extends GameObject implements ScreenSizeAware {
       return child;
     }
 
+    child.visible = this.#visible;
     this.#children.push(child);
     return child;
   }
@@ -133,6 +135,11 @@ export class GroupGameObject extends GameObject implements ScreenSizeAware {
     this.removeAllChildren();
 
     super.onDispose();
+  }
+
+  override set visible(value: boolean) {
+    this.#visible = value;
+    this.#children.forEach(child => { child.visible = value; });
   }
 
   /**

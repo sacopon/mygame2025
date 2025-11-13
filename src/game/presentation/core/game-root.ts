@@ -9,14 +9,14 @@ import { SpellRepositoryInMemory } from "@game/infrastructure/repository/spell";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "あああああ", level: Level.of(3), maxHp: Hp.of(80), currentHp: Hp.of(80),
-      attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
-    { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), maxHp: Hp.of(130), currentHp: Hp.of(130),
-      attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
-    { allyId: AllyId(3), name: "ううううう", level: Level.of(6),  maxHp: Hp.of(60),  currentHp: Hp.of(60),
-      attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(15) },
-    { allyId: AllyId(4), name: "えええええ", level: Level.of(2),  maxHp: Hp.of(35),  currentHp: Hp.of(35),
-      attack: Attack.of(5), defence: Defence.of(10), agility: Agility.of(25) },
+    { allyId: AllyId(1), name: "あああああ", level: Level.of(3), spellIds: [SpellId(1), SpellId(2), SpellId(3), SpellId(4), SpellId(5)],
+      maxHp: Hp.of(80), currentHp: Hp.of(80), attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
+    { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), spellIds: [SpellId(2)],
+      maxHp: Hp.of(130), currentHp: Hp.of(130), attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
+    { allyId: AllyId(3), name: "ううううう", level: Level.of(6), spellIds: [SpellId(1), SpellId(3)],
+      maxHp: Hp.of(60),  currentHp: Hp.of(60), attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(15) },
+    { allyId: AllyId(4), name: "えええええ", level: Level.of(2), spellIds: [SpellId(3)],
+      maxHp: Hp.of(35),  currentHp: Hp.of(35), attack: Attack.of(5), defence: Defence.of(10), agility: Agility.of(25) },
   ] as const;
 
   const allEnemies: Enemy[] = [
@@ -34,7 +34,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体攻撃呪文
     {
       spellId: SpellId(1),
-      name: "メラメラ",
+      name: "メラメラメ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -42,7 +42,7 @@ const createDomainPorts = function(): DomainPorts {
     // グループ攻撃呪文
     {
       spellId: SpellId(2),
-      name: "ギラギラ",
+      name: "ギラギラギ",
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -50,7 +50,23 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(3),
-      name: "ホイホイ",
+      name: "ホイホイホ",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(4),
+      name: "ホホホホホ",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(5),
+      name: "ブブブブブ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",

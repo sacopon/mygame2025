@@ -1,4 +1,4 @@
-import { ListWindowContents } from "../common/list-window-contents";
+import { SelectableWindowContents } from "../common/selectable-window-contents";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { WindowTextsVertical } from "../..";
 import { Position, Size, toZenkaku } from "@shared";
@@ -7,7 +7,7 @@ import { GamePorts } from "@game/presentation";
 /**
  * 敵選択ウィンドウの中身部分
  */
-export class EnemySelectWindowContents extends ListWindowContents {
+export class EnemySelectWindowContents extends SelectableWindowContents {
   #enemyNamesObject: WindowTextsVertical;
 
   constructor(ports: GamePorts, windowSize: Size, nameAndCounts: ReadonlyArray<{ name: string, count: number }>) {

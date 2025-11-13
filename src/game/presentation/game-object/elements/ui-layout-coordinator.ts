@@ -1,6 +1,6 @@
 import { GameObject } from "../../core/game-object";
 import { ScreenSizeAware } from "../../core/game-component";
-import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow } from "..";
+import { BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow, SpellSelectWindow } from "..";
 import { GamePorts } from "@game/presentation";
 import { DEFAULT_SHAKE_PATTERNS, ShakeRunner } from "@game/presentation/effects/shake-runner";
 import { StatusWindow } from "./window/status-window";
@@ -9,6 +9,7 @@ type Windows = {
   mainWindow?: MainWindow;
   commandSelectWindow?: CommandSelectWindow;
   enemySelectWindow?: EnemySelectWindow;
+  spellSelectWindow?: SpellSelectWindow;
   messageWindow?: BattleMessageWindow;
   statusWindow?: StatusWindow;
 }
@@ -27,6 +28,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   #mainWindow?: MainWindow;
   #commandWindow?: CommandSelectWindow;
   #enemySelectWindow?: EnemySelectWindow;
+  #spellSelectWindow?: SpellSelectWindow;
   #messageWindow?: BattleMessageWindow;
   #statusWindow?: StatusWindow;
   #shakeRunners = new WeakMap<Window, ShakeRunner>();
@@ -34,10 +36,10 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   constructor(ports: GamePorts, vw: number, vh: number, windows: Windows) {
     super(ports);
 
-    // TODO: MainWindow の枠だけ揺らす
     this.#mainWindow = windows.mainWindow;
     this.#commandWindow = windows.commandSelectWindow;
     this.#enemySelectWindow = windows.enemySelectWindow;
+    this.#spellSelectWindow = windows.spellSelectWindow;
     this.#messageWindow = windows.messageWindow;
     this.#statusWindow = windows.statusWindow;
     this.#place();
@@ -100,8 +102,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   #placeInputWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
-
-    if (!this.#commandWindow || !this.#enemySelectWindow) {
+    if (!this.#commandWindow || !this.#enemySelectWindow || !this.#spellSelectWindow) {
       return;
     }
 
@@ -117,8 +118,14 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
 
     // 敵選択ウィンドウ
     {
+      // TODO: オフセット要らないはず（揺れないので）
       const offset = offsets?.get(this.#enemySelectWindow) || { dx: 0, dy: 0 };
       this.#enemySelectWindow.setPosition(x + this.#commandWindow.width + offset.dx, this.#commandWindow.transform.y + 19 + offset.dy);
+    }
+
+    // 呪文選択ウィンドウ
+    {
+      this.#spellSelectWindow.setPosition(x + Math.floor(this.#commandWindow.width / 2), this.#commandWindow.transform.y + 19);
     }
   }
 

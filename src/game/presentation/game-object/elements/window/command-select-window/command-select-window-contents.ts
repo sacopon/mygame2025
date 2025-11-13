@@ -1,4 +1,4 @@
-import { ListWindowContents } from "../common/list-window-contents";
+import { SelectableWindowContents } from "../common/selectable-window-contents";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { DEFAULT_WINDOW_SETTINGS, WindowTextsVertical } from "..";
 import { Position, Size } from "@shared";
@@ -8,7 +8,7 @@ import { GameObject, GamePorts } from "@game/presentation";
 /**
  * コマンド選択ウィンドウの中身部分
  */
-export class CommandSelectWindowContents extends ListWindowContents {
+export class CommandSelectWindowContents extends SelectableWindowContents {
   #commandTextsObject: WindowTextsVertical;
   #actorNameComponent: TextComponent;
 
