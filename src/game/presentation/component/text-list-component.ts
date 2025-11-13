@@ -44,8 +44,8 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
   update(gameObject: GameObject, _deltaTime: number): void {
     this.#handles.forEach((handle, i) => {
       gameObject.render.setTransform(handle, {
-        x: gameObject.transform.x + this.#layout.offsetX,
-        y: gameObject.transform.y + this.#layout.offsetY + this.#layout.lineHeight * i,
+        x: gameObject.worldTransform.x + this.#layout.offsetX,
+        y: gameObject.worldTransform.y + this.#layout.offsetY + this.#layout.lineHeight * i,
       });
 
       gameObject.render.setVisible(handle, this.#visible);

@@ -18,8 +18,8 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
       return;
     }
 
-    gameObject.render.setTransform(this.#handle, gameObject.transform);
-    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? false);
+    gameObject.render.setTransform(this.#handle, gameObject.worldTransform);
+    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? true);
   }
 
   override get visible() {

@@ -24,13 +24,13 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
     gameObject.render.setTransform(
       this.#handle,
       {
-        ...gameObject.transform,
+        ...gameObject.worldTransform,
         ...{
-          x: gameObject.transform.x + (this.#spec.offset?.x ?? 0),
-          y: gameObject.transform.y + (this.#spec.offset?.y ?? 0),
+          x: gameObject.worldTransform.x + (this.#spec.offset?.x ?? 0),
+          y: gameObject.worldTransform.y + (this.#spec.offset?.y ?? 0),
         },
       });
-    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? false);
+    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? true);
   }
 
   override onAttached(gameObject: GameObject): void {

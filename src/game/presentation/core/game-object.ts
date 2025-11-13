@@ -3,6 +3,7 @@ import { GamePorts } from "./game-ports";
 import {
   ComponentById,
   ComponentTypeId,
+  GroupGameObject,
   InputPort,
   RenderPort,
   Transform2D,
@@ -10,6 +11,7 @@ import {
 } from "..";
 
 export class GameObject {
+  #parent: GroupGameObject | null = null;
   #ports: GamePorts;
   #components: GameComponents;
   #alive: boolean;
@@ -39,6 +41,30 @@ export class GameObject {
 
   get transform(): Readonly<Transform2D> {
     return this.#components.getComponent(TransformComponent.typeId)!.transform;
+  }
+
+  get worldTransform(): Readonly<Transform2D> {
+    const local = this.transform;
+
+    if (!this.#parent) {
+      return { ...local };
+    }
+
+    return {
+      x: this.#parent.worldTransform.x + local.x,
+      y: this.#parent.worldTransform.y + local.y,
+      rotation: this.#parent.worldTransform.rotation + local.rotation,
+      scaleX: local.scaleX, //this.#parent.worldTransform.scaleX + local.scaleX,
+      scaleY: local.scaleY, //this.#parent.worldTransform.scaleY + local.scaleY,
+    };
+  }
+
+  get worldX(): number {
+    return (this.#parent?.worldX ?? 0) + this.transform.x;
+  }
+
+  get worldY(): number {
+    return (this.#parent?.worldY ?? 0) + this.transform.y;
   }
 
   get isAlive(): boolean {
@@ -92,7 +118,11 @@ export class GameObject {
     this.#components.visible = value;
   }
 
-  get #transform(): TransformComponent {
+  get parent(): GroupGameObject | null {
+    return this.#parent;
+  }
+
+  get #transform(): Readonly<TransformComponent> {
     return this.#components.getComponent(TransformComponent.typeId)!;
   }
 
@@ -109,6 +139,11 @@ export class GameObject {
 
   getComponent<T extends ComponentTypeId>(id: T): ComponentById<T> | null {
     return this.#components.getComponent(id);
+  }
+
+  // GroupGameObject からのみ使用する
+  protected static setParentOf(child: GameObject, parent: GroupGameObject | null): void {
+    child.#parent = parent;
   }
 
   protected onDisposeInternal(): void {}

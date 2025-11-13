@@ -80,7 +80,7 @@ export class WindowTextsGrid extends GroupGameObject {
 
       textComp.text = this.#texts[i];
       const pos = this.#getCellTopLeft(i);
-      label.setPosition(this.transform.x + pos.x, this.transform.y + pos.y);
+      label.setPosition(pos.x, pos.y);
     }
   }
 

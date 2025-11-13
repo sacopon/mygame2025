@@ -36,7 +36,7 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
       return;
     }
 
-    gameObject.render.setTransform(this.#handle, gameObject.transform);
+    gameObject.render.setTransform(this.#handle, gameObject.worldTransform);
     gameObject.render.setVisible(this.#handle, this.#visible);
   }
 

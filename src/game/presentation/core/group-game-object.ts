@@ -23,6 +23,7 @@ export class GroupGameObject extends GameObject implements ScreenSizeAware {
       return child;
     }
 
+    GameObject.setParentOf(child, this);
     child.visible = this.#visible;
     this.#children.push(child);
     return child;
@@ -36,6 +37,7 @@ export class GroupGameObject extends GameObject implements ScreenSizeAware {
     }
 
     this.#children.splice(index, 1);
+    GameObject.setParentOf(child, null);
     return true;
   }
 
@@ -93,25 +95,6 @@ export class GroupGameObject extends GameObject implements ScreenSizeAware {
     }
 
     this.#children = alives;
-  }
-
-  override setPosition(x: number, y: number): void {
-    const prevX = this.transform.x;
-    const prevY = this.transform.y;
-    super.setPosition(x, y);
-
-    const dx = this.transform.x - prevX;
-    const dy = this.transform.y - prevY;
-
-    if (dx === 0 && dy === 0) {
-      return;
-    }
-
-    for (const c of this.#children) {
-      if (c.isAlive) {
-        c.setPosition(c.transform.x + dx, c.transform.y + dy);
-      }
-    }
   }
 
   override onDispose(): void {

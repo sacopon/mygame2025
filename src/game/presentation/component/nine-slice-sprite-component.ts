@@ -19,8 +19,8 @@ export class NineSliceSpriteComponent extends BaseGameComponent<typeof NineSlice
       return;
     }
 
-    gameObject.render.setTransform(this.#handle, gameObject.transform);
-    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? false);
+    gameObject.render.setTransform(this.#handle, gameObject.worldTransform);
+    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? true);
   }
 
   override get visible(): boolean {

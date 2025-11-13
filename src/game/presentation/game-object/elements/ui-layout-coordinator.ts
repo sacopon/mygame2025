@@ -120,12 +120,12 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     {
       // TODO: オフセット要らないはず（揺れないので）
       const offset = offsets?.get(this.#enemySelectWindow) || { dx: 0, dy: 0 };
-      this.#enemySelectWindow.setPosition(x + this.#commandWindow.width + offset.dx, this.#commandWindow.transform.y + 19 + offset.dy);
+      this.#enemySelectWindow.setPosition(x + this.#commandWindow.width + offset.dx, this.#commandWindow.y + 19 + offset.dy);
     }
 
     // 呪文選択ウィンドウ
     {
-      this.#spellSelectWindow.setPosition(x + Math.floor(this.#commandWindow.width / 2), this.#commandWindow.transform.y + 19);
+      this.#spellSelectWindow.setPosition(x + Math.floor(this.#commandWindow.width / 2), this.#commandWindow.y + 19);
     }
   }
 
