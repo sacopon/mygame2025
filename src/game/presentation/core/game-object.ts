@@ -54,8 +54,8 @@ export class GameObject {
       x: this.#parent.worldTransform.x + local.x,
       y: this.#parent.worldTransform.y + local.y,
       rotation: this.#parent.worldTransform.rotation + local.rotation,
-      scaleX: local.scaleX, //this.#parent.worldTransform.scaleX + local.scaleX,
-      scaleY: local.scaleY, //this.#parent.worldTransform.scaleY + local.scaleY,
+      scaleX: this.#parent.worldTransform.scaleX * local.scaleX,
+      scaleY: this.#parent.worldTransform.scaleY * local.scaleY,
     };
   }
 
