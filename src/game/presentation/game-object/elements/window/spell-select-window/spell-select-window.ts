@@ -3,6 +3,7 @@ import { SPELL_SELECT_WINDOW_SETTINGS } from "./spell-select-window-constants";
 import { SpellSelectWindowContents } from "./spell-select-window-contents";
 import { GamePorts } from "../../../..";
 import { Spell } from "@game/domain";
+import { wrapIndex } from "@shared/utils";
 
 /**
  * 呪文選択ウィンドウ
@@ -51,6 +52,26 @@ export class SpellSelectWindow extends SelectableWindow<Spell, SpellSelectWindow
 
   getCurrent(): Spell {
     return this.#spells[this.selectedIndex];
+  }
+
+  moveHorizontal(delta: -1 | 1): void {
+    const maxCol = this.contents.getColumnsAt(this.currentRow);
+    const newCol = wrapIndex(this.currentColumn + delta, maxCol);
+    this.select(this.currentRow * this.contents.columns + newCol);
+  }
+
+  moveVertical(delta: -1 | 1): void {
+    const maxRow = this.contents.getRowsAt(this.currentColumn);
+    const newRow = wrapIndex(this.currentRow + delta, maxRow);
+    this.select(newRow * this.contents.columns + this.currentColumn);
+  }
+
+  get currentColumn(): number {
+    return this.selectedIndex % this.contents.columns;
+  }
+
+  get currentRow(): number {
+    return Math.floor(this.selectedIndex / this.contents.columns);
   }
 
   get width(): number {

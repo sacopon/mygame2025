@@ -9,7 +9,7 @@ import { SpellRepositoryInMemory } from "@game/infrastructure/repository/spell";
 
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
-    { allyId: AllyId(1), name: "あああああ", level: Level.of(3), spellIds: [SpellId(1), SpellId(2), SpellId(3), SpellId(4), SpellId(5)],
+    { allyId: AllyId(1), name: "あああああ", level: Level.of(3), spellIds: [SpellId(1), SpellId(2), SpellId(3), SpellId(4), SpellId(5), SpellId(6), SpellId(7), SpellId(8), SpellId(9)],
       maxHp: Hp.of(80), currentHp: Hp.of(80), attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
     { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), spellIds: [SpellId(2)],
       maxHp: Hp.of(130), currentHp: Hp.of(130), attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
@@ -34,7 +34,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体攻撃呪文
     {
       spellId: SpellId(1),
-      name: "メラメラメ",
+      name: "アアアアア",
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -42,7 +42,7 @@ const createDomainPorts = function(): DomainPorts {
     // グループ攻撃呪文
     {
       spellId: SpellId(2),
-      name: "ギラギラギ",
+      name: "イイイイイ",
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -50,7 +50,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(3),
-      name: "ホイホイホ",
+      name: "ウウウウウ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -58,7 +58,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(4),
-      name: "ホホホホホ",
+      name: "エエエエエ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -66,7 +66,39 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(5),
-      name: "ブブブブブ",
+      name: "オオオオオ",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(6),
+      name: "カカカカカ",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(7),
+      name: "キキキキキ",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(8),
+      name: "ククククク",
+      power: SpellPower.of(1),
+      target: { scope: "single", side: "us", },
+      type: "heal",
+    },
+    // 単体回復呪文
+    {
+      spellId: SpellId(9),
+      name: "ケケケケケ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",

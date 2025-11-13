@@ -19,7 +19,6 @@ type WindowTextsGridStyle = {
 };
 
 export class WindowTextsGrid extends GroupGameObject {
-  #texts: ReadonlyArray<string> = [];
   #labels: GameObject[] = [];
   #style: Required<WindowTextsGridStyle>;
 
@@ -36,8 +35,20 @@ export class WindowTextsGrid extends GroupGameObject {
     this.#createLabels(texts);
   }
 
-  get textLines(): ReadonlyArray<string> {
-    return this.#texts;
+  get columns(): number {
+    return this.#style.columns;
+  }
+
+  get rows(): number {
+    return Math.ceil(this.#labels.length / this.columns);
+  }
+
+  getColumnsAt(row: number): number {
+    return this.rows - 1 <= row ? this.#labels.length % this.columns : this.columns;
+  }
+
+  getRowsAt(col: number): number {
+    return (this.#labels.length % this.columns) <= col ? this.rows - 1 : this.rows;
   }
 
   getCellMidY(index: number): Position {
@@ -49,8 +60,7 @@ export class WindowTextsGrid extends GroupGameObject {
   }
 
   setTexts(texts: ReadonlyArray<string>): void {
-    this.#texts = texts.slice();
-    const n = this.#texts.length;
+    const n = texts.length;
 
     // 足りない分を追加
     while (this.#labels.length < n) {
@@ -78,7 +88,7 @@ export class WindowTextsGrid extends GroupGameObject {
         continue;
       }
 
-      textComp.text = this.#texts[i];
+      textComp.text = texts[i];
       const pos = this.#getCellTopLeft(i);
       label.setPosition(pos.x, pos.y);
     }

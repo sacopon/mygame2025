@@ -67,6 +67,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     const cancel = inp.pressed(GameButton.B);
     const up = inp.pressed(GameButton.Up);
     const down = inp.pressed(GameButton.Down);
+    const left = inp.pressed(GameButton.Left);
+    const right = inp.pressed(GameButton.Right);
 
     // 決定
     if (ok) {
@@ -92,12 +94,16 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
       this.#callbacks.onCancel(this.#actor);
     }
     else if (up) {
-      // カーソル上移動
-      this.#spellSelectWindow.selectPrev();
+      this.#spellSelectWindow.moveVertical(-1);
     }
     else if (down) {
-      // カーソル下移動
-      this.#spellSelectWindow.selectNext();
+      this.#spellSelectWindow.moveVertical(1);
+    }
+    else if (left) {
+      this.#spellSelectWindow.moveHorizontal(-1);
+    }
+    else if (right) {
+      this.#spellSelectWindow.moveHorizontal(1);
     }
   }
 

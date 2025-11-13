@@ -14,7 +14,6 @@ import { Spell } from "@game/domain";
 export class SpellSelectWindowContents extends SelectableWindowContents {
   #spellNamesObject: WindowTextsGrid;
   #actorNameComponent: TextComponent;
-  #commandTextsPos: { x: number, y: number };
 
   constructor(ports: GamePorts, windowSize: Size) {
     super(ports, windowSize);
@@ -65,7 +64,6 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
       y: separator.transform.y + DEFAULT_WINDOW_SETTINGS.separatorHeight + DEFAULT_WINDOW_SETTINGS.separatorMarginBottom,
     };
     this.#spellNamesObject.setPosition(commandTextsPos.x, commandTextsPos.y);
-    this.#commandTextsPos = commandTextsPos;
   }
 
   override getCursorLocalPos(index: number): Position {
@@ -82,6 +80,26 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
   }
 
   setSpells(spells: ReadonlyArray<Spell>): void {
-    this.#spellNamesObject.setTexts(spells.map(s => s.name));
+    this.setItems(spells.map(s => s.name));
+  }
+
+  setItems(names: ReadonlyArray<string>): void {
+    this.#spellNamesObject.setTexts(names);
+  }
+
+  getColumnsAt(row: number): number {
+    return this.#spellNamesObject.getColumnsAt(row);
+  }
+
+  getRowsAt(col: number): number {
+    return this.#spellNamesObject.getRowsAt(col);
+  }
+
+  get columns(): number {
+    return this.#spellNamesObject.columns;
+  }
+
+  get rows(): number {
+    return this.#spellNamesObject.rows;
   }
 }
