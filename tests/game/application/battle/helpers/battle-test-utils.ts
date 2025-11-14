@@ -69,6 +69,7 @@ export function createStateAndDeps(opts: {
   const allyIds = new Set(state.getAllyActorStates().map(a => a.actorId));
 
   const deps: ResolveDeps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     random: dummyRandom as any,
     getActor: _id => {
       // resolveTargets では使わないので適当でも OK

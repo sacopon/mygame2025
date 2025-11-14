@@ -127,8 +127,8 @@ export class SpellSelectWindow extends SelectableWindow<Spell, SpellSelectWindow
     return SpellSelectWindow.#windowSpec.height;
   }
 
-  get selectionCount(): number {
-    return this.#allSpells.length;
+  override get selectionCount(): number {
+    return this.#itemCountInPage;
   }
 
   get #pageSize(): number {
