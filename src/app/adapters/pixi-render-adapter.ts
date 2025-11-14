@@ -210,7 +210,7 @@ export class PixiRenderAdapter implements RenderPort {
     sprite.height = size.height;
   }
 
-  setSpriteTransform(handle: ViewHandle, transform: Partial<Transform2D>): void {
+  setTransform(handle: ViewHandle, transform: Partial<Transform2D>): void {
     const container = this.#views.get(handle);
 
     if (!container) {
@@ -220,7 +220,7 @@ export class PixiRenderAdapter implements RenderPort {
     this.#applyTransform(container, transform);
   }
 
-  setSpriteVisible(handle: ViewHandle, visible: boolean): void {
+  setVisible(handle: ViewHandle, visible: boolean): void {
     const container = this.#views.get(handle);
 
     if (!container) {

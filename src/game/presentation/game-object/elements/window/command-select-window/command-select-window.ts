@@ -1,4 +1,4 @@
-import { ListSelectWindow } from "../common/list-select-window";
+import { SelectableWindow } from "../common/selectable-window";
 import { COMMAND_SELECT_WINDOW_SETTINGS } from "./command-select-window-constants";
 import { CommandSelectWindowContents } from "./command-select-window-contents";
 import { GamePorts } from "../../../..";
@@ -7,7 +7,7 @@ import { BattleCommand, BattleCommandLabels } from "../../../../scene/battle-sce
 /**
  * コマンド選択ウィンドウ
  */
-export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
+export class CommandSelectWindow extends SelectableWindow<BattleCommand, CommandSelectWindowContents> {
   #commands: ReadonlyArray<BattleCommand>;
 
   static readonly #windowSpec = {
@@ -42,7 +42,7 @@ export class CommandSelectWindow extends ListSelectWindow<BattleCommand> {
   }
 
   setActorName(actorName: string): void {
-    (this.contents as CommandSelectWindowContents).setActorName(actorName);
+    this.contents.setActorName(actorName);
   }
 
   getCurrent(): BattleCommand {

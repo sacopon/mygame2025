@@ -1,14 +1,15 @@
-import { GameComponent } from "@game/presentation/core/game-component";
+import { BaseGameComponent } from "@game/presentation/core/game-component";
 import { identityTransform, Transform2D } from "@game/presentation/ports";
 import { GameObject } from "@game/presentation";
 
-export class TransformComponent implements GameComponent<typeof TransformComponent.typeId> {
+export class TransformComponent extends BaseGameComponent<typeof TransformComponent.typeId> {
   static readonly typeId: unique symbol = Symbol("TransformComponent");
   readonly typeId: typeof TransformComponent.typeId = TransformComponent.typeId;
 
   #transform: Transform2D = { ...identityTransform };
 
   constructor() {
+    super();
   }
 
   get transform(): Readonly<Transform2D> {

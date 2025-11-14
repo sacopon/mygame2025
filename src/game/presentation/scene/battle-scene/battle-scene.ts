@@ -139,7 +139,7 @@ export class BattleScene implements Scene {
       domainState,
       nextDomainState: domainState,
       commandChoices: [],
-      // inputUi は #beginInputPhase() にて作成
+      // inputUi は buildInputUi() にて作成
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
     // 最初は空なのでステートを直push
@@ -237,7 +237,7 @@ export class BattleScene implements Scene {
 
     // ロジックエラー
     if (this.#context.inputUi) {
-      throw new Error("#beginInputPhase: this.#context.inputUi already exists.");
+      throw new Error("buildInputUi: this.#context.inputUi already exists.");
     }
 
     // コマンド(本当はキャラクターごとにコマンドは異なるが仮で共通)

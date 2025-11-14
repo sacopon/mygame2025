@@ -24,7 +24,7 @@ export class WindowTextsVertical extends GameObject {
       }))!;
   }
 
-  get textLines() {
+  get textLines(): ReadonlyArray<string> {
     return this.#textList.lines.concat();
   }
 
