@@ -10,18 +10,16 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   #callbacks: InputPhaseCallbacks;
   #actor: AllyActor;
   // 呪文選択ウィンドウ
-  #spellSelectWindow: SpellSelectWindow;
+  #spellSelectWindow: SpellSelectWindow | null = null;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
 
   constructor(
     scene: BattleScene,
-    window: SpellSelectWindow,
     actor: AllyActor,
     callbacks: InputPhaseCallbacks
   ) {
     super(scene);
-    this.#spellSelectWindow = window;
     this.#actor = actor;
     this.#callbacks = callbacks;
   }
@@ -35,15 +33,24 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     context.inputUi!.commandSelectWindow.setActive(false);
     context.inputUi!.enemySelectWindow.setActive(false, true);  // ウィンドウカラーも非アクティブ色に
 
-    // 呪文の一覧をウィンドウに設定する
-    this.#spellSelectWindow.setSpells(this.#actor.spellIds.map(s => context.domain.spellRepository.findSpell(s)));
-
-    // ウィンドウにキャラクター名を反映
-    this.#spellSelectWindow.setActorName(context.domain.allyRepository.findAlly(this.#actor.originId).name);
+    // 呪文選択ウィンドウ生成
+    this.#spellSelectWindow = this.scene.spawn(new SpellSelectWindow(
+      context.ui,
+      this.#actor.name,
+      this.#actor.spellIds.map(s => context.domain.spellRepository.findSpell(s))));
+    context.inputUi?.coordinator.placeSpellSelectWindow(this.#spellSelectWindow);
+    this.#spellSelectWindow.setActive(true);
   }
 
   override onLeave(_context: BattleSceneContext): void {
     this.#locked = false;
+
+    if (this.#spellSelectWindow) {
+      this.context.inputUi?.coordinator.placeSpellSelectWindow(null);
+      this.scene.despawn(this.#spellSelectWindow);
+      this.#spellSelectWindow = null;
+    }
+
     this.#inactivate();
   }
 
@@ -58,7 +65,7 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   }
 
   override update(_deltaTime: number): void {
-    if (this.#locked) {
+    if (this.#locked || !this.#spellSelectWindow) {
       return;
     }
 
@@ -74,7 +81,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     if (ok) {
       this.#locked = true;
       this.context.ui.audio.playSe("cursor");
-      // const command = this.#spellSelectWindow.getCurrent();
+      const spell = this.#spellSelectWindow.getCurrent();
+      console.log(spell.name);
       // this.#runFlow(command, BattleCommandDecider.next(this.#actor.actorId, command));
     }
     // キャンセル
@@ -226,12 +234,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   // }
 
   #activate(): void {
-    this.#spellSelectWindow.visible = true;
-    this.#spellSelectWindow.setActive(true);
   }
 
   #inactivate(): void {
-    this.#spellSelectWindow.visible = false;
-    this.#spellSelectWindow.setActive(false);
   }
 }

@@ -40,15 +40,15 @@ export class WindowTextsGrid extends GroupGameObject {
   }
 
   get rows(): number {
-    return Math.ceil(this.#labels.length / this.columns);
+    return Math.ceil(this.#labels.filter(l => l.visible).length / this.columns);
   }
 
   getColumnsAt(row: number): number {
-    return this.rows - 1 <= row ? this.#labels.length % this.columns : this.columns;
+    return this.#labels.filter(l => l.visible).length <= (row + 1) * this.columns - 1 ? this.columns - 1 : this.columns;
   }
 
   getRowsAt(col: number): number {
-    return (this.#labels.length % this.columns) <= col ? this.rows - 1 : this.rows;
+    return (this.#labels.filter(l => l.visible).length - 1) % this.columns < col % this.columns ? this.rows - 1 : this.rows;
   }
 
   getCellMidY(index: number): Position {
@@ -90,6 +90,7 @@ export class WindowTextsGrid extends GroupGameObject {
 
       textComp.text = texts[i];
       const pos = this.#getCellTopLeft(i);
+      label.visible = true;
       label.setPosition(pos.x, pos.y);
     }
   }

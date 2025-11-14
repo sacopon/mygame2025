@@ -188,7 +188,6 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
       case BattleCommandDecider.FlowType.NeedSpellSelect:
         this.scene.requestPushState(new InputPhaseSelectSpellState(
           this.scene,
-          this.context.inputUi!.spellSelectWindow,
           this.#actor,
           {
             // TODO: ちゃんとやる

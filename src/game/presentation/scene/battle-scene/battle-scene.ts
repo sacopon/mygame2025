@@ -1,6 +1,6 @@
 import { Scene } from "../../scene/core/scene";
 import { BattleCommand, BattleSceneState, CommandChoice, InputPhaseFlowState, TurnPlan, TurnResolution } from ".";
-import { UiPorts, GameObjectAccess, BattleMessageWindow, SpellSelectWindow } from "../..";
+import { UiPorts, GameObjectAccess, BattleMessageWindow } from "../..";
 import {
   GameObject,
   Background,
@@ -48,7 +48,6 @@ export type BattleSceneContext = {
     coordinator: UILayoutCoordinator;
     commandSelectWindow: CommandSelectWindow;
     enemySelectWindow: EnemySelectWindow;
-    spellSelectWindow: SpellSelectWindow;
     statusWindow: StatusWindow;
   };
 
@@ -254,10 +253,6 @@ export class BattleScene implements Scene {
     // 敵選択ウィンドウ
     const enemySelectWindow = this.spawn(new EnemySelectWindow(ui, this.#buildEnemyGroups(domain, state)));
 
-    // 呪文選択ウィンドウ
-    const spellSelectWindow = this.spawn(new SpellSelectWindow(ui));
-    spellSelectWindow.visible = false;  // 呪文コマンドが選択されるまで非表示
-
     // ステータスウィンドウ
     const resolver = {
       resolveName: (actorId: ActorId) => this.getActorDisplayNameById(actorId),
@@ -271,12 +266,11 @@ export class BattleScene implements Scene {
         mainWindow: this.#mainWindow,
         commandSelectWindow,
         enemySelectWindow,
-        spellSelectWindow,
         statusWindow,
       }));
 
     // コンテキストに設定
-    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow, spellSelectWindow, statusWindow };
+    this.#context.inputUi = { coordinator, commandSelectWindow, enemySelectWindow, statusWindow };
   }
 
   /**
@@ -290,7 +284,6 @@ export class BattleScene implements Scene {
     this.despawn(this.#context.inputUi.coordinator);
     this.despawn(this.#context.inputUi.commandSelectWindow);
     this.despawn(this.#context.inputUi.enemySelectWindow);
-    this.despawn(this.#context.inputUi.spellSelectWindow);
     this.despawn(this.#context.inputUi.statusWindow);
     this.#context.inputUi = undefined;
   }

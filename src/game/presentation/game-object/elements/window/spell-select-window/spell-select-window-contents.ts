@@ -75,8 +75,8 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
     };
   }
 
-  setActorName(actorName: string): void {
-    this.#actorNameComponent.text = `${actorName}の呪文${toZenkaku(1)}`;
+  setWindowTitle(actorName: string, pageIndex: number): void {
+    this.#setHeader(`${actorName}の呪文${toZenkaku(pageIndex + 1)}`);
   }
 
   setSpells(spells: ReadonlyArray<Spell>): void {
@@ -93,6 +93,10 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
 
   getRowsAt(col: number): number {
     return this.#spellNamesObject.getRowsAt(col);
+  }
+
+  #setHeader(headerText: string): void {
+    this.#actorNameComponent.text = headerText;
   }
 
   get columns(): number {
