@@ -11,5 +11,4 @@ export type ResolveDeps = {
   isAlly: (id: ActorId) => boolean;
   getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
   enemyGroupIds: ReadonlyArray<EnemyGroupId>;
-  aliveAllActors: () => ReadonlyArray<ActorId>;
 };

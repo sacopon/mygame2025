@@ -81,10 +81,6 @@ export function createStateAndDeps(opts: {
     isAlly: (id: ActorId) => allyIds.has(id),
     getActorIdsByEnemyGroup: (groupId: EnemyGroupId) =>
       groupMap.get(groupId) ?? [],
-    aliveAllActors: () => [
-      ...state.getAliveAllyActorIds(),
-      ...state.getAliveEnemyActorIds(),
-    ],
     enemyGroupIds: Array.from(groupMap.keys()),
   };
 

@@ -310,11 +310,6 @@ export class BattleScene implements Scene {
     return this.#context.domain.allyRepository.findAlly(actor.originId).level;
   }
 
-  getAliveAllActors(): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
-    return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
-  }
-
   getEnemyGroupIds(): ReadonlyArray<EnemyGroupId> {
     return [...this.#enemyActorsByGroupId.keys()];
   }

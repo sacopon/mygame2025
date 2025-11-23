@@ -40,7 +40,6 @@ export class ExecutePhaseTurnResolveState extends BaseBattleSceneState {
       isAlly: (actorId: ActorId) => this.scene.getActorById(actorId).actorType === ActorType.Ally,
       getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => this.scene.getActorIdsByEnemyGroup(groupId),
       enemyGroupIds: this.scene.getEnemyGroupIds(),
-      aliveAllActors: () => this.scene.getAliveAllActors(),
     });
 
     // 生成された解決済みアクションをバトル状態に反映する
