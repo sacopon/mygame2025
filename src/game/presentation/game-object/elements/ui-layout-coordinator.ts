@@ -84,6 +84,22 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     window.setPosition(pos.x, pos.y);
   }
 
+  bringToFrontEnemySelectWindow(window: EnemySelectWindow | null): void {
+    if (!window) {
+      return;
+    }
+
+    window.bringToTop();
+  }
+
+  bringToFrontSpellSelectWindow(window: SpellSelectWindow | null): void {
+    if (!window) {
+      return;
+    }
+
+    window.bringToTop();
+  }
+
   #place(offsets?: OffsetsByWindow) {
     const { width, height } = this.ports.screen.getGameSize();
     this.#placeCommonWindow(width, height, offsets);

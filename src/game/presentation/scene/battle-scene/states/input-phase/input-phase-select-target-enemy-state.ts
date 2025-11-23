@@ -4,7 +4,7 @@ import { EnemyGroupId } from "@game/domain";
 import { EnemySelectWindow, GameButton } from "../../../..";
 
 export type EnemySelectEvents = {
-  onConfirm: (target: EnemyGroupId) => void;
+  onTargetSelected: (target: EnemyGroupId) => void;
   onCancel: () => void;
 }
 
@@ -13,8 +13,7 @@ export type EnemySelectEvents = {
  */
 export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
   #enemySelectWindow: EnemySelectWindow;
-  #selectedEnemy: string | null = null;
-  #callbacks;
+  #callbacks: EnemySelectEvents;
 
   constructor(scene: BattleScene, window: EnemySelectWindow, callbacks: EnemySelectEvents) {
     super(scene);
@@ -58,7 +57,7 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
       // 決定
       this.context.ui.audio.playSe("cursor");
       const targetGroupId = this.#enemySelectWindow.getCurrent();
-      this.#callbacks.onConfirm(targetGroupId);
+      this.#callbacks.onTargetSelected(targetGroupId);
     }
     else if (up) {
       // カーソル上移動

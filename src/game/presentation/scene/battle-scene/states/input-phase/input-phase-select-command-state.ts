@@ -135,7 +135,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
           this.context.inputUi!.enemySelectWindow,
           {
             // 敵選択決定時
-            onConfirm: targetGroupId => {
+            onTargetSelected: targetGroupId => {
               if (command === BattleCommand.Attack) {
                 const choice: Extract<CommandChoice, { command: typeof BattleCommand.Attack }> = {
                   actorId: this.#actor.actorId,

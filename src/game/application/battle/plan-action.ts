@@ -28,35 +28,43 @@ export function planAction(action: Readonly<Action>, isAlly: (actorId: ActorId) 
 
       if (isAllyAction) {
         if (spell.target.side === "them") {
-          // 相手にかける呪文
-          if (action.selection.kind !== "group") {
-            // 相手全体はまだ未実装
-            throw new Error("Ally offensive spell requires group target selection.");
-          }
+          switch (spell.target.scope) {
+            case "single":
+              if (action.selection.kind !== "group") { throw new Error("単体攻撃呪文なのに敵グループが選択されていない"); }
+              return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
 
-          if (spell.target.scope === "single") {
-            return plannedActionFactory.ally.spell.them.single(action.actorId, action.spellId, action.selection.groupId);
-          }
-          else if (spell.target.scope === "group") {
-            return plannedActionFactory.ally.spell.them.group(action.actorId, action.spellId, action.selection.groupId);
-          }
-          else {
-            throw new Error("Not Implement");
+            case "group":
+              if (action.selection.kind !== "group") { throw new Error("グループ攻撃呪文なのに敵グループが選択されていない"); }
+              return plannedActionFactory.ally.spell.them.group(action.actorId, action.spellId, action.selection.groupId);
+
+            case "all":
+              if (action.selection.kind !== "none") { throw new Error("全体攻撃呪文なのに敵グループが選択されている"); }
+              return plannedActionFactory.ally.spell.them.all(action.actorId, action.spellId);
+
+            default:
+              assertNever(spell.target.scope);
           }
         }
         else if (spell.target.side === "us") {
           // 味方にかける呪文
-          if (action.selection.kind === "ally") {
-            // 味方単体
-            return plannedActionFactory.ally.spell.us.single(action.actorId, action.spellId, action.selection.actorId);
-          }
-          else {
-            // 味方全体
-            throw new Error("Not Implement");
+          switch (spell.target.scope) {
+            case "single":
+              if (action.selection.kind !== "ally") { throw new Error("味方単体の呪文なのにキャラが選択されていない"); }
+              return plannedActionFactory.ally.spell.us.single(action.actorId, action.spellId, action.selection.actorId);
+
+            case "all":
+              if (action.selection.kind !== "none") { throw new Error("味方全体の呪文なのにキャラが選択されている"); }
+              return plannedActionFactory.ally.spell.us.all(action.actorId, action.spellId);
+
+            case "group":
+              throw new Error("味方対象のグループ呪文は存在しない");
+
+            default:
+              assertNever(spell.target.scope);
           }
         }
         else {
-          throw new Error("Not Implement");
+          assertNever(spell.target.side);
         }
       }
       else {
