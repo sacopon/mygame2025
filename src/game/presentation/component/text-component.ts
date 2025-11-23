@@ -99,6 +99,14 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
     if (!this.#handle) { return; }
     this.owner.render.setTextStyle(this.#handle, { color });
   }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
+  }
 }
 
 declare module "@game/presentation/component/component-registry" {

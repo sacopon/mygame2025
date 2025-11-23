@@ -9,6 +9,7 @@ export interface GameComponent<T extends ComponentTypeId = ComponentTypeId> {
   update?(gameObject: GameObject, deltaTime: number): void;
   onAttach?(gameObject: GameObject): void;
   onDetach?(gameObject: GameObject): void;
+  bringToTop?(): void;
   set visible(value: boolean);
 }
 

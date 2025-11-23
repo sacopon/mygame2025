@@ -92,6 +92,12 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
     });
   }
 
+  bringToTop(): void {
+    this.#handles.forEach(handle => {
+      this.owner.render.bringToTop(handle);
+    });
+  }
+
   #createAllLines(gameObject: GameObject) {
     return this.#lines.map(line => gameObject.render.createText({
       text: line,

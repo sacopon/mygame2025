@@ -36,6 +36,10 @@ export abstract class SelectableWindowContents extends GroupGameObject {
 
   abstract getCursorLocalPos(index: number): Position;
 
+  bringToTop(): void {
+    this.#ensureCursor().bringToTop();
+  }
+
   #ensureCursor(): WindowCursor {
     if (!this.#cursor) {
       this.#cursor = this.addChild(new WindowCursor(this.ports));

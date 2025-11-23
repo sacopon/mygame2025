@@ -58,6 +58,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
   }
 
   override onResume(): void {
+    console.log("InputPhaseSelectCommandState#onResume");
     this.#locked = false;
     this.#activate();
   }
@@ -179,9 +180,7 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
               // }
             },
             // 敵選択キャンセル時
-            onCancel: () => {
-              this.scene.requestPopState();
-            }
+            onCancel: () => {},
           }));
         break;
 
@@ -190,8 +189,15 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
           this.scene,
           this.#actor,
           {
-            // TODO: ちゃんとやる
-            onDecide: (_: CommandChoice) => {},
+            onDecide: (choice: CommandChoice) => {
+              // 妥当性チェック(選択できない相手を選んでいないか)
+              if (!this.#callbacks.canDecide(choice)) {
+                // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+              }
+
+              // 確定処理
+              this.#onConfirmCommand(choice, mark);
+            },
             canDecide: (_: CommandChoice) => true,
             onCancel: (_: AllyActor) => {},
             canCancel: (_: AllyActor) => true,

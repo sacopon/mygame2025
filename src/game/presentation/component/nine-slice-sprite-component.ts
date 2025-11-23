@@ -47,6 +47,14 @@ export class NineSliceSpriteComponent extends BaseGameComponent<typeof NineSlice
   setSize(width: number, height: number): void {
     this.owner!.render.setNineSpriteSize(this.#handle!, { width, height });
   }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
+  }
 }
 
 declare module "@game/presentation/component/component-registry" {

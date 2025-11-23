@@ -1,6 +1,6 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../../states/battle-scene-state";
-import { AllyActor } from "@game/domain";
-import { BattleScene, InputPhaseCallbacks } from "../..";
+import { AllyActor, Spell } from "@game/domain";
+import { BattleCommand, BattleScene, CommandChoice, InputPhaseCallbacks, InputPhaseSelectTargetEnemyState } from "../..";
 import { GameButton, SpellSelectWindow } from "../../../..";
 
 /**
@@ -13,6 +13,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   #spellSelectWindow: SpellSelectWindow | null = null;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
+  // この呪文内容が確定した際にどこまで巻き戻すか(このステートが積まれた時の状態を記録)
+  #rewindMarker!: number;
 
   constructor(
     scene: BattleScene,
@@ -27,6 +29,7 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   override onEnter(context: BattleSceneContext): void {
     super.onEnter(context);
     this.#locked = false;
+    this.#rewindMarker = this.scene.markState();
     this.#activate();
 
     // コマンド選択/敵選択ウィンドウを非アクティブにする
@@ -81,12 +84,11 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     if (ok) {
       this.#locked = true;
       this.context.ui.audio.playSe("cursor");
-      const spell = this.#spellSelectWindow.getCurrent();
-      console.log(spell.name);
-      // this.#runFlow(command, BattleCommandDecider.next(this.#actor.actorId, command));
+      this.#onSpellDecided(this.#spellSelectWindow.getCurrent());
     }
     // キャンセル
     else if (cancel) {
+      console.log("InputPhaseSelectSpellState#update: cancel");
       this.#locked = true;
 
       if (!this.#callbacks.canCancel(this.#actor)) {
@@ -113,6 +115,78 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     else if (right) {
       this.#spellSelectWindow.moveHorizontal(1);
     }
+  }
+
+  bringToTop(): void {
+    this.#spellSelectWindow?.bringToTop();
+  }
+
+  #onSpellDecided(spell: Spell): void {
+    if (spell.target.scope === "all") {
+      if (spell.target.side === "us") {
+        // 味方全体
+      }
+      else {
+        // 敵全体
+      }
+    }
+    else if ((spell.target.scope === "single" || spell.target.scope === "group") && spell.target.side === "them") {
+      // 下に隠れている敵選択ウィンドウを最前面に移動
+      this.context.inputUi?.enemySelectWindow.bringToTop();
+
+      // 敵側のの単体 or グループが対象の場合、敵選択ウィンドウへ
+      this.scene.requestPushState(new InputPhaseSelectTargetEnemyState(
+        this.scene,
+        this.context.inputUi!.enemySelectWindow,
+        {
+          // 敵選択決定時
+          onConfirm: targetGroupId => {
+            const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
+              actorId: this.#actor.actorId,
+              command: BattleCommand.Spell,
+              spellId: spell.spellId,
+              target: {
+                kind: "enemyGroup",
+                groupId: targetGroupId,
+              },
+            };
+
+            // 妥当性チェック(選択できない相手を選んでいないか)
+            if (!this.#callbacks.canDecide(choice)) {
+              // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+            }
+
+            // 確定処理
+            this.#onConfirmCommand(choice);
+          },
+          // 敵選択キャンセル時
+          onCancel: () => {
+            // 敵選択をキャンセルしたら呪文選択に戻る
+            this.#locked = false;
+            // 敵選択ウィンドウが最前面に来ているので、自身を再度最前面に
+            this.bringToTop();
+          }
+        }));
+
+      return;
+    }
+    else if (spell.target.scope === "single" && spell.target.side === "us") {
+      // 味方単体
+    }
+
+    // その他の組み合わせはエラー扱い
+    throw new Error(`Unsupported spell target scope: spell=${spell.spellId}, scope=${spell.target.scope}, side=${spell.target.side}`);
+  }
+
+  #onConfirmCommand(choice: CommandChoice): void {
+    // 呪文選択ウィンドウのカーソル位置リセット
+    this.#spellSelectWindow?.reset();
+    // 上に積まれているステートを全削除
+    this.scene.requestRewindTo(this.#rewindMarker);
+    // このステート自身を取り除く
+    this.scene.requestPopState();
+    // 最終確定時コールバックの呼び出し
+    this.#callbacks.onDecide(choice);
   }
 
   // get #enemySelectWindow(): EnemySelectWindow {
@@ -234,8 +308,10 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   // }
 
   #activate(): void {
+    this.#spellSelectWindow?.setActive(true);
   }
 
   #inactivate(): void {
+    this.#spellSelectWindow?.setActive(false);
   }
 }

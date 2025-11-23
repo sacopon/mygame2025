@@ -61,6 +61,14 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
 
     this.owner.render.setAlpha(this.#handle, alpha);
   }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
+  }
 }
 
 declare module "@game/presentation/component/component-registry" {

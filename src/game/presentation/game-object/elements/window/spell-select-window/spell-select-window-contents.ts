@@ -14,6 +14,7 @@ import { Spell } from "@game/domain";
 export class SpellSelectWindowContents extends SelectableWindowContents {
   #spellNamesObject: WindowTextsGrid;
   #actorNameComponent: TextComponent;
+  #separator: NineSliceSpriteComponent;
 
   constructor(ports: GamePorts, windowSize: Size) {
     super(ports, windowSize);
@@ -31,11 +32,11 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
 
     // 名前とコマンドの区切り線
     const separator = this.addChild(new GameObject(ports));
-    separator.addComponent(new NineSliceSpriteComponent({
+    this.#separator = separator.addComponent(new NineSliceSpriteComponent({
         imageId: "line.png",
         border: { left: 1, top: 1, right: 1, bottom: 0 },
         size: { width: this.windowWidth - DEFAULT_WINDOW_SETTINGS.separatorWidthDiff, height: 1 },
-      }));
+      }))!;
 
     // コマンド選択肢
     this.#spellNamesObject = this.addChild(new WindowTextsGrid(
@@ -46,7 +47,8 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
         fontSize: SPELL_SELECT_WINDOW_SETTINGS.fontSize,
         cellWidth: 66,  // TODO: ちゃんと定数化する
         cellHeight: SPELL_SELECT_WINDOW_SETTINGS.lineHeight,
-        columns: 2,
+        maximumColumns: 2,
+        maximumRows: 3,
       }));
 
     const headerTextPos = {
@@ -73,6 +75,13 @@ export class SpellSelectWindowContents extends SelectableWindowContents {
       x: this.#spellNamesObject.x + pos.x + SPELL_SELECT_WINDOW_SETTINGS.cursorMarginX,
       y: this.#spellNamesObject.y + pos.y + SPELL_SELECT_WINDOW_SETTINGS.cursorBaselineTweak,
     };
+  }
+
+  override bringToTop(): void {
+    super.bringToTop();
+    this.#actorNameComponent.bringToTop();
+    this.#separator.bringToTop();
+    this.#spellNamesObject.bringToTop();
   }
 
   setWindowTitle(actorName: string, pageIndex: number): void {

@@ -157,6 +157,8 @@ export interface RenderPort {
   setVisible(view: ViewHandle, visible: boolean): void;
   setSpriteLayer?(view: ViewHandle, layer: number): void;
   setAlpha(view: ViewHandle, alpha: number): void;
+  /** 同一レイヤー内の最前面に移動する(現時点ではレイヤーの概念がないので全体の最前面に移動する) */
+  bringToTop(handle: ViewHandle): void;
   destroyView(view: ViewHandle): void;
 
   // テキスト描画

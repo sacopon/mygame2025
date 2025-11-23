@@ -24,7 +24,7 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
-    this.#enemySelectWindow.setActive(true);
+    this.#enemySelectWindow.setActive(true, true);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -49,6 +49,9 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
     if (cancel) {
       // キャンセル
       this.#enemySelectWindow.reset();
+      // このステート自身を取り除く
+      this.scene.requestPopState();
+      // キャンセル処理
       this.#callbacks.onCancel();
     }
     else if (ok) {

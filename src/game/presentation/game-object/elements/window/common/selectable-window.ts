@@ -10,6 +10,7 @@ import { WindowCoverRect } from "./window-cover-rect";
  * 選択肢の切り替えの責務を持つ
  */
 export abstract class SelectableWindow<TItem, TContents extends SelectableWindowContents> extends GroupGameObject {
+  #base: WindowBase;
   #contents: TContents;
   #cover: WindowCoverRect;
   #selectedIndex = 0;
@@ -17,12 +18,13 @@ export abstract class SelectableWindow<TItem, TContents extends SelectableWindow
   constructor(ports: GamePorts, size: { width: number, height: number }, alpha: number, createContents: (ports: GamePorts) => TContents) {
     super(ports);
 
-    const base = new WindowBase(ports, size.width, size.height, alpha);
+    this.#base = new WindowBase(ports, size.width, size.height, alpha);
     this.#contents = createContents(ports);
-    this.#cover = new WindowCoverRect(ports, base, 0x000000);
 
-    this.addChild(base);
+    this.addChild(this.#base);
     this.addChild(this.#contents);
+
+    this.#cover = new WindowCoverRect(ports, this.#base, 0x000000);
     this.addChild(this.#cover);
     this.#cover.setAlpha(0);
   }
@@ -72,6 +74,12 @@ export abstract class SelectableWindow<TItem, TContents extends SelectableWindow
 
   reset(): void {
     this.select(0, true);
+  }
+
+  bringToTop(): void {
+    this.#base.bringToTop();
+    this.#contents.bringToTop();
+    this.#cover.bringToTop();
   }
 
   get selectedIndex(): number {

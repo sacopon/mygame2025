@@ -46,6 +46,14 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
     return this.owner.render.getHeight(this.#handle);
   }
 
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
+  }
+
   protected override onAttached(): void {
     this.#handle = this.owner.render.createSprite(this.#spec);
   }

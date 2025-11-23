@@ -11,7 +11,9 @@ type WindowTextsGridStyle = {
   /** 1マスの横幅 */
   cellWidth: number;
   /** 列数 */
-  columns: number;
+  maximumColumns: number;
+  /** 最大行数 */
+  maximumRows: number;
   /** 列間のスペース（オプション） */
   columnGap?: number;
   /** 行間の追加オフセット（オプション） */
@@ -32,11 +34,12 @@ export class WindowTextsGrid extends GroupGameObject {
     };
 
     this.setPosition(0, 0);
-    this.#createLabels(texts);
+    this.#createLabels(style.maximumColumns * style.maximumRows);
+    this.setTexts(texts);
   }
 
   get columns(): number {
-    return this.#style.columns;
+    return this.#style.maximumColumns;
   }
 
   get rows(): number {
@@ -62,20 +65,6 @@ export class WindowTextsGrid extends GroupGameObject {
   setTexts(texts: ReadonlyArray<string>): void {
     const n = texts.length;
 
-    // 足りない分を追加
-    while (this.#labels.length < n) {
-      const label = this.addChild(new GameObject(this.ports));
-      label.addComponent(new TextComponent(
-        "",
-        {
-          style: {
-            fontFamily: this.#style.fontFamily,
-            fontSize: this.#style.fontSize,
-          },
-        }))!;
-      this.#labels.push(label);
-    }
-
     // ラベル設定
     for (let i = 0; i < this.#labels.length; ++i) {
       const label = this.#labels[i];
@@ -95,13 +84,30 @@ export class WindowTextsGrid extends GroupGameObject {
     }
   }
 
-  #createLabels(texts: ReadonlyArray<string>): void {
-    this.setTexts(texts);
+  bringToTop(): void {
+    this.#labels.forEach(label => {
+      label.getComponent(TextComponent.typeId)?.bringToTop();
+    });
+  }
+
+  #createLabels(maximumTextCount: number): void {
+    while (this.#labels.length < maximumTextCount) {
+      const label = this.addChild(new GameObject(this.ports));
+      label.addComponent(new TextComponent(
+        "",
+        {
+          style: {
+            fontFamily: this.#style.fontFamily,
+            fontSize: this.#style.fontSize,
+          },
+        }))!;
+      this.#labels.push(label);
+    }
   }
 
   #getCellTopLeft(index: number): Position {
-    const col = index % this.#style.columns;
-    const row = Math.floor(index / this.#style.columns);
+    const col = index % this.#style.maximumColumns;
+    const row = Math.floor(index / this.#style.maximumColumns);
 
     const left = (this.#style.cellWidth + this.#style.columnGap) * col;
     const top  = (this.#style.cellHeight + this.#style.rowGap) * row;

@@ -37,6 +37,11 @@ export class WindowBase extends GameObject {
     this.#height = height;
   }
 
+  bringToTop(): void {
+    this.getComponent(RectComponent.typeId)?.bringToTop();
+    this.getComponent(NineSliceSpriteComponent.typeId)?.bringToTop();
+  }
+
   get width(): number {
     return this.#width;
   }

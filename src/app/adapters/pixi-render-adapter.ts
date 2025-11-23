@@ -234,6 +234,20 @@ export class PixiRenderAdapter implements RenderPort {
     throw new Error("Method not implemented.");
   }
 
+  /**
+   * 同一レイヤー内の最前面に移動する(現時点ではレイヤーの概念がないので全体の最前面に移動する)
+   */
+  bringToTop(handle: ViewHandle): void {
+    const container = this.#views.get(handle);
+
+    if (!container) {
+      return;
+    }
+
+    this.#rootContainer.removeChild(container);
+    this.#rootContainer.addChild(container);
+  }
+
   destroyView(handle: ViewHandle): void {
     const v = this.#views.get(handle);
     if (!v) {

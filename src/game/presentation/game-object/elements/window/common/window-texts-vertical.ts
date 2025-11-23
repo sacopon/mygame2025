@@ -32,4 +32,8 @@ export class WindowTextsVertical extends GameObject {
     const top = this.transform.y;
     return top + this.#lineHeight * index + Math.floor(this.#lineHeight / 2);
   }
+
+  bringToTop(): void {
+    this.#textList.bringToTop();
+  }
 }

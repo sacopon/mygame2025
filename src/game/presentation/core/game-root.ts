@@ -34,7 +34,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体攻撃呪文
     {
       spellId: SpellId(1),
-      name: "アアアアア",
+      name: "メラメラ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -42,7 +42,7 @@ const createDomainPorts = function(): DomainPorts {
     // グループ攻撃呪文
     {
       spellId: SpellId(2),
-      name: "イイイイイ",
+      name: "ギラギラ",
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -50,7 +50,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(3),
-      name: "ウウウウウ",
+      name: "ホイホイ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -58,7 +58,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(4),
-      name: "エエエエエ",
+      name: "ホイホイ2",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -66,7 +66,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(5),
-      name: "オオオオオ",
+      name: "ホイホイ3",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -74,7 +74,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(6),
-      name: "カカカカカ",
+      name: "ホイホイ4",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -82,7 +82,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(7),
-      name: "キキキキキ",
+      name: "ホイホイ5",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -90,7 +90,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(8),
-      name: "ククククク",
+      name: "ホイホイ6",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -98,7 +98,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(9),
-      name: "ケケケケケ",
+      name: "ホイホイ7",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
