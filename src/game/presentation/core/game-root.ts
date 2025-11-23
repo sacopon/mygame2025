@@ -13,9 +13,9 @@ const createDomainPorts = function(): DomainPorts {
       maxHp: Hp.of(80), currentHp: Hp.of(80), attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
     { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), spellIds: [SpellId(2), SpellId(5), ],
       maxHp: Hp.of(130), currentHp: Hp.of(130), attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
-    { allyId: AllyId(3), name: "ううううう", level: Level.of(6), spellIds: [SpellId(1), SpellId(3)],
+    { allyId: AllyId(3), name: "ううううう", level: Level.of(6), spellIds: [SpellId(1), SpellId(3), SpellId(4)],
       maxHp: Hp.of(60),  currentHp: Hp.of(60), attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(15) },
-    { allyId: AllyId(4), name: "えええええ", level: Level.of(2), spellIds: [SpellId(3)],
+    { allyId: AllyId(4), name: "えええええ", level: Level.of(2), spellIds: [SpellId(2), SpellId(3)],
       maxHp: Hp.of(35),  currentHp: Hp.of(35), attack: Attack.of(5), defence: Defence.of(10), agility: Agility.of(25) },
   ] as const;
 
@@ -74,7 +74,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(6),
-      name: "ホイホイ4",
+      name: "水増し1",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -82,7 +82,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(7),
-      name: "ホイホイ5",
+      name: "水増し2",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -90,7 +90,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(8),
-      name: "ホイホイ6",
+      name: "水増し3",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -98,7 +98,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(9),
-      name: "ホイホイ7",
+      name: "水増し4",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",

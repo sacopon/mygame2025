@@ -79,8 +79,6 @@ export function createStateAndDeps(opts: {
       throw new Error("not used in this test");
     },
     isAlly: (id: ActorId) => allyIds.has(id),
-    aliveAllAllies: () => state.getAliveAllyActorIds(),
-    aliveAllEnemies: () => state.getAliveEnemyActorIds(),
     getActorIdsByEnemyGroup: (groupId: EnemyGroupId) =>
       groupMap.get(groupId) ?? [],
     aliveAllActors: () => [
