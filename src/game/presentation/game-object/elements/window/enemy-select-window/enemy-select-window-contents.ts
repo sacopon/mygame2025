@@ -1,4 +1,4 @@
-import { ListWindowContents } from "../common/list-window-contents";
+import { SelectableWindowContents } from "../common/selectable-window-contents";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { WindowTextsVertical } from "../..";
 import { Position, Size, toZenkaku } from "@shared";
@@ -7,8 +7,9 @@ import { GamePorts } from "@game/presentation";
 /**
  * 敵選択ウィンドウの中身部分
  */
-export class EnemySelectWindowContents extends ListWindowContents {
+export class EnemySelectWindowContents extends SelectableWindowContents {
   #enemyNamesObject: WindowTextsVertical;
+  #enemyCountObject: WindowTextsVertical;
 
   constructor(ports: GamePorts, windowSize: Size, nameAndCounts: ReadonlyArray<{ name: string, count: number }>) {
     super(ports, windowSize);
@@ -28,7 +29,7 @@ export class EnemySelectWindowContents extends ListWindowContents {
     };
     this.#enemyNamesObject.setPosition(enemyNamesPos.x, enemyNamesPos.y);
 
-    const enemyCountObject = this.addChild(new WindowTextsVertical(
+    this.#enemyCountObject = this.addChild(new WindowTextsVertical(
       ports,
       nameAndCounts.map(e => `ー ${toZenkaku(e.count)}匹`),
       {
@@ -40,7 +41,7 @@ export class EnemySelectWindowContents extends ListWindowContents {
       x: 100,
       y: ENEMY_SELECT_WINDOW_SETTINGS.borderHeight + ENEMY_SELECT_WINDOW_SETTINGS.marginTop,
     };
-    enemyCountObject.setPosition(enemyCountPos.x, enemyCountPos.y);
+    this.#enemyCountObject.setPosition(enemyCountPos.x, enemyCountPos.y);
   }
 
   override getCursorLocalPos(index: number): Position {
@@ -48,5 +49,11 @@ export class EnemySelectWindowContents extends ListWindowContents {
       x: this.#enemyNamesObject.transform.x + ENEMY_SELECT_WINDOW_SETTINGS.cursorMarginX,
       y: this.#enemyNamesObject.getLineMidY(index) + ENEMY_SELECT_WINDOW_SETTINGS.cursorBaselineTweak,
     };
+  }
+
+  override bringToTop(): void {
+    super.bringToTop();
+    this.#enemyNamesObject.bringToTop();
+    this.#enemyCountObject.bringToTop();
   }
 }

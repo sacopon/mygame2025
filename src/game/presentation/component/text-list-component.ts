@@ -14,6 +14,7 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
   #style: TextStyle;
   #anchor: { x: number, y: number };
   #layout = { offsetX: 0, offsetY: 0, lineHeight: 14 };
+  #visible: boolean = true;
 
   constructor(lines: ReadonlyArray<string>, options: { style?: Partial<TextStyle>, anchor?: { x?: number, y?: number }, layout?: { offsetX?: number, offsetY?: number, lineHeight?: number } } = {}) {
     super();
@@ -42,11 +43,21 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
 
   update(gameObject: GameObject, _deltaTime: number): void {
     this.#handles.forEach((handle, i) => {
-      gameObject.render.setSpriteTransform(handle, {
-        x: gameObject.transform.x + this.#layout.offsetX,
-        y: gameObject.transform.y + this.#layout.offsetY + this.#layout.lineHeight * i,
+      gameObject.render.setTransform(handle, {
+        x: gameObject.worldTransform.x + this.#layout.offsetX,
+        y: gameObject.worldTransform.y + this.#layout.offsetY + this.#layout.lineHeight * i,
       });
+
+      gameObject.render.setVisible(handle, this.#visible);
     });
+  }
+
+  override get visible(): boolean {
+    return this.#visible;
+  }
+
+  override set visible(value: boolean) {
+    this.#visible = value;
   }
 
   protected override onAttached(): void {
@@ -78,6 +89,12 @@ export class TextListComponent extends BaseGameComponent<typeof TextListComponen
   setColor(color: number): void {
     this.#handles.forEach(handle => {
       this.owner.ports.render.setTextStyle(handle, { color });
+    });
+  }
+
+  bringToTop(): void {
+    this.#handles.forEach(handle => {
+      this.owner.render.bringToTop(handle);
     });
   }
 

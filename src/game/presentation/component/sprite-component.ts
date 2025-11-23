@@ -7,12 +7,10 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
 
   #handle: ViewHandle | null = null;
   #spec: SpriteSpec;
-  #visible: boolean;
 
   constructor(spec: Partial<SpriteSpec> & Required<Pick<SpriteSpec, "imageId">>) {
     super();
     this.#spec = { ...spec };
-    this.#visible = this.#spec.visible ?? true;
   }
 
   update(gameObject: GameObject, _deltaTime: number): void {
@@ -20,16 +18,16 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
       return;
     }
 
-    gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
-    gameObject.render.setSpriteVisible(this.#handle, this.#visible);
+    gameObject.render.setTransform(this.#handle, gameObject.worldTransform);
+    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? true);
   }
 
-  get visible() {
-    return this.#visible;
+  override get visible() {
+    return this.#spec.visible ?? false;
   }
 
-  set visible(value: boolean) {
-    this.#visible = value;
+  override set visible(value: boolean) {
+    this.#spec.visible = value;
   }
 
   get width(): number {
@@ -46,6 +44,14 @@ export class SpriteComponent extends BaseGameComponent<typeof SpriteComponent.ty
     }
 
     return this.owner.render.getHeight(this.#handle);
+  }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
   }
 
   protected override onAttached(): void {

@@ -24,12 +24,16 @@ export class WindowTextsVertical extends GameObject {
       }))!;
   }
 
-  get textLines() {
+  get textLines(): ReadonlyArray<string> {
     return this.#textList.lines.concat();
   }
 
   getLineMidY(index: number) {
     const top = this.transform.y;
     return top + this.#lineHeight * index + Math.floor(this.#lineHeight / 2);
+  }
+
+  bringToTop(): void {
+    this.#textList.bringToTop();
   }
 }

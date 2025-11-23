@@ -1,3 +1,4 @@
+import { SpellId } from "./spell";
 import { Agility, Attack, Defence, Hp, Level } from "./status-value-objects";
 import { Brand } from "@shared";
 
@@ -30,6 +31,7 @@ export type Ally = {
   allyId: AllyId;
   name: Readonly<string>;
   level: Level;
+  spellIds: ReadonlyArray<SpellId>,
   maxHp: Hp;
   currentHp: Hp;
   attack: Attack;
@@ -45,6 +47,7 @@ export type AllyActor = {
   originId: AllyId;
   name: Readonly<string>;
   level: Level;
+  spellIds: ReadonlyArray<SpellId>,
   hp: Hp;
   maxHp: Hp;
   attack: Attack;
@@ -86,6 +89,7 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     originId: ally.allyId,
     name: ally.name,
     level: Level.of(ally.level),
+    spellIds: ally.spellIds.slice(),
     hp: Hp.of(ally.currentHp),
     maxHp: Hp.of(ally.maxHp),
     attack: Attack.of(ally.attack),

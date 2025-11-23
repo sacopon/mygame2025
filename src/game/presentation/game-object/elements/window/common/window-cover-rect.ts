@@ -22,4 +22,8 @@ export class WindowCoverRect extends GameObject {
   setAlpha(alpha: number): void {
     this.getComponent(RectComponent.typeId)!.setAlpha(alpha);
   }
+
+  bringToTop(): void {
+    this.getComponent(RectComponent.typeId)!.bringToTop();
+  }
 }

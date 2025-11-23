@@ -10,6 +10,7 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
   #text: string = "";
   #style: TextStyle;
   #anchor: { x: number, y: number };
+  #visible: boolean = true;
 
   constructor(text: string, options: { style?: Partial<TextStyle>; anchor?: { x?: number, y?: number } } = {}) {
     super();
@@ -35,7 +36,8 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
       return;
     }
 
-    gameObject.render.setSpriteTransform(this.#handle, gameObject.transform);
+    gameObject.render.setTransform(this.#handle, gameObject.worldTransform);
+    gameObject.render.setVisible(this.#handle, this.#visible);
   }
 
   protected override onAttached(): void {
@@ -85,9 +87,25 @@ export class TextComponent extends BaseGameComponent<typeof TextComponent.typeId
     return this.owner.render.getHeight(this.#handle);
   }
 
+  override get visible(): boolean {
+    return this.#visible;
+  }
+
+  override set visible(value: boolean) {
+    this.#visible = value;
+  }
+
   setColor(color: number): void {
     if (!this.#handle) { return; }
     this.owner.render.setTextStyle(this.#handle, { color });
+  }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
   }
 }
 
