@@ -13,8 +13,8 @@ const STATUS_WIDTH = 54;  // 5文字用
 const DEAD_COLOR = 0xFF6666;
 
 export type StatusWindowResolver = {
-  resolveName: (actorId: ActorId) => Readonly<string>,
-  resolveLevel: (actorId: ActorId) => Readonly<Level>,
+  resolveName: (actorId: ActorId) => string,
+  resolveLevel: (actorId: ActorId) => Level,
 }
 
 /**

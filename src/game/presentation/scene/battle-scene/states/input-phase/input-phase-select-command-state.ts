@@ -154,30 +154,6 @@ export class InputPhaseSelectCommandState extends BaseBattleSceneState {
                 // 確定処理
                 this.#onConfirmCommand(choice, mark);
               }
-              // else if (command === BattleCommand.Spell) {
-              //   // TODO: 本来このケースは存在しないので、呪文選択ウィンドウを実装するまでの一時的な処理
-              //   const spellId = SpellId(1 + ((this.#actor.actorId - 1) % 3)); // 1 = メラ、2 = ギラ、3 = ホイミ
-              //   const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
-              //     actorId: this.#actor.actorId,
-              //     command,
-              //     spellId,
-              //     target: spellId === 1 || spellId === 2 ? {
-              //       kind: "enemyGroup",
-              //       groupId: targetGroupId,
-              //     } : {
-              //       kind: "ally",
-              //       actorId: ActorId(4),//this.scene.getAliveAllies()[0],
-              //     },
-              //   };
-
-              //   // 妥当性チェック(選択できない相手を選んでいないか)
-              //   if (!this.#callbacks.canDecide(choice)) {
-              //     // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
-              //   }
-
-              //   // 確定処理
-              //   this.#onConfirmCommand(choice, mark);
-              // }
             },
             // 敵選択キャンセル時
             onCancel: () => {},

@@ -100,6 +100,10 @@ export class GameComponents {
     }
   }
 
+  bringToTop(): void {
+    this.#components.forEach(c => c.bringToTop?.());
+  }
+
   get visible(): boolean {
     return this.#visible;
   }

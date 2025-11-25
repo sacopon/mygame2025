@@ -141,6 +141,10 @@ export class GameObject {
     return this.#components.getComponent(id);
   }
 
+  bringToTop(): void {
+    this.#components.bringToTop();
+  }
+
   // GroupGameObject からのみ使用する
   protected static setParentOf(child: GameObject, parent: GroupGameObject | null): void {
     child.#parent = parent;

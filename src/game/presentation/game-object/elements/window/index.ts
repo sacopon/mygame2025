@@ -1,3 +1,4 @@
+export * from "./ally-select-window";
 export * from "./battle-message-window";
 export * from "./command-select-window";
 export * from "./common";

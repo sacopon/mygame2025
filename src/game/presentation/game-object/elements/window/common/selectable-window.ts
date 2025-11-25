@@ -76,7 +76,8 @@ export abstract class SelectableWindow<TItem, TContents extends SelectableWindow
     this.select(0, true);
   }
 
-  bringToTop(): void {
+  override bringToTop(): void {
+    super.bringToTop();
     this.#base.bringToTop();
     this.#contents.bringToTop();
     this.#cover.bringToTop();

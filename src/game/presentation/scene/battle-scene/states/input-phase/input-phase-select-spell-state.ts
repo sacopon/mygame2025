@@ -1,6 +1,6 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../../states/battle-scene-state";
 import { AllyActor, Spell } from "@game/domain";
-import { BattleCommand, BattleScene, CommandChoice, InputPhaseCallbacks, InputPhaseSelectTargetEnemyState } from "../..";
+import { BattleCommand, BattleScene, CommandChoice, InputPhaseCallbacks, InputPhaseSelectTargetAllyState, InputPhaseSelectTargetEnemyState } from "../..";
 import { GameButton, SpellSelectWindow } from "../../../..";
 
 /**
@@ -43,6 +43,9 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
       this.#actor.spellIds.map(s => context.domain.spellRepository.findSpell(s))));
     context.inputUi?.coordinator.placeSpellSelectWindow(this.#spellSelectWindow);
     this.#spellSelectWindow.setActive(true);
+
+    // 呪文選択ウィンドウを最前面に移動する
+    context.inputUi?.coordinator.bringToFrontSpellSelectWindow(this.#spellSelectWindow);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -202,7 +205,37 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     }
     else if (spell.target.scope === "single" && spell.target.side === "us") {
       // 味方単体
-      throw new Error("Not Implemented: spell(scope=single, side=us)");
+      this.scene.requestPushState(new InputPhaseSelectTargetAllyState(
+        this.scene,
+        {
+          // キャラクター選択決定時
+          onTargetSelected: allyActorId => {
+            const choice: Extract<CommandChoice, { command: typeof BattleCommand.Spell }> = {
+              actorId: this.#actor.actorId,
+              command: BattleCommand.Spell,
+              spellId: spell.spellId,
+              target: {
+                kind: "ally",
+                actorId: allyActorId,
+              },
+            };
+
+            // 妥当性チェック(選択できない相手を選んでいないか)
+            if (!this.#callbacks.canDecide(choice)) {
+              // もし何かしらメッセージを表示するならメッセージ表示のステートを push する
+            }
+
+            // 確定処理
+            this.#commitCommandChoice(choice);
+          },
+          // 敵選択キャンセル時
+          onCancel: () => {
+            // 敵選択をキャンセルしたら呪文選択に戻る
+            this.#locked = false;
+          }
+        }));
+
+      return;
     }
 
     // その他の組み合わせはエラー扱い

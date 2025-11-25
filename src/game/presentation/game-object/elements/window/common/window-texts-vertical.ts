@@ -33,7 +33,8 @@ export class WindowTextsVertical extends GameObject {
     return top + this.#lineHeight * index + Math.floor(this.#lineHeight / 2);
   }
 
-  bringToTop(): void {
+  override bringToTop(): void {
+    super.bringToTop();
     this.#textList.bringToTop();
   }
 }

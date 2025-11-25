@@ -84,7 +84,8 @@ export class WindowTextsGrid extends GroupGameObject {
     }
   }
 
-  bringToTop(): void {
+  override bringToTop(): void {
+    super.bringToTop();
     this.#labels.forEach(label => {
       label.getComponent(TextComponent.typeId)?.bringToTop();
     });

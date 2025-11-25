@@ -29,9 +29,9 @@ export type ActorType = typeof ActorType[keyof typeof ActorType];
  */
 export type Ally = {
   allyId: AllyId;
-  name: Readonly<string>;
+  name: string;
   level: Level;
-  spellIds: ReadonlyArray<SpellId>,
+  spellIds: SpellId[],
   maxHp: Hp;
   currentHp: Hp;
   attack: Attack;
@@ -45,9 +45,9 @@ export type AllyActor = {
   actorId: ActorId;
   actorType: typeof ActorType.Ally;
   originId: AllyId;
-  name: Readonly<string>;
+  name: string;
   level: Level;
-  spellIds: ReadonlyArray<SpellId>,
+  spellIds: SpellId[],
   hp: Hp;
   maxHp: Hp;
   attack: Attack;
@@ -60,7 +60,7 @@ export type AllyActor = {
  */
 export type Enemy = {
   enemyId: EnemyId;
-  name: Readonly<string>;
+  name: string;
   baseHp: Hp;
   attack: Attack;
   defence: Defence;
@@ -73,7 +73,7 @@ export type EnemyActor = {
   enemyGroupId: EnemyGroupId;
   actorType: typeof ActorType.Enemy;
   originId: EnemyId;
-  name: Readonly<string>;
+  name: string;
   hp: Hp;
   attack: Attack;
   defence: Defence;

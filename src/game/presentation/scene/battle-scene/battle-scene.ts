@@ -84,7 +84,7 @@ export class BattleScene implements Scene {
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
-  #allyActorByAllyId!: Map<Readonly<AllyId>, AllyActor>;
+  #allyActorByAllyId!: Map<AllyId, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
@@ -303,7 +303,7 @@ export class BattleScene implements Scene {
     return actor.name;
   }
 
-  getAllyLevelById(actorId: ActorId): Readonly<Level> {
+  getAllyLevelById(actorId: ActorId): Level {
     const actor = this.getActorById(actorId);
     if (!isAllyActor(actor)) { throw new Error(`It's not Ally(actorId:${actorId})`); }
 
@@ -361,7 +361,7 @@ export class BattleScene implements Scene {
     return enemyGroups;
   }
 
-  #getAllyActorByAllyId(allyId: Readonly<AllyId>): AllyActor {
+  #getAllyActorByAllyId(allyId: AllyId): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {

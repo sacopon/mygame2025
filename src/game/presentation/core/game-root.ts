@@ -20,7 +20,7 @@ const createDomainPorts = function(): DomainPorts {
   ] as const;
 
   const allEnemies: Enemy[] = [
-    { enemyId: EnemyId(1), name: "スライム", baseHp: Hp.of(20),
+    { enemyId: EnemyId(1), name: "ポロン", baseHp: Hp.of(20),
       attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(5) },
     { enemyId: EnemyId(2), name: "おおねずみ", baseHp: Hp.of(35),
       attack: Attack.of(15), defence: Defence.of(10), agility: Agility.of(5) },
@@ -34,7 +34,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体攻撃呪文
     {
       spellId: SpellId(1),
-      name: "敵単体",
+      name: "イグナ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -42,7 +42,7 @@ const createDomainPorts = function(): DomainPorts {
     // グループ攻撃呪文
     {
       spellId: SpellId(2),
-      name: "敵GRP",
+      name: "ラディ",
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -50,7 +50,7 @@ const createDomainPorts = function(): DomainPorts {
     // 全体攻撃呪文
     {
       spellId: SpellId(3),
-      name: "敵全体",
+      name: "ゲルダ",
       power: SpellPower.of(1),
       target: { scope: "all", side: "them", },
       type: "damage",
@@ -58,7 +58,7 @@ const createDomainPorts = function(): DomainPorts {
     // 単体回復呪文
     {
       spellId: SpellId(4),
-      name: "単体回復",
+      name: "サナ",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -66,42 +66,42 @@ const createDomainPorts = function(): DomainPorts {
     // 全体回復呪文
     {
       spellId: SpellId(5),
-      name: "全体回復",
+      name: "サナリム",
       power: SpellPower.of(1),
       target: { scope: "all", side: "us", },
       type: "heal",
     },
-    // 単体回復呪文
+    // 単体攻撃呪文(中位)
     {
       spellId: SpellId(6),
-      name: "水増し1",
+      name: "イグナト",
       power: SpellPower.of(1),
-      target: { scope: "single", side: "us", },
-      type: "heal",
+      target: { scope: "single", side: "them", },
+      type: "damage",
     },
-    // 単体回復呪文
+    // グループ攻撃呪文(中位)
     {
       spellId: SpellId(7),
-      name: "水増し2",
+      name: "ラディム",
       power: SpellPower.of(1),
-      target: { scope: "single", side: "us", },
-      type: "heal",
+      target: { scope: "group", side: "them", },
+      type: "damage",
     },
-    // 単体回復呪文
+    // 全体攻撃呪文(中位)
     {
       spellId: SpellId(8),
-      name: "水増し3",
+      name: "ゲルダム",
       power: SpellPower.of(1),
-      target: { scope: "single", side: "us", },
+      target: { scope: "all", side: "them", },
       type: "heal",
     },
-    // 単体回復呪文
+    // 眠り呪文
     {
       spellId: SpellId(9),
-      name: "水増し4",
+      name: "ソムナ",
       power: SpellPower.of(1),
-      target: { scope: "single", side: "us", },
-      type: "heal",
+      target: { scope: "group", side: "them", },
+      type: "damage",
     },
   ] as const;
 

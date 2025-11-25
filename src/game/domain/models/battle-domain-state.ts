@@ -15,13 +15,13 @@ export type ActorStateBase = {
 }
 
 export type AllyActorState = ActorStateBase & {
-  actorType: Readonly<typeof ActorType.Ally>;
-  originId: Readonly<AllyId>;
+  actorType: typeof ActorType.Ally;
+  originId: AllyId;
 }
 
 export type EnemyActorState = ActorStateBase & {
-  actorType: Readonly<typeof ActorType.Enemy>;
-  originId: Readonly<EnemyId>;
+  actorType: typeof ActorType.Enemy;
+  originId: EnemyId;
 }
 
 export type ActorState = AllyActorState | EnemyActorState;
@@ -30,14 +30,14 @@ export const isAlive = (s: ActorState): boolean => s.currentHp.isAlive;
 const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
 
 export class BattleDomainState {
-  #actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>;
+  #actorStateByActorId: Map<ActorId, Readonly<ActorState>>;
 
-  constructor(actorStateByActorId: Map<Readonly<ActorId>, Readonly<ActorState>>) {
+  constructor(actorStateByActorId: Map<ActorId, Readonly<ActorState>>) {
     this.#actorStateByActorId = new Map(actorStateByActorId);
   }
 
   static fromActors(allies: ReadonlyArray<AllyActor>, enemies: ReadonlyArray<EnemyActor>) {
-    const stateMap = new Map<Readonly<ActorId>, Readonly<ActorState>>();
+    const stateMap = new Map<ActorId, Readonly<ActorState>>();
 
     for (const ally of allies) {
       stateMap.set(ally.actorId, {
@@ -92,7 +92,7 @@ export class BattleDomainState {
   /**
    * 指定アクターの状態を取得します
    */
-  getActorState(actorId: Readonly<ActorId>): Readonly<ActorState> {
+  getActorState(actorId: ActorId): Readonly<ActorState> {
     const state = this.#actorStateByActorId.get(actorId);
     if (!state) { throw new Error(`invalid actorId:${actorId}`); };
 
