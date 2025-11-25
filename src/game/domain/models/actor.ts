@@ -1,3 +1,4 @@
+import { SpellId } from "./spell";
 import { Agility, Attack, Defence, Hp, Level } from "./status-value-objects";
 import { Brand } from "@shared";
 
@@ -28,8 +29,9 @@ export type ActorType = typeof ActorType[keyof typeof ActorType];
  */
 export type Ally = {
   allyId: AllyId;
-  name: Readonly<string>;
+  name: string;
   level: Level;
+  spellIds: SpellId[],
   maxHp: Hp;
   currentHp: Hp;
   attack: Attack;
@@ -43,8 +45,9 @@ export type AllyActor = {
   actorId: ActorId;
   actorType: typeof ActorType.Ally;
   originId: AllyId;
-  name: Readonly<string>;
+  name: string;
   level: Level;
+  spellIds: SpellId[],
   hp: Hp;
   maxHp: Hp;
   attack: Attack;
@@ -57,7 +60,7 @@ export type AllyActor = {
  */
 export type Enemy = {
   enemyId: EnemyId;
-  name: Readonly<string>;
+  name: string;
   baseHp: Hp;
   attack: Attack;
   defence: Defence;
@@ -70,7 +73,7 @@ export type EnemyActor = {
   enemyGroupId: EnemyGroupId;
   actorType: typeof ActorType.Enemy;
   originId: EnemyId;
-  name: Readonly<string>;
+  name: string;
   hp: Hp;
   attack: Attack;
   defence: Defence;
@@ -86,6 +89,7 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     originId: ally.allyId,
     name: ally.name,
     level: Level.of(ally.level),
+    spellIds: ally.spellIds.slice(),
     hp: Hp.of(ally.currentHp),
     maxHp: Hp.of(ally.maxHp),
     attack: Attack.of(ally.attack),

@@ -1,4 +1,4 @@
-import { ListSelectWindow } from "../common/list-select-window";
+import { SelectableWindow } from "../common/selectable-window";
 import { EnemyGroupId } from "../../../../../domain/models/actor";
 import { ENEMY_SELECT_WINDOW_SETTINGS } from "./enemy-select-window-constants";
 import { EnemySelectWindowContents } from "./enemy-select-window-contents";
@@ -17,7 +17,7 @@ function calcWindowHeight(count: number): number {
 /**
  * 敵選択ウィンドウの挙動や配置を司るクラス
  */
-export class EnemySelectWindow extends ListSelectWindow<EnemyGroupId> {
+export class EnemySelectWindow extends SelectableWindow<EnemyGroupId, EnemySelectWindowContents> {
   #enemyGroupIds: ReadonlyArray<EnemyGroupId>;
 
   static readonly #windowSpec = {
@@ -37,6 +37,21 @@ export class EnemySelectWindow extends ListSelectWindow<EnemyGroupId> {
     this.reset();
   }
 
+  override setActive(active: boolean, effectColor: boolean = false): void {
+    super.setActive(active);
+
+    if (!effectColor) {
+      return;
+    }
+
+    if (active) {
+      this.setToActiveColor();
+    }
+    else {
+      this.setToDeactiveColor();
+    }
+  }
+
   getCurrent(): EnemyGroupId {
     return this.#enemyGroupIds[this.selectedIndex];
   }
@@ -46,7 +61,6 @@ export class EnemySelectWindow extends ListSelectWindow<EnemyGroupId> {
   }
 
   get height(): number {
-    // return EnemySelectWindow.#windowSpec.height;
     return calcWindowHeight(this.#enemyGroupIds.length);
   }
 

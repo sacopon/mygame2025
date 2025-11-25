@@ -16,6 +16,8 @@ export class BattleCommandDecider {
     Immediate: "immediate",
     /** 対象(敵)が必要なコマンド */
     NeedEnemyTarget: "needEnemyTarget",
+    /** 呪文選択が必要なコマンド */
+    NeedSpellSelect: "needSpellSelect",
     /** 未実装のコマンド */
     NotImplement: "notImplement",
   } as const;
@@ -29,8 +31,7 @@ export class BattleCommandDecider {
         return { kind: BattleCommandDecider.FlowType.Immediate };
 
       case BattleCommand.Spell:
-        // TODO: 呪文選択ウィンドウを作り、FlotType.NeedSpellSelect を設ける
-        return { kind: BattleCommandDecider.FlowType.NeedEnemyTarget };
+        return { kind: BattleCommandDecider.FlowType.NeedSpellSelect };
 
       case BattleCommand.Item:
         return { kind: BattleCommandDecider.FlowType.NotImplement };

@@ -66,7 +66,7 @@ export function resolveAttackTargets(state: Readonly<BattleDomainState>, action:
     }
 
     case "all":
-      return deps.isAlly(action.actorId) ? deps.aliveAllEnemies() : deps.aliveAllAllies();
+      return deps.isAlly(action.actorId) ? state.getAliveEnemyActorIds() : state.getAliveAllyActorIds();
 
     case "none":
       return [];
@@ -95,7 +95,7 @@ export function resolveSpellTargets(
     case "all":
       // 敵(or味方)全体が対象の呪文
       // 指定サイドの生き残り全員が対象
-      return isTargetAllies ? deps.aliveAllAllies() : deps.aliveAllEnemies();
+      return isTargetAllies ? state.getAliveAllyActorIds() : state.getAliveEnemyActorIds();
 
     case "single": {
       // action.mode.kind も必然的に "single" となる

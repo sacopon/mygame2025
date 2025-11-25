@@ -77,6 +77,6 @@ export class MainWindow extends GroupGameObject implements ScreenSizeAware {
   }
 
   shake(offset: { dx: number, dy: number }): void {
-    this.#border.setPosition(this.x + offset.dx, this.y + offset.dy);
+    this.#border.setPosition(offset.dx, offset.dy);
   }
 }

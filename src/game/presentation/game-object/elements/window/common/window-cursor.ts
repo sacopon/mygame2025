@@ -60,6 +60,11 @@ export class WindowCursor extends GameObject {
     this.#resetAnimation();
   }
 
+  override bringToTop(): void {
+    super.bringToTop();
+    this.#sprite.bringToTop();
+  }
+
   #resetAnimation() {
     this.#timeMS = 0;
   }

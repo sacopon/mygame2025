@@ -4,7 +4,7 @@ import { EnemyGroupId } from "@game/domain";
 import { EnemySelectWindow, GameButton } from "../../../..";
 
 export type EnemySelectEvents = {
-  onConfirm: (target: EnemyGroupId) => void;
+  onTargetSelected: (target: EnemyGroupId) => void;
   onCancel: () => void;
 }
 
@@ -13,8 +13,7 @@ export type EnemySelectEvents = {
  */
 export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
   #enemySelectWindow: EnemySelectWindow;
-  #selectedEnemy: string | null = null;
-  #callbacks;
+  #callbacks: EnemySelectEvents;
 
   constructor(scene: BattleScene, window: EnemySelectWindow, callbacks: EnemySelectEvents) {
     super(scene);
@@ -24,7 +23,7 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
 
   override onEnter(context: BattleSceneContext) {
     super.onEnter(context);
-    this.#enemySelectWindow.setActive(true);
+    this.#enemySelectWindow.setActive(true, true);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -49,13 +48,16 @@ export class InputPhaseSelectTargetEnemyState extends BaseBattleSceneState {
     if (cancel) {
       // キャンセル
       this.#enemySelectWindow.reset();
+      // このステート自身を取り除く
+      this.scene.requestPopState();
+      // キャンセル処理
       this.#callbacks.onCancel();
     }
     else if (ok) {
       // 決定
       this.context.ui.audio.playSe("cursor");
       const targetGroupId = this.#enemySelectWindow.getCurrent();
-      this.#callbacks.onConfirm(targetGroupId);
+      this.#callbacks.onTargetSelected(targetGroupId);
     }
     else if (up) {
       // カーソル上移動

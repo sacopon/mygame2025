@@ -7,7 +7,7 @@ import { GamePorts } from "@game/presentation";
  * 選択系ウィンドウの中身
  * 中身のレイアウトについて責務を持つ
  */
-export abstract class ListWindowContents extends GroupGameObject {
+export abstract class SelectableWindowContents extends GroupGameObject {
   #cursor!: WindowCursor;
   #windowSize: Size;
 
@@ -35,6 +35,11 @@ export abstract class ListWindowContents extends GroupGameObject {
   }
 
   abstract getCursorLocalPos(index: number): Position;
+
+  override bringToTop(): void {
+    super.bringToTop();
+    this.#ensureCursor().bringToTop();
+  }
 
   #ensureCursor(): WindowCursor {
     if (!this.#cursor) {

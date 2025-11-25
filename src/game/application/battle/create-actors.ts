@@ -18,7 +18,7 @@ function fullWidthAlpha(n: number): string {
  * ActorId は味方全員→敵全員の順に割り振られる
  * 同一の敵が複数含まれる場合、個体ごとに末尾にアルファベットを付加した名前で生成する
  */
-export function createActors(allyIds: ReadonlyArray<AllyId>, enemyIds: ReadonlyArray<EnemyId>, domain: DomainPorts): ReadonlyArray<Actor> {
+export function createActors(allyIds: AllyId[], enemyIds: EnemyId[], domain: DomainPorts): ReadonlyArray<Actor> {
   const allyActors: AllyActor[] = allyIds.map((allyId, index) => createAllyActor(domain.allyRepository.findAlly(allyId), ActorId(index + 1)));
 
   // 種別ごとの総数

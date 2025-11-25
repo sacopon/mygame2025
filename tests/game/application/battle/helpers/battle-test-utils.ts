@@ -34,6 +34,7 @@ export function createStateAndDeps(opts: {
     actorType: "Ally",
     name: `Ally${a.id}`,
     level: Level.of(1),
+    spellIds: [],
     hp: Hp.of(a.hp ?? 10),
     maxHp: Hp.of(10),
     attack: Attack.of(5),
@@ -68,6 +69,7 @@ export function createStateAndDeps(opts: {
   const allyIds = new Set(state.getAllyActorStates().map(a => a.actorId));
 
   const deps: ResolveDeps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     random: dummyRandom as any,
     getActor: _id => {
       // resolveTargets では使わないので適当でも OK
@@ -77,14 +79,8 @@ export function createStateAndDeps(opts: {
       throw new Error("not used in this test");
     },
     isAlly: (id: ActorId) => allyIds.has(id),
-    aliveAllAllies: () => state.getAliveAllyActorIds(),
-    aliveAllEnemies: () => state.getAliveEnemyActorIds(),
     getActorIdsByEnemyGroup: (groupId: EnemyGroupId) =>
       groupMap.get(groupId) ?? [],
-    aliveAllActors: () => [
-      ...state.getAliveAllyActorIds(),
-      ...state.getAliveEnemyActorIds(),
-    ],
     enemyGroupIds: Array.from(groupMap.keys()),
   };
 

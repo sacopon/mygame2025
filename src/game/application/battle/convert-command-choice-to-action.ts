@@ -23,25 +23,40 @@ export function convertCommandChoiceToAction(choice: CommandChoice): Action {
       };
 
     case BattleCommand.Spell:
-      if (choice.target!.kind === "enemyGroup") {
+      if (choice.target.kind === "enemyGroup") {
         return {
           actorId: choice.actorId,
           actionType: ActionType.Spell,
           spellId: choice.spellId,
-          selection: TargetSelections.group(choice.target!.groupId),
+          selection: TargetSelections.group(choice.target.groupId),
         };
       }
-      else if (choice.target!.kind === "ally") {
+      else if (choice.target.kind === "enemyAll") {
         return {
           actorId: choice.actorId,
           actionType: ActionType.Spell,
           spellId: choice.spellId,
-          selection: TargetSelections.ally(choice.target!.actorId),
+          selection: TargetSelections.none(),
         };
       }
-      else {
-        throw new Error("Not implement");
+      else if (choice.target.kind === "ally") {
+        return {
+          actorId: choice.actorId,
+          actionType: ActionType.Spell,
+          spellId: choice.spellId,
+          selection: TargetSelections.ally(choice.target.actorId),
+        };
       }
+      else if (choice.target.kind === "allyAll") {
+        return {
+          actorId: choice.actorId,
+          actionType: ActionType.Spell,
+          spellId: choice.spellId,
+          selection: TargetSelections.none(),
+        };
+      }
+
+      return assertNever(choice.target);
 
     case BattleCommand.Item:
       // 未実装のため actionType 以外は適当

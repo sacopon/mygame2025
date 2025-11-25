@@ -9,6 +9,8 @@ export interface GameComponent<T extends ComponentTypeId = ComponentTypeId> {
   update?(gameObject: GameObject, deltaTime: number): void;
   onAttach?(gameObject: GameObject): void;
   onDetach?(gameObject: GameObject): void;
+  bringToTop?(): void;
+  set visible(value: boolean);
 }
 
 /**
@@ -52,6 +54,8 @@ export abstract class BaseGameComponent<T extends ComponentTypeId> implements Ga
     this.onDetached?.(gameObject);
     this.#owner = null;
   }
+
+  set visible(value: boolean) {}
 }
 
 /**
@@ -60,6 +64,7 @@ export abstract class BaseGameComponent<T extends ComponentTypeId> implements Ga
 export class GameComponents {
   #components: GameComponent[] = [];
   #componentById = new Map<ComponentTypeId, GameComponent>();
+  #visible: boolean = true;
 
   update(deltaTime: number, gameObject: GameObject) {
     const list = this.#components.slice();
@@ -93,6 +98,21 @@ export class GameComponents {
 
       this.#removeComponent(c, owner);
     }
+  }
+
+  bringToTop(): void {
+    this.#components.forEach(c => c.bringToTop?.());
+  }
+
+  get visible(): boolean {
+    return this.#visible;
+  }
+
+  set visible(value: boolean) {
+    this.#visible = value;
+    this.#components.forEach(component => {
+      component.visible = value;
+    });
   }
 
   #removeComponent(component: GameComponent, owner: GameObject): void {

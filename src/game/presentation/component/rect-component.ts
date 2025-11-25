@@ -12,6 +12,7 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
     super();
     this.#spec = {
       ...spec,
+      visible: true,
     };
   }
 
@@ -20,15 +21,16 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
       return;
     }
 
-    gameObject.render.setSpriteTransform(
+    gameObject.render.setTransform(
       this.#handle,
       {
-        ...gameObject.transform,
+        ...gameObject.worldTransform,
         ...{
-          x: gameObject.transform.x + (this.#spec.offset?.x ?? 0),
-          y: gameObject.transform.y + (this.#spec.offset?.y ?? 0),
+          x: gameObject.worldTransform.x + (this.#spec.offset?.x ?? 0),
+          y: gameObject.worldTransform.y + (this.#spec.offset?.y ?? 0),
         },
       });
+    gameObject.render.setVisible(this.#handle, this.#spec.visible ?? true);
   }
 
   override onAttached(gameObject: GameObject): void {
@@ -44,12 +46,28 @@ export class RectComponent extends BaseGameComponent<typeof RectComponent.typeId
     this.#handle = null;
   }
 
+  override get visible() {
+    return this.#spec.visible ?? false;
+  }
+
+  override set visible(value: boolean) {
+    this.#spec.visible = value;
+  }
+
   setAlpha(alpha: number): void {
     if (!this.#handle) {
       return;
     }
 
     this.owner.render.setAlpha(this.#handle, alpha);
+  }
+
+  bringToTop(): void {
+    if (!this.#handle) {
+      return;
+    }
+
+    this.owner.render.bringToTop(this.#handle);
   }
 }
 

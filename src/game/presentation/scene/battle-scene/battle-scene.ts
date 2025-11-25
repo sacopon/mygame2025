@@ -84,7 +84,7 @@ export class BattleScene implements Scene {
   // 辞書データキャッシュ
   #allActors!: ReadonlyArray<Actor>;
   #actorById!: Map<ActorId, Actor>;
-  #allyActorByAllyId!: Map<Readonly<AllyId>, AllyActor>;
+  #allyActorByAllyId!: Map<AllyId, AllyActor>;
   #enemyActorsByGroupId!: Map<EnemyGroupId, EnemyActor[]>;
   #allAllyActorIds!: ReadonlyArray<ActorId>;
   #allEnemyActorIds!: ReadonlyArray<ActorId>;
@@ -139,7 +139,7 @@ export class BattleScene implements Scene {
       domainState,
       nextDomainState: domainState,
       commandChoices: [],
-      // inputUi は #beginInputPhase() にて作成
+      // inputUi は buildInputUi() にて作成
     };
     this.#stateStack = new StateStack<BattleSceneContext>(this.#context);
     // 最初は空なのでステートを直push
@@ -237,7 +237,7 @@ export class BattleScene implements Scene {
 
     // ロジックエラー
     if (this.#context.inputUi) {
-      throw new Error("#beginInputPhase: this.#context.inputUi already exists.");
+      throw new Error("buildInputUi: this.#context.inputUi already exists.");
     }
 
     // コマンド(本当はキャラクターごとにコマンドは異なるが仮で共通)
@@ -303,26 +303,11 @@ export class BattleScene implements Scene {
     return actor.name;
   }
 
-  getAllyLevelById(actorId: ActorId): Readonly<Level> {
+  getAllyLevelById(actorId: ActorId): Level {
     const actor = this.getActorById(actorId);
     if (!isAllyActor(actor)) { throw new Error(`It's not Ally(actorId:${actorId})`); }
 
     return this.#context.domain.allyRepository.findAlly(actor.originId).level;
-  }
-
-  getAliveAllies(): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
-    return this.#allAllyActorIds;
-  }
-
-  getAliveEnemies(): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
-    return this.#allEnemyActorIds;
-  }
-
-  getAliveAllActors(): ReadonlyArray<ActorId> {
-    // TODO: 生死判定
-    return [...this.#allAllyActorIds, ...this.#allEnemyActorIds];
   }
 
   getEnemyGroupIds(): ReadonlyArray<EnemyGroupId> {
@@ -376,7 +361,7 @@ export class BattleScene implements Scene {
     return enemyGroups;
   }
 
-  #getAllyActorByAllyId(allyId: Readonly<AllyId>): AllyActor {
+  #getAllyActorByAllyId(allyId: AllyId): AllyActor {
     const actor = this.#allyActorByAllyId.get(allyId);
 
     if (!actor) {

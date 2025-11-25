@@ -26,6 +26,7 @@ export class PixiRenderAdapter implements RenderPort {
 
   constructor(rootContainer: Container) {
     this.#rootContainer = rootContainer;
+    this.#rootContainer.sortableChildren = true;
   }
 
   createSprite(spec: SpriteSpec): ViewHandle {
@@ -210,7 +211,7 @@ export class PixiRenderAdapter implements RenderPort {
     sprite.height = size.height;
   }
 
-  setSpriteTransform(handle: ViewHandle, transform: Partial<Transform2D>): void {
+  setTransform(handle: ViewHandle, transform: Partial<Transform2D>): void {
     const container = this.#views.get(handle);
 
     if (!container) {
@@ -220,7 +221,7 @@ export class PixiRenderAdapter implements RenderPort {
     this.#applyTransform(container, transform);
   }
 
-  setSpriteVisible(handle: ViewHandle, visible: boolean): void {
+  setVisible(handle: ViewHandle, visible: boolean): void {
     const container = this.#views.get(handle);
 
     if (!container) {
@@ -232,6 +233,41 @@ export class PixiRenderAdapter implements RenderPort {
 
   setSpriteLayer?(_view: ViewHandle, _layer: number): void {
     throw new Error("Method not implemented.");
+  }
+
+  /**
+   * 同一レイヤー内の最前面に移動する(現時点ではレイヤーの概念がないので全体の最前面に移動する)
+   */
+  /**
+   * 同一レイヤー内の最前面に移動する
+   */
+  bringToTop(handle: ViewHandle): void {
+    const container = this.#views.get(handle);
+    if (!container) {
+      return;
+    }
+
+    const currentZ = container.zIndex ?? 0;
+    // 小数切り捨てた値を「論理レイヤー」とみなす
+    const baseLayer = Math.floor(currentZ);
+
+    let maxZInLayer = currentZ;
+
+    for (const child of this.#rootContainer.children) {
+      const childZ = child.zIndex ?? 0;
+      // 同じレイヤーだけを見る
+      if (Math.floor(childZ) !== baseLayer) {
+        continue;
+      }
+
+      if (childZ > maxZInLayer) {
+        maxZInLayer = childZ;
+      }
+    }
+
+    // 同じレイヤー内で一番手前に出す（少しだけオフセットを足す）
+    container.zIndex = maxZInLayer + 0.001;
+    this.#rootContainer.sortChildren();
   }
 
   destroyView(handle: ViewHandle): void {

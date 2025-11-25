@@ -27,7 +27,7 @@ export class ExecutePhasePlayActionState extends BaseBattleSceneState {
     const resolveName = (actorId: ActorId): string => this.scene.getActorDisplayNameById(actorId);
     const resolver = {
       resolveName,
-      resolveLevel: (actorId: ActorId): Readonly<Level> => this.scene.getAllyLevelById(actorId),
+      resolveLevel: (actorId: ActorId): Level => this.scene.getAllyLevelById(actorId),
     };
 
     // 演出再生のランナー作成

@@ -1,9 +1,11 @@
 import { ActorId, EnemyGroupId, SpellId } from "@game/domain";
 import { BattleCommand } from "./battle-command";
 
-export type AllyTarget       = { kind: "ally";       actorId: ActorId };
+export type AllyTarget       = { kind: "ally"; actorId: ActorId };
+export type AllyAllTarget       = { kind: "allyAll"; };
 export type EnemyGroupTarget = { kind: "enemyGroup"; groupId: EnemyGroupId };
-export type CommandTarget    = EnemyGroupTarget | AllyTarget;
+export type EnemyAllTarget = { kind: "enemyAll"; };
+export type CommandTarget    = EnemyGroupTarget | EnemyAllTarget | AllyTarget | AllyAllTarget;
 
 // 各キャラクターのコマンド選択結果
 export type CommandChoice =
@@ -24,7 +26,7 @@ export type CommandChoice =
       actorId: ActorId;                    // 誰が
       command: typeof BattleCommand.Spell; // どのコマンド(呪文)
       spellId: SpellId;                    // どの呪文
-      target?: CommandTarget;              // 対象(味方の場合は ActorId, 敵の場合は EnemyGroupId となる)
+      target: CommandTarget;               // 対象
     }
   | {
       // アイテム時の型

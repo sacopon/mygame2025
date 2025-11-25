@@ -9,9 +9,6 @@ export type ResolveDeps = {
   getActor: (id: ActorId) => Actor;
   getSpell: (id: SpellId) => Spell;
   isAlly: (id: ActorId) => boolean;
-  aliveAllAllies: () => ReadonlyArray<ActorId>;
-  aliveAllEnemies: () => ReadonlyArray<ActorId>;
   getActorIdsByEnemyGroup: (groupId: EnemyGroupId) => ReadonlyArray<ActorId>;
   enemyGroupIds: ReadonlyArray<EnemyGroupId>;
-  aliveAllActors: () => ReadonlyArray<ActorId>;
 };
