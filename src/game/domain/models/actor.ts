@@ -1,5 +1,5 @@
 import { SpellId } from "./spell";
-import { Agility, Attack, Defence, Hp, Level } from "./status-value-objects";
+import { Agility, Attack, Defence, Hp, Level, Mp } from "./status-value-objects";
 import { Brand } from "@shared";
 
 // 味方キャラクター内での一意なID
@@ -34,6 +34,8 @@ export type Ally = {
   spellIds: SpellId[],
   maxHp: Hp;
   currentHp: Hp;
+  maxMp: Mp;
+  currentMp: Mp;
   attack: Attack;
   defence: Defence;
   agility: Agility;
@@ -50,6 +52,8 @@ export type AllyActor = {
   spellIds: SpellId[],
   hp: Hp;
   maxHp: Hp;
+  mp: Mp;
+  maxMp: Mp;
   attack: Attack;
   defence: Defence;
   agility: Agility;
@@ -92,6 +96,8 @@ export function createAllyActor(ally: Ally, actorId: ActorId): AllyActor {
     spellIds: ally.spellIds.slice(),
     hp: Hp.of(ally.currentHp),
     maxHp: Hp.of(ally.maxHp),
+    mp: Mp.of(ally.currentMp),
+    maxMp: Mp.of(ally.maxMp),
     attack: Attack.of(ally.attack),
     defence: Defence.of(ally.defence),
     agility: Agility.of(ally.agility),

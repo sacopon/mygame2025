@@ -1,5 +1,5 @@
 import { ResolveDeps } from "@game/application/battle/resolve-types";
-import { ActorId, Agility, AllyActor, AllyId, Attack, BattleDomainState, Defence, EnemyActor, EnemyGroupId, EnemyId, Hp, Level } from "@game/domain";
+import { ActorId, Agility, AllyActor, AllyId, Attack, BattleDomainState, Defence, EnemyActor, EnemyGroupId, EnemyId, Hp, Level, Mp } from "@game/domain";
 
 // 型短縮用
 export const aid = (n: number) => n as ActorId;
@@ -37,6 +37,8 @@ export function createStateAndDeps(opts: {
     spellIds: [],
     hp: Hp.of(a.hp ?? 10),
     maxHp: Hp.of(10),
+    mp: Mp.of(0),
+    maxMp: Mp.of(0),
     attack: Attack.of(5),
     defence: Defence.of(3),
     agility: Agility.of(4),

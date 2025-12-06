@@ -19,9 +19,21 @@ export class SpellPower extends ValueObject {
   static of = ValueObject.makeOf<SpellPower>(value => new SpellPower(value));
 }
 
+export class SpellCost extends ValueObject {
+  static readonly MAX = 99;
+
+  protected constructor(value: number) {
+    super(value, 0, SpellCost.MAX);
+  }
+
+  static of = ValueObject.makeOf<SpellCost>(value => new SpellCost(value));
+}
+
 export type Spell = Readonly<{
   spellId: SpellId;
   name: string;
+  cost: SpellCost,
+  description: string,
   power: SpellPower;
   target: SpellTarget;
   type: SpellEffectType;

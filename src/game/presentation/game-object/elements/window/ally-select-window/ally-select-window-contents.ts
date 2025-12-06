@@ -19,7 +19,7 @@ export class AllySelectWindowContents extends SelectableWindowContents {
     // 「だれに」
     this.#header = this.addChild(new GameObject(ports));
     this.#header.addComponent(new TextComponent(
-      "だれに",
+      "だれに", // TODO: 文字列外部化
       {
         style: {
           fontFamily: ALLY_SELECT_WINDOW_SETTINGS.fontFamily,
