@@ -2,7 +2,7 @@ import { GameObjectAccess, UiPorts } from "../scene/core/scene";
 import { isScreenSizeAware } from "./game-component";
 import { GameObject } from "./game-object";
 import { SceneManager } from "../scene/core";
-import { Agility, Ally, AllyId, Attack, Defence, DomainPorts, Enemy, EnemyId, Hp, Level, Spell, SpellId, SpellPower } from "@game/domain";
+import { Agility, Ally, AllyId, Attack, Defence, DomainPorts, Enemy, EnemyId, Hp, Level, Mp, Spell, SpellCost, SpellId, SpellPower } from "@game/domain";
 import { AllyRepositoryInMemory, EnemyRepositoryInMemory } from "@game/infrastructure";
 import { EncounterRepositoryInMemory } from "@game/infrastructure/repository/encounter";
 import { SpellRepositoryInMemory } from "@game/infrastructure/repository/spell";
@@ -10,13 +10,13 @@ import { SpellRepositoryInMemory } from "@game/infrastructure/repository/spell";
 const createDomainPorts = function(): DomainPorts {
   const allAllyCharacters: Ally[] = [
     { allyId: AllyId(1), name: "あああああ", level: Level.of(3), spellIds: [SpellId(1), SpellId(2), SpellId(3), SpellId(4), SpellId(5), SpellId(6), SpellId(7), SpellId(8), SpellId(9)],
-      maxHp: Hp.of(80), currentHp: Hp.of(80), attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
+      maxHp: Hp.of(80), currentHp: Hp.of(80), maxMp: Mp.of(10), currentMp: Mp.of(20), attack: Attack.of(20), defence: Defence.of(10), agility: Agility.of(15) },
     { allyId: AllyId(2), name: "いいいいい", level: Level.of(10), spellIds: [SpellId(2), SpellId(5), ],
-      maxHp: Hp.of(130), currentHp: Hp.of(130), attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
+      maxHp: Hp.of(130), currentHp: Hp.of(130), maxMp: Mp.of(30), currentMp: Mp.of(30), attack: Attack.of(30), defence: Defence.of(10), agility: Agility.of(10) },
     { allyId: AllyId(3), name: "ううううう", level: Level.of(6), spellIds: [SpellId(1), SpellId(3), SpellId(4)],
-      maxHp: Hp.of(60),  currentHp: Hp.of(60), attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(15) },
+      maxHp: Hp.of(60),  currentHp: Hp.of(60), maxMp: Mp.of(25), currentMp: Mp.of(40), attack: Attack.of(10), defence: Defence.of(10), agility: Agility.of(15) },
     { allyId: AllyId(4), name: "えええええ", level: Level.of(2), spellIds: [SpellId(2), SpellId(3)],
-      maxHp: Hp.of(35),  currentHp: Hp.of(35), attack: Attack.of(5), defence: Defence.of(10), agility: Agility.of(25) },
+      maxHp: Hp.of(35),  currentHp: Hp.of(35), maxMp: Mp.of(30), currentMp: Mp.of(80), attack: Attack.of(5), defence: Defence.of(10), agility: Agility.of(25) },
   ] as const;
 
   const allEnemies: Enemy[] = [
@@ -35,6 +35,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(1),
       name: "イグナ",
+      description: "敵ひとりに\nちいさな炎",
+      cost: SpellCost.of(1),
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -43,6 +45,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(2),
       name: "ラディ",
+      description: "敵グループに\nちいさな\n竜巻",
+      cost: SpellCost.of(2),
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -51,6 +55,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(3),
       name: "ゲルダ",
+      description: "敵全員に\nいかずちを\n落とす",
+      cost: SpellCost.of(3),
       power: SpellPower.of(1),
       target: { scope: "all", side: "them", },
       type: "damage",
@@ -59,6 +65,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(4),
       name: "サナ",
+      cost: SpellCost.of(4),
+      description: "仲間ひとりの\nHPを30〜\n回復",
       power: SpellPower.of(1),
       target: { scope: "single", side: "us", },
       type: "heal",
@@ -67,6 +75,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(5),
       name: "サナリム",
+      description: "仲間全員の\nHPを30〜\n回復",
+      cost: SpellCost.of(5),
       power: SpellPower.of(1),
       target: { scope: "all", side: "us", },
       type: "heal",
@@ -75,6 +85,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(6),
       name: "イグナト",
+      description: "敵ひとりに\n火炎を\nあびせる",
+      cost: SpellCost.of(6),
       power: SpellPower.of(1),
       target: { scope: "single", side: "them", },
       type: "damage",
@@ -83,6 +95,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(7),
       name: "ラディム",
+      cost: SpellCost.of(7),
+      description: "敵グループを\n竜巻に\nまきこむ",
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",
@@ -91,6 +105,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(8),
       name: "ゲルダム",
+      cost: SpellCost.of(8),
+      description: "敵全員に\nはげしい\nいかずち",
       power: SpellPower.of(1),
       target: { scope: "all", side: "them", },
       type: "heal",
@@ -99,6 +115,8 @@ const createDomainPorts = function(): DomainPorts {
     {
       spellId: SpellId(9),
       name: "ソムナ",
+      description: "敵グループを\nねむらせる",
+      cost: SpellCost.of(9),
       power: SpellPower.of(1),
       target: { scope: "group", side: "them", },
       type: "damage",

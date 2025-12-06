@@ -1,6 +1,6 @@
 import { GameObject } from "../../core/game-object";
 import { ScreenSizeAware } from "../../core/game-component";
-import { AllySelectWindow, BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow, SpellSelectWindow } from "..";
+import { AllySelectWindow, BattleMessageWindow, CommandSelectWindow, EnemySelectWindow, MainWindow, SpellDetailWindow, SpellSelectWindow } from "..";
 import { GamePorts } from "@game/presentation";
 import { DEFAULT_SHAKE_PATTERNS, ShakeRunner } from "@game/presentation/effects/shake-runner";
 import { StatusWindow } from "./window/status-window";
@@ -29,6 +29,7 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   #commandWindow?: CommandSelectWindow;
   #enemySelectWindow?: EnemySelectWindow;
   #spellSelectWindow?: SpellSelectWindow;
+  #spellDetailWindow?: SpellDetailWindow;
   #allySelectWindow?: AllySelectWindow;
   #messageWindow?: BattleMessageWindow;
   #statusWindow?: StatusWindow;
@@ -85,6 +86,18 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     window.setPosition(pos.x, pos.y);
   }
 
+  placeSpellDetailWindow(window: SpellDetailWindow | null): void {
+    this.#spellDetailWindow = window ?? undefined;
+    if (!window) {
+      return;
+    }
+
+    const pos = this.#getSpellDetailWindowPos();
+    window.setPosition(pos.x, pos.y);
+    console.log(`select:(${this.#spellSelectWindow!.width}`);
+    console.log(`detail:(${this.#spellDetailWindow!.width}`);
+  }
+
   placeAllySelectWindow(window: AllySelectWindow | null): void {
     this.#allySelectWindow = window ?? undefined;
     if (!window) {
@@ -96,22 +109,22 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
   }
 
   bringToFrontEnemySelectWindow(window: EnemySelectWindow | null): void {
-    if (!window) {
-      return;
-    }
-
-    window.bringToTop();
+    this.#bringToWindow(window);
   }
 
   bringToFrontSpellSelectWindow(window: SpellSelectWindow | null): void {
-    if (!window) {
-      return;
-    }
+    this.#bringToWindow(window);
+  }
 
-    window.bringToTop();
+  bringToFrontSpellDetailWindow(window: SpellDetailWindow | null): void {
+    this.#bringToWindow(window);
   }
 
   bringToFrontAllySelectWindow(window: AllySelectWindow | null): void {
+    this.#bringToWindow(window);
+  }
+
+  #bringToWindow(window: GameObject | null): void {
     if (!window) {
       return;
     }
@@ -178,6 +191,11 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
     if (this.#spellSelectWindow) {
       this.placeSpellSelectWindow(this.#spellSelectWindow);
     }
+
+    // 呪文詳細ウィンドウ
+    if (this.#spellDetailWindow) {
+      this.placeSpellDetailWindow(this.#spellDetailWindow);
+    }
   }
 
   #placeMessageWindow(width: number, _height: number, offsets?: OffsetsByWindow) {
@@ -194,8 +212,24 @@ export class UILayoutCoordinator extends GameObject implements ScreenSizeAware {
 
   #getSpellSelectWindowPos(): Position {
     const { width } = this.ports.screen.getGameSize();
-    const x = Math.floor((width - this.inputWindowWidth) / 2);
-    return { x: x + Math.floor((this.#commandWindow?.width ?? 0) / 2), y: (this.#commandWindow?.y ?? 0) + 19 };
+    const windowWidth = 214;  // 呪文選択ウィンドウ幅 + 呪文詳細ウィンドウ幅
+    // const x = Math.floor((width - this.inputWindowWidth) / 2);
+    // return { x: x + Math.floor((this.#commandWindow?.width ?? 0) / 2), y: (this.#commandWindow?.y ?? 0) + 19 };
+    return { x: Math.trunc(width - windowWidth) / 2, y: (this.#commandWindow?.y ?? 0) + 19 };
+  }
+
+  #getSpellDetailWindowPos(): Position {
+    const base = {
+      x: this.#spellSelectWindow?.x ?? 0,
+      y: this.#spellSelectWindow?.y ?? 0,
+      width: this.#spellSelectWindow?.width ?? 0,
+      height: this.#spellSelectWindow?.height ?? 0,
+    };
+
+    return {
+      x: base.x + base.width,
+      y: base.y + base.height - (this.#spellDetailWindow?.height ?? 0),
+    };
   }
 
   // 味方選択ウィンドウの位置

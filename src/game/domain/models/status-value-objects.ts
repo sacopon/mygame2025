@@ -46,6 +46,19 @@ export class Hp extends CharacterParameter {
 }
 
 /**
+ * マジックパワー
+ */
+export class Mp extends CharacterParameter {
+  static readonly MAX = 999;
+
+  protected constructor(value: number) {
+    super(value, Mp.MAX);
+  }
+
+  static of = CharacterParameter.makeOf<Mp>(value => new Mp(value));
+}
+
+/**
  * 攻撃力
  */
 export class Attack extends CharacterParameter {

@@ -1,7 +1,7 @@
 import { BaseBattleSceneState, BattleSceneContext } from "../../states/battle-scene-state";
 import { AllyActor, Spell } from "@game/domain";
 import { BattleCommand, BattleScene, CommandChoice, InputPhaseCallbacks, InputPhaseSelectTargetAllyState, InputPhaseSelectTargetEnemyState } from "../..";
-import { GameButton, SpellSelectWindow } from "../../../..";
+import { GameButton, SpellDetailWindow, SpellSelectWindow } from "../../../..";
 
 /**
  * バトルシーン状態: 呪文選択
@@ -11,6 +11,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   #actor: AllyActor;
   // 呪文選択ウィンドウ
   #spellSelectWindow: SpellSelectWindow | null = null;
+  // 呪文説明/消費MPウィンドウ
+  #spellDetailWindow: SpellDetailWindow | null = null;
   // シーンの遷移中など誤操作防止のためのフラグ
   #locked = false;
   // この呪文内容が確定した際にどこまで巻き戻すか(このステートが積まれた時の状態を記録)
@@ -32,6 +34,8 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     this.#rewindMarker = this.scene.markState();
     this.#activate();
 
+    const actorState = this.context.domainState.getAllyActorState(this.#actor.actorId);
+
     // コマンド選択/敵選択ウィンドウを非アクティブにする
     context.inputUi!.commandSelectWindow.setActive(false);
     context.inputUi!.enemySelectWindow.setActive(false, true);  // ウィンドウカラーも非アクティブ色に
@@ -44,8 +48,15 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     context.inputUi?.coordinator.placeSpellSelectWindow(this.#spellSelectWindow);
     this.#spellSelectWindow.setActive(true);
 
+    // 呪文説明/消費MPウィンドウ生成
+    this.#spellDetailWindow = this.scene.spawn(new SpellDetailWindow(context.ui));
+    this.#spellDetailWindow.setContent(this.#spellSelectWindow.getCurrent(), actorState.currentMp);
+    context.inputUi?.coordinator.placeSpellDetailWindow(this.#spellDetailWindow);
+
     // 呪文選択ウィンドウを最前面に移動する
     context.inputUi?.coordinator.bringToFrontSpellSelectWindow(this.#spellSelectWindow);
+    // 呪文詳細ウィンドウを最前面に移動する
+    context.inputUi?.coordinator.bringToFrontSpellDetailWindow(this.#spellDetailWindow);
   }
 
   override onLeave(_context: BattleSceneContext): void {
@@ -55,6 +66,12 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
       this.context.inputUi?.coordinator.placeSpellSelectWindow(null);
       this.scene.despawn(this.#spellSelectWindow);
       this.#spellSelectWindow = null;
+    }
+
+    if (this.#spellDetailWindow) {
+      this.context.inputUi?.coordinator.placeSpellDetailWindow(null);
+      this.scene.despawn(this.#spellDetailWindow);
+      this.#spellDetailWindow = null;
     }
 
     this.#inactivate();
@@ -71,17 +88,22 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
   }
 
   override update(_deltaTime: number): void {
-    if (this.#locked || !this.#spellSelectWindow) {
+    if (this.#locked || !this.#spellSelectWindow || !this.#spellDetailWindow) {
       return;
     }
 
     const inp = this.context.ui.input;
+    const detailWindow = this.#spellDetailWindow;
     const ok = inp.pressed(GameButton.A);
     const cancel = inp.pressed(GameButton.B);
     const up = inp.pressed(GameButton.Up);
     const down = inp.pressed(GameButton.Down);
     const left = inp.pressed(GameButton.Left);
     const right = inp.pressed(GameButton.Right);
+    const changeDetailWindow = (spell: Spell) => {
+      const state = this.context.domainState.getAllyActorState(this.#actor.actorId);
+      detailWindow.setContent(spell, state.currentMp);
+    };
 
     // 決定
     if (ok) {
@@ -108,15 +130,19 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     }
     else if (up) {
       this.#spellSelectWindow.moveVertical(-1);
+      changeDetailWindow(this.#spellSelectWindow.getCurrent());
     }
     else if (down) {
       this.#spellSelectWindow.moveVertical(1);
+      changeDetailWindow(this.#spellSelectWindow.getCurrent());
     }
     else if (left) {
       this.#spellSelectWindow.moveHorizontal(-1);
+      changeDetailWindow(this.#spellSelectWindow.getCurrent());
     }
     else if (right) {
       this.#spellSelectWindow.moveHorizontal(1);
+      changeDetailWindow(this.#spellSelectWindow.getCurrent());
     }
   }
 
@@ -166,6 +192,7 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
     else if ((spell.target.scope === "single" || spell.target.scope === "group") && spell.target.side === "them") {
       // 下に隠れている敵選択ウィンドウを最前面に移動
       this.context.inputUi?.coordinator.bringToFrontEnemySelectWindow(this.context.inputUi.enemySelectWindow);
+      // TODO: 呪文詳細ウィンドウを非表示にする
 
       // 敵側のの単体 or グループが対象の場合、敵選択ウィンドウへ
       this.scene.requestPushState(new InputPhaseSelectTargetEnemyState(
@@ -198,6 +225,7 @@ export class InputPhaseSelectSpellState extends BaseBattleSceneState {
             this.#locked = false;
             // 敵選択ウィンドウが最前面に来ているので、自身を再度最前面に
             this.context.inputUi?.coordinator.bringToFrontSpellSelectWindow(this.#spellSelectWindow);
+            this.context.inputUi?.coordinator.bringToFrontSpellDetailWindow(this.#spellDetailWindow);
           }
         }));
 

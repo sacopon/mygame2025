@@ -1,4 +1,4 @@
-import { ActionType, Spell, SpellId, SpellPlannedAction, SpellPower } from "@game/domain";
+import { ActionType, Spell, SpellCost, SpellId, SpellPlannedAction, SpellPower } from "@game/domain";
 import { createStateAndDeps } from "./helpers/battle-test-utils";
 import { resolveSpellTargets } from "@game/application/battle/resolve-common";
 
@@ -7,6 +7,8 @@ function makeSpell(id: number, scope: "single" | "group" | "all", side: "us" | "
   return {
     spellId,
     name: `テストダメージ呪文${id}`,
+    cost: SpellCost.of(0),
+    description: "テスト説明文",
     power: SpellPower.of(0),
     type,
     target: { scope, side, },

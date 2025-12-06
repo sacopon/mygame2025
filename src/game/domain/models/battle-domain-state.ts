@@ -1,7 +1,7 @@
 import { assertNever } from "@shared";
 import { ActorId, ActorType, AllyActor, AllyId, EnemyActor, EnemyId } from "./actor";
 import { DamageApplied, DomainEvent, HealApplied } from "./domain-event";
-import { Agility, Attack, Defence, Hp } from "./status-value-objects";
+import { Agility, Attack, Defence, Hp, Mp } from "./status-value-objects";
 import { Damage } from "./damage";
 import { HealAmount } from "./heal-amount";
 
@@ -17,6 +17,7 @@ export type ActorStateBase = {
 export type AllyActorState = ActorStateBase & {
   actorType: typeof ActorType.Ally;
   originId: AllyId;
+  currentMp: Mp;
 }
 
 export type EnemyActorState = ActorStateBase & {
@@ -27,7 +28,7 @@ export type EnemyActorState = ActorStateBase & {
 export type ActorState = AllyActorState | EnemyActorState;
 
 export const isAlive = (s: ActorState): boolean => s.currentHp.isAlive;
-const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
+export const isAllyState = (s: ActorState): s is AllyActorState => s.actorType == ActorType.Ally;
 
 export class BattleDomainState {
   #actorStateByActorId: Map<ActorId, Readonly<ActorState>>;
@@ -46,6 +47,7 @@ export class BattleDomainState {
         actorType: ActorType.Ally,
         currentHp: Hp.of(ally.hp),
         maxHp: Hp.of(ally.maxHp),
+        currentMp: Mp.of(ally.mp),
         currentAttack: Attack.of(ally.attack),
         currentDefence: Defence.of(ally.defence),
         currentAgility: Agility.of(ally.agility),
@@ -95,6 +97,17 @@ export class BattleDomainState {
   getActorState(actorId: ActorId): Readonly<ActorState> {
     const state = this.#actorStateByActorId.get(actorId);
     if (!state) { throw new Error(`invalid actorId:${actorId}`); };
+
+    return state;
+  }
+
+  /**
+   * 指定アクター(味方)の状態を取得します
+   */
+  getAllyActorState(actorId: ActorId): Readonly<AllyActorState> {
+    const state = this.#actorStateByActorId.get(actorId);
+    if (!state) { throw new Error(`invalid actorId:${actorId}`); };
+    if (!isAllyState(state)) { throw new Error(`actorId:${actorId} is not ally`); }
 
     return state;
   }
